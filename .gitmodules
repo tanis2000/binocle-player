@@ -1,0 +1,3 @@
+[submodule "binocle-c"]
+	path = binocle-c
+	url = https://github.com/tanis2000/binocle-c.git
