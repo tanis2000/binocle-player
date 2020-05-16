@@ -35,7 +35,11 @@ SET(VERSION_MINOR "1")
 SET(VERSION_PATCH "0")
 SET(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-set(BINOCLE_LINK_LIBRARIES binocle-static)
+if (IOS OR EMSCRIPTEN)
+    set(BINOCLE_LINK_LIBRARIES binocle-static lua)
+else()
+    set(BINOCLE_LINK_LIBRARIES binocle-static luajit-5.1)
+endif()
 
 if (MSVC)
 	message("Including Windows defines")
@@ -68,7 +72,6 @@ message("Linking with the following libraries: ${BINOCLE_LINK_LIBRARIES}")
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps
-    ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl_mixer
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/stb_image
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/physfs
@@ -78,7 +81,8 @@ include_directories(
 )
 
 if (APPLE)
-    include_directories(${PROJECT_SOURCE_DIR}/../binocle-c/src/deps/luajit/src)
+    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/luajit/src)
+    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include)
     if (IOS)
         include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/default)
     else ()
@@ -88,18 +92,20 @@ if (APPLE)
 endif ()
 
 if (ANDROID)
-    include_directories(${PROJECT_SOURCE_DIR}/../binocle-c/src/deps/luajit/src)
+    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include)
+    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/luajit/src)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/default)
 endif ()
 
 if (WIN32)
-    include_directories(${PROJECT_SOURCE_DIR}/../binocle-c/src/deps/luajit/src)
+    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include)
+    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/luajit/src)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/windows)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/glew/include)
 endif ()
 
 if (EMSCRIPTEN)
-    include_directories(${PROJECT_SOURCE_DIR}/../binocle-c/src/deps/lua/src)
+    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/lua/src)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/default)
 endif ()
 

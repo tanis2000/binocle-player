@@ -19,6 +19,8 @@
 #include <binocle_sprite.h>
 #include <binocle_shader.h>
 #include <binocle_material.h>
+#include <binocle_lua.h>
+#include <binocle_app.h>
 #define BINOCLE_MATH_IMPL
 #include "binocle_math.h"
 #include "binocle_gd.h"
@@ -31,19 +33,55 @@ binocle_window window;
 binocle_input input;
 binocle_viewport_adapter adapter;
 binocle_camera camera;
-binocle_sprite player;
+binocle_sprite *player;
 kmVec2 player_pos;
 binocle_gd gd;
 binocle_bitmapfont *font;
-binocle_image font_image;
-binocle_texture font_texture;
-binocle_material font_material;
-binocle_sprite font_sprite;
+binocle_image *font_image;
+binocle_texture *font_texture;
+binocle_material *font_material;
+binocle_sprite *font_sprite;
 kmVec2 font_sprite_pos;
 char *binocle_assets_dir;
+binocle_lua lua;
+binocle_app app;
+binocle_sprite_batch sprite_batch;
+binocle_shader *shader;
+
+int lua_set_globals() {
+  lua_pushlightuserdata(lua.L, (void *)&gd);
+  lua_setglobal(lua.L, "gd");
+
+  lua_pushlightuserdata(lua.L, (void *)&sprite_batch);
+  lua_setglobal(lua.L, "sprite_batch");
+
+  lua_pushlightuserdata(lua.L, (void *)&adapter.viewport);
+  lua_setglobal(lua.L, "viewport");
+
+  lua_pushlightuserdata(lua.L, (void *)&camera);
+  lua_setglobal(lua.L, "camera");
+
+  lua_pushlightuserdata(lua.L, (void *)&input);
+  lua_setglobal(lua.L, "input_mgr");
+
+  return 0;
+}
+
+int lua_on_update(float dt) {
+  lua_getglobal(lua.L, "on_update");
+  lua_pushnumber(lua.L, dt);
+  int result = lua_pcall(lua.L, 1, 0, 0);
+  if (result) {
+    binocle_log_error("Failed to run function: %s\n", lua_tostring(lua.L, -1));
+    return 1;
+  }
+  return 0;
+}
 
 void main_loop() {
   binocle_window_begin_frame(&window);
+  float dt = binocle_window_get_frame_time(&window) / 1000.0f;
+
   binocle_input_update(&input);
 
   if (input.resized) {
@@ -55,27 +93,39 @@ void main_loop() {
   }
 
 
-  if (binocle_input_is_key_pressed(input, KEY_RIGHT)) {
+  if (binocle_input_is_key_pressed(&input, KEY_RIGHT)) {
     player_pos.x += 50 * (1.0/window.frame_time);
-  } else if (binocle_input_is_key_pressed(input, KEY_LEFT)) {
+  } else if (binocle_input_is_key_pressed(&input, KEY_LEFT)) {
     player_pos.x -= 50 * (1.0/window.frame_time);
   }
 
-  if (binocle_input_is_key_pressed(input, KEY_UP)) {
+  if (binocle_input_is_key_pressed(&input, KEY_UP)) {
     player_pos.y += 50 * (1.0/window.frame_time);
-  } else if (binocle_input_is_key_pressed(input, KEY_DOWN)) {
+  } else if (binocle_input_is_key_pressed(&input, KEY_DOWN)) {
     player_pos.y -= 50 * (1.0/window.frame_time);
   }
 
+  kmMat4 matrix;
+  kmMat4Identity(&matrix);
+  binocle_sprite_batch_begin(&sprite_batch, binocle_camera_get_viewport(camera), BINOCLE_SPRITE_SORT_MODE_DEFERRED, shader, &matrix);
+
   binocle_window_clear(&window);
+
+  lua_on_update(dt);
+
+  binocle_sprite_batch_end(&sprite_batch, binocle_camera_get_viewport(camera));
+
   kmVec2 scale;
   scale.x = 1.0f;
   scale.y = 1.0f;
-  binocle_sprite_draw(player, &gd, (uint64_t)player_pos.x, (uint64_t)player_pos.y, adapter.viewport, 0, scale, &camera);
+  binocle_sprite_draw(player, &gd, (uint64_t)player_pos.x, (uint64_t)player_pos.y, &adapter.viewport, 0, &scale, &camera);
   kmMat4 view_matrix;
   kmMat4Identity(&view_matrix);
   binocle_bitmapfont_draw_string(font, "TEST", 12, &gd, 20, 20, adapter.viewport, binocle_color_white(), view_matrix);
   //binocle_sprite_draw(font_sprite, &gd, (uint64_t)font_sprite_pos.x, (uint64_t)font_sprite_pos.y, adapter.viewport);
+
+  binocle_lua_check_scripts_modification_time(&lua, "assets");
+
   binocle_window_refresh(&window);
   binocle_window_end_frame(&window);
   //binocle_log_info("FPS: %d", binocle_window_get_fps(&window));
@@ -83,7 +133,9 @@ void main_loop() {
 
 int main(int argc, char *argv[])
 {
-  binocle_sdl_init();
+  app = binocle_app_new();
+  binocle_app_init(&app);
+
   window = binocle_window_new(320, 240, "Binocle Test Game");
   binocle_window_set_background_color(&window, binocle_color_azure());
   adapter = binocle_viewport_adapter_new(window, BINOCLE_VIEWPORT_ADAPTER_KIND_SCALING, BINOCLE_VIEWPORT_ADAPTER_SCALING_TYPE_PIXEL_PERFECT, window.original_width, window.original_height, window.original_width, window.original_height);
@@ -92,17 +144,17 @@ int main(int argc, char *argv[])
   binocle_assets_dir = binocle_sdl_assets_dir();
   char filename[1024];
   sprintf(filename, "%s%s", binocle_assets_dir, "wabbit_alpha.png");
-  binocle_image image = binocle_image_load(filename);
-  binocle_texture texture = binocle_texture_from_image(image);
+  binocle_image *image = binocle_image_load(filename);
+  binocle_texture *texture = binocle_texture_from_image(image);
   char vert[1024];
   sprintf(vert, "%s%s", binocle_assets_dir, "default.vert");
   char frag[1024];
   sprintf(frag, "%s%s", binocle_assets_dir, "default.frag");
-  binocle_shader shader = binocle_shader_load_from_file(vert, frag);
-  binocle_material material = binocle_material_new();
-  material.texture = &texture;
-  material.shader = &shader;
-  player = binocle_sprite_from_material(&material);
+  shader = binocle_shader_load_from_file(vert, frag);
+  binocle_material *material = binocle_material_new();
+  material->albedo_texture = texture;
+  material->shader = shader;
+  player = binocle_sprite_from_material(material);
   player_pos.x = 50;
   player_pos.y = 50;
 
@@ -115,15 +167,28 @@ int main(int argc, char *argv[])
   font_image = binocle_image_load(font_image_filename);
   font_texture = binocle_texture_from_image(font_image);
   font_material = binocle_material_new();
-  font_material.texture = &font_texture;
-  font_material.shader = &shader;
-  font->material = &font_material;
-  font_sprite = binocle_sprite_from_material(&font_material);
+  font_material->albedo_texture = font_texture;
+  font_material->shader = shader;
+  font->material = font_material;
+  font_sprite = binocle_sprite_from_material(font_material);
   font_sprite_pos.x = 0;
   font_sprite_pos.y = -256;
 
   gd = binocle_gd_new();
   binocle_gd_init(&gd);
+
+  sprite_batch = binocle_sprite_batch_new();
+  sprite_batch.gd = &gd;
+
+  lua = binocle_lua_new();
+  binocle_lua_init(&lua);
+
+  lua_set_globals();
+
+  char main_lua[1024];
+  sprintf(main_lua, "%s%s", binocle_assets_dir, "main.lua");
+  binocle_lua_run_script(&lua, main_lua);
+
 #ifdef GAMELOOP
   binocle_game_run(window, input);
 #else
