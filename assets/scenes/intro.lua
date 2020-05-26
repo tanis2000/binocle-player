@@ -1,5 +1,8 @@
 local intro = {}
 
+intro.TEX_WIDTH = 1682
+intro.TEX_HEIGHT = 479
+
 function intro.init(shd)
     local assets_dir = sdl.assets_dir()
     local image_filename = assets_dir .. "img/binocle-logo-full.png"
@@ -12,8 +15,9 @@ function intro.init(shd)
     intro.logo = sprite.from_material(intro.mat)
     intro.shader = shd
 
-    intro.bg_color = color.new(191.0 / 255.0, 1.0, 1.0, 1.0)
-    io.write("bg_color: " .. tostring(intro.bg_color) .."\n")
+    intro.azure_color = color.new(191.0 / 255.0, 1.0, 1.0, 1.0)
+    intro.white_color = color.new(1.0, 1.0, 1.0, 1.0)
+    intro.black_color = color.new(0, 0, 0, 1.0)
 end
 
 function intro.on_update(dt)
@@ -28,8 +32,8 @@ function intro.on_update(dt)
 
     -- By default we scale our logo by 1/3
     scale = lkazmath.kmVec2New();
-    scale.x = 0.3;
-    scale.y = 0.3;
+    scale.x = DESIGN_WIDTH / intro.TEX_WIDTH
+    scale.y = DESIGN_HEIGHT / intro.TEX_WIDTH
 
     -- Create a viewport that corresponds to the size of our render target
     center = lkazmath.kmVec2New();
@@ -46,8 +50,8 @@ function intro.on_update(dt)
     uint64_t x = (uint64_t)((DESIGN_WIDTH - (sprite->material->albedo_texture->width * scale.x)) / 2.0f);
     uint64_t y = (uint64_t)((DESIGN_HEIGHT - (sprite->material->albedo_texture->height * scale.x)) / 2.0f);
     ]]
-    x = (DESIGN_WIDTH - (1682 * scale.x)) / 2.0
-    y = (DESIGN_HEIGHT - (479 * scale.y)) / 2.0
+    x = (DESIGN_WIDTH - (intro.TEX_WIDTH * scale.x)) / 2.0
+    y = (DESIGN_HEIGHT - (intro.TEX_HEIGHT * scale.y)) / 2.0
 
     io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
     sprite.draw(intro.logo, gdc, x, y, viewport, 0, scale, camera)
@@ -61,7 +65,7 @@ function intro.on_update(dt)
     io.write("vp_y: " .. tostring(vp_y) .. "\n")
     -- Reset the render target to the screen
     gd.set_render_target(nil);
-    gd.clear(intro.bg_color)
+    gd.clear(intro.black_color)
     gd.apply_viewport(vp);
     gd.apply_shader(gdc, screen_shader);
     gd.set_uniform_float2(screen_shader, "resolution", DESIGN_WIDTH, DESIGN_HEIGHT);

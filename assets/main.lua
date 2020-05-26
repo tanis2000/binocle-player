@@ -25,8 +25,8 @@ local entity = require("entity")
 
 -- Constants
 GL_RGBA8 = 0x8058
-DESIGN_WIDTH = 504 --320
-DESIGN_HEIGHT = 143 --240
+DESIGN_WIDTH = 320
+DESIGN_HEIGHT = 240
 
 -- Globals
 log.info("Begin of main.lua\n");
@@ -34,10 +34,14 @@ log.info("Begin of main.lua\n");
 log.debug("test entitiy: " .. entity.test_entity .. "\n")
 entity.say_test()
 
+color.azure = color.new(191.0 / 255.0, 1.0, 1.0, 1.0)
+color.white = color.new(1.0, 1.0, 1.0, 1.0)
+color.black = color.new(0, 0, 0, 1.0)
+
 function on_init()
     win = window.new(DESIGN_WIDTH, DESIGN_HEIGHT, "Binocle Player")
     io.write("win: " .. tostring(win) .."\n")
-    bg_color = color.new(1.0, 0.0, 0.0, 1.0)
+    bg_color = color.black
     io.write("bg_color: " .. tostring(bg_color) .."\n")
     window.set_background_color(win, bg_color)
     window.set_minimum_size(win, DESIGN_WIDTH, DESIGN_HEIGHT)
