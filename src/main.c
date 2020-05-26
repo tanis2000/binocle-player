@@ -21,6 +21,8 @@
 #include <binocle_material.h>
 #include <binocle_lua.h>
 #include <binocle_app.h>
+#include <binocle_window_wrap.h>
+#include <binocle_viewport_adapter_wrap.h>
 #define BINOCLE_MATH_IMPL
 #include "binocle_math.h"
 #include "binocle_gd.h"
@@ -29,9 +31,13 @@
 
 //#define GAMELOOP 1
 
-binocle_window window;
+#define DESIGN_WIDTH 320
+#define DESIGN_HEIGHT 240
+
+// TODO: remove after we're done with Lua bindings
+binocle_window *window;
 binocle_input input;
-binocle_viewport_adapter adapter;
+binocle_viewport_adapter *adapter;
 binocle_camera camera;
 binocle_sprite *player;
 kmVec2 player_pos;
@@ -47,16 +53,27 @@ binocle_lua lua;
 binocle_app app;
 binocle_sprite_batch sprite_batch;
 binocle_shader *shader;
+float elapsed_time = 0;
+SDL_mutex *lua_mutex;
 
 int lua_set_globals() {
   lua_pushlightuserdata(lua.L, (void *)&gd);
-  lua_setglobal(lua.L, "gd");
+  lua_setglobal(lua.L, "gdc");
 
   lua_pushlightuserdata(lua.L, (void *)&sprite_batch);
   lua_setglobal(lua.L, "sprite_batch");
 
-  lua_pushlightuserdata(lua.L, (void *)&adapter.viewport);
+  //lua_pushlightuserdata(lua.L, (void *)&adapter.viewport);
+  //lua_setglobal(lua.L, "viewport");
+
+  /*
+  kmAABB2 *p = &adapter.viewport;
+  kmAABB2 **my__p = lua_newuserdata(lua.L, sizeof(void *));
+  *my__p = p;
+  (lua_getfield(lua.L, (-10000), ("KAZMATH{kmAABB2}")));
+  lua_setmetatable(lua.L, -2);
   lua_setglobal(lua.L, "viewport");
+*/
 
   lua_pushlightuserdata(lua.L, (void *)&camera);
   lua_setglobal(lua.L, "camera");
@@ -64,92 +81,160 @@ int lua_set_globals() {
   lua_pushlightuserdata(lua.L, (void *)&input);
   lua_setglobal(lua.L, "input_mgr");
 
+  //lua_pushlightuserdata(lua.L, (void *)&window);
+  //lua_setglobal(lua.L, "win");
+
+  if (adapter != NULL) {
+    lua_pushnumber(lua.L, adapter->multiplier);
+    lua_setglobal(lua.L, "multiplier");
+
+    lua_pushnumber(lua.L, adapter->inverse_multiplier);
+    lua_setglobal(lua.L, "inverse_multiplier");
+  }
+
+  return 0;
+}
+
+int lua_on_init() {
+  SDL_LockMutex(lua_mutex);
+  lua_getglobal(lua.L, "on_init");
+  int result = lua_pcall(lua.L, 0, 0, 0);
+  if (result) {
+    binocle_log_error("Failed to run function: %s\n", lua_tostring(lua.L, -1));
+    SDL_UnlockMutex(lua_mutex);
+    return 1;
+  }
+  SDL_UnlockMutex(lua_mutex);
   return 0;
 }
 
 int lua_on_update(float dt) {
+  SDL_LockMutex(lua_mutex);
   lua_getglobal(lua.L, "on_update");
   lua_pushnumber(lua.L, dt);
   int result = lua_pcall(lua.L, 1, 0, 0);
   if (result) {
     binocle_log_error("Failed to run function: %s\n", lua_tostring(lua.L, -1));
+    SDL_UnlockMutex(lua_mutex);
     return 1;
   }
+  SDL_UnlockMutex(lua_mutex);
   return 0;
 }
 
 void main_loop() {
-  binocle_window_begin_frame(&window);
-  float dt = binocle_window_get_frame_time(&window) / 1000.0f;
+  binocle_window_begin_frame(window);
+  float dt = binocle_window_get_frame_time(window) / 1000.0f;
+  elapsed_time += dt;
 
   binocle_input_update(&input);
 
   if (input.resized) {
-    kmVec2 oldWindowSize = {.x = window.width, .y = window.height};
-    window.width = input.newWindowSize.x;
-    window.height = input.newWindowSize.y;
-    binocle_viewport_adapter_reset(&adapter, oldWindowSize, input.newWindowSize);
+    kmVec2 oldWindowSize = {.x = window->width, .y = window->height};
+    window->width = input.newWindowSize.x;
+    window->height = input.newWindowSize.y;
+    // Update the pixel-perfect rescaling viewport adapter
+    binocle_viewport_adapter_reset(camera.viewport_adapter, oldWindowSize, input.newWindowSize);
     input.resized = false;
   }
 
-
+/*
   if (binocle_input_is_key_pressed(&input, KEY_RIGHT)) {
-    player_pos.x += 50 * (1.0/window.frame_time);
+    player_pos.x += 50 * (1.0/window->frame_time);
   } else if (binocle_input_is_key_pressed(&input, KEY_LEFT)) {
-    player_pos.x -= 50 * (1.0/window.frame_time);
+    player_pos.x -= 50 * (1.0/window->frame_time);
   }
 
   if (binocle_input_is_key_pressed(&input, KEY_UP)) {
-    player_pos.y += 50 * (1.0/window.frame_time);
+    player_pos.y += 50 * (1.0/window->frame_time);
   } else if (binocle_input_is_key_pressed(&input, KEY_DOWN)) {
-    player_pos.y -= 50 * (1.0/window.frame_time);
+    player_pos.y -= 50 * (1.0/window->frame_time);
   }
+*/
 
-  kmMat4 matrix;
-  kmMat4Identity(&matrix);
-  binocle_sprite_batch_begin(&sprite_batch, binocle_camera_get_viewport(camera), BINOCLE_SPRITE_SORT_MODE_DEFERRED, shader, &matrix);
+  //kmMat4 matrix;
+  //kmMat4Identity(&matrix);
+  //binocle_sprite_batch_begin(&sprite_batch, binocle_camera_get_viewport(camera), BINOCLE_SPRITE_SORT_MODE_DEFERRED, shader, &matrix);
 
-  binocle_window_clear(&window);
+  //binocle_window_clear(window);
 
+  lua_set_globals();
   lua_on_update(dt);
 
-  binocle_sprite_batch_end(&sprite_batch, binocle_camera_get_viewport(camera));
+  //binocle_sprite_batch_end(&sprite_batch, binocle_camera_get_viewport(camera));
 
-  kmVec2 scale;
-  scale.x = 1.0f;
-  scale.y = 1.0f;
-  binocle_sprite_draw(player, &gd, (uint64_t)player_pos.x, (uint64_t)player_pos.y, &adapter.viewport, 0, &scale, &camera);
-  kmMat4 view_matrix;
-  kmMat4Identity(&view_matrix);
-  binocle_bitmapfont_draw_string(font, "TEST", 12, &gd, 20, 20, adapter.viewport, binocle_color_white(), view_matrix);
+  //kmVec2 scale;
+  //scale.x = 1.0f;
+  //scale.y = 1.0f;
+  //binocle_sprite_draw(player, &gd, (uint64_t)player_pos.x, (uint64_t)player_pos.y, &adapter.viewport, 0, &scale, &camera);
+  //kmMat4 view_matrix;
+  //kmMat4Identity(&view_matrix);
+  //binocle_bitmapfont_draw_string(font, "TEST", 12, &gd, 20, 20, adapter.viewport, binocle_color_white(), view_matrix);
   //binocle_sprite_draw(font_sprite, &gd, (uint64_t)font_sprite_pos.x, (uint64_t)font_sprite_pos.y, adapter.viewport);
 
-  binocle_lua_check_scripts_modification_time(&lua, "assets");
+  /*
+  if ((int)elapsed_time % 5 == 0) {
+    binocle_lua_check_scripts_modification_time(&lua, "assets");
+  }
+   */
 
-  binocle_window_refresh(&window);
-  binocle_window_end_frame(&window);
+  binocle_window_refresh(window);
+  binocle_window_end_frame(window);
   //binocle_log_info("FPS: %d", binocle_window_get_fps(&window));
 }
 
 int main(int argc, char *argv[])
 {
+  binocle_assets_dir = binocle_sdl_assets_dir();
+  lua_mutex = SDL_CreateMutex();
+
   app = binocle_app_new();
   binocle_app_init(&app);
 
-  window = binocle_window_new(320, 240, "Binocle Test Game");
-  binocle_window_set_background_color(&window, binocle_color_azure());
-  adapter = binocle_viewport_adapter_new(window, BINOCLE_VIEWPORT_ADAPTER_KIND_SCALING, BINOCLE_VIEWPORT_ADAPTER_SCALING_TYPE_PIXEL_PERFECT, window.original_width, window.original_height, window.original_width, window.original_height);
-  camera = binocle_camera_new(&adapter);
+  lua = binocle_lua_new();
+  binocle_lua_init(&lua);
+
+  lua_set_globals();
+
+  char main_lua[1024];
+  sprintf(main_lua, "%s%s", binocle_assets_dir, "main.lua");
+  binocle_lua_run_script(&lua, main_lua);
+
+  lua_on_init();
+
+  lua_getglobal(lua.L, "get_window");
+  if (lua_pcall(lua.L, 0, 1, 0) != 0) {
+    binocle_log_error("can't get the window from Lua");
+  }
+  if (!lua_isuserdata(lua.L, 0)) {
+    binocle_log_error("returned value is not userdata");
+  }
+  l_binocle_window_t *win = luaL_checkudata(lua.L, 0, "binocle_window");
+  window = win->window;
+  //window = SDL_malloc(sizeof(binocle_window));
+  //memcpy(window, win->window, sizeof(binocle_window));
+
+  //adapter = binocle_viewport_adapter_new(*window, BINOCLE_VIEWPORT_ADAPTER_KIND_SCALING, BINOCLE_VIEWPORT_ADAPTER_SCALING_TYPE_PIXEL_PERFECT, window->original_width, window->original_height, window->original_width, window->original_height);
+  lua_getglobal(lua.L, "get_adapter");
+  if (lua_pcall(lua.L, 0, 1, 0) != 0) {
+    binocle_log_error("can't get the adapter from Lua");
+  }
+  if (!lua_isuserdata(lua.L, 0)) {
+    binocle_log_error("returned value is not userdata");
+  }
+  l_binocle_viewport_adapter_t *va = luaL_checkudata(lua.L, 0, "binocle_viewport_adapter");
+  adapter = va->viewport_adapter;
+
+  camera = binocle_camera_new(adapter);
   input = binocle_input_new();
-  binocle_assets_dir = binocle_sdl_assets_dir();
   char filename[1024];
   sprintf(filename, "%s%s", binocle_assets_dir, "wabbit_alpha.png");
   binocle_image *image = binocle_image_load(filename);
   binocle_texture *texture = binocle_texture_from_image(image);
   char vert[1024];
-  sprintf(vert, "%s%s", binocle_assets_dir, "default.vert");
+  sprintf(vert, "%s%s", binocle_assets_dir, "shaders/default_vert.glsl");
   char frag[1024];
-  sprintf(frag, "%s%s", binocle_assets_dir, "default.frag");
+  sprintf(frag, "%s%s", binocle_assets_dir, "shaders/default_frag.glsl");
   shader = binocle_shader_load_from_file(vert, frag);
   binocle_material *material = binocle_material_new();
   material->albedo_texture = texture;
@@ -180,14 +265,7 @@ int main(int argc, char *argv[])
   sprite_batch = binocle_sprite_batch_new();
   sprite_batch.gd = &gd;
 
-  lua = binocle_lua_new();
-  binocle_lua_init(&lua);
 
-  lua_set_globals();
-
-  char main_lua[1024];
-  sprintf(main_lua, "%s%s", binocle_assets_dir, "main.lua");
-  binocle_lua_run_script(&lua, main_lua);
 
 #ifdef GAMELOOP
   binocle_game_run(window, input);
@@ -201,6 +279,7 @@ int main(int argc, char *argv[])
 #endif
   binocle_log_info("Quit requested");
 #endif
+  SDL_DestroyMutex(lua_mutex);
   binocle_sdl_exit();
 }
 

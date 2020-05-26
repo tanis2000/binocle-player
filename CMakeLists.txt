@@ -81,7 +81,9 @@ include_directories(
 )
 
 if (APPLE)
-    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/luajit/src)
+    # we're using lua instead of luajit on macos to be able to test with valgrind
+    #include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/luajit/src)
+    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/lua/src)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include)
     if (IOS)
         include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/default)
@@ -124,10 +126,16 @@ endforeach()
 if (APPLE)
     #if(IOS)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-    file(GLOB RESOURCES_LIST ${CMAKE_SOURCE_DIR}/assets/*)
-    set(RESOURCES
-            ${RESOURCES_LIST}
-            )
+    file(GLOB_RECURSE RESOURCES "${CMAKE_SOURCE_DIR}/assets/*")
+    foreach(RES_FILE ${RESOURCES})
+        message("RES_FILE: ${RES_FILE}")
+        file(RELATIVE_PATH RES_PATH "${CMAKE_SOURCE_DIR}/assets" ${RES_FILE})
+        message("RES_PATH: ${RES_PATH}")
+        get_filename_component(RES_FOLDER ${RES_PATH} DIRECTORY)
+        message("RES_FOLDER: ${RES_FOLDER}")
+        set_property(SOURCE ${RES_FILE} PROPERTY MACOSX_PACKAGE_LOCATION "Resources/${RES_FOLDER}")
+    endforeach(RES_FILE)
+    #set_property(SOURCE ${RESOURCES} PROPERTY MACOSX_PACKAGE_LOCATION "Resources")
     message("Resources list: ${RESOURCES}")
     #endif()
 endif ()
@@ -177,10 +185,10 @@ if (APPLE)
     # 			PROPERTIES
     # 			MACOSX_PACKAGE_LOCATION Resources
     # )
-    set_source_files_properties(
-            ${RESOURCES}
-            PROPERTIES
-            MACOSX_PACKAGE_LOCATION Resources)
+    #set_source_files_properties(
+    #        ${RESOURCES}
+    #        PROPERTIES
+    #        MACOSX_PACKAGE_LOCATION Resources)
     if (IOS)
         set_target_properties(
                 ${PROJECT_NAME}
