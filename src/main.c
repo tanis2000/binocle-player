@@ -100,7 +100,7 @@ int lua_on_init() {
   lua_getglobal(lua.L, "on_init");
   int result = lua_pcall(lua.L, 0, 0, 0);
   if (result) {
-    binocle_log_error("Failed to run function: %s\n", lua_tostring(lua.L, -1));
+    binocle_log_error("Failed to run function on_init: %s\n", lua_tostring(lua.L, -1));
     SDL_UnlockMutex(lua_mutex);
     return 1;
   }
@@ -114,7 +114,7 @@ int lua_on_update(float dt) {
   lua_pushnumber(lua.L, dt);
   int result = lua_pcall(lua.L, 1, 0, 0);
   if (result) {
-    binocle_log_error("Failed to run function: %s\n", lua_tostring(lua.L, -1));
+    binocle_log_error("Failed to run function on_update: %s\n", lua_tostring(lua.L, -1));
     SDL_UnlockMutex(lua_mutex);
     return 1;
   }
@@ -159,7 +159,9 @@ void main_loop() {
   //binocle_window_clear(window);
 
   lua_set_globals();
-  lua_on_update(dt);
+  if (lua_on_update(dt)) {
+    input.quit_requested = true;
+  }
 
   //binocle_sprite_batch_end(&sprite_batch, binocle_camera_get_viewport(camera));
 
@@ -197,10 +199,13 @@ int main(int argc, char *argv[])
   lua_set_globals();
 
   char main_lua[1024];
-  sprintf(main_lua, "%s%s", binocle_assets_dir, "main.lua");
+  sprintf(main_lua, "%s%s", binocle_assets_dir, "boot.lua");
   binocle_lua_run_script(&lua, main_lua);
 
-  lua_on_init();
+  if (lua_on_init()) {
+    binocle_sdl_exit();
+    exit(1);
+  }
 
   lua_getglobal(lua.L, "get_window");
   if (lua_pcall(lua.L, 0, 1, 0) != 0) {

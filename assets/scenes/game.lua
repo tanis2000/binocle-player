@@ -1,4 +1,9 @@
-local game = {}
+local entity = require("entity")
+local hero = require("en/hero")
+local mob = require("en/mob")
+local process = require("process")
+
+local game = process:new()
 
 function game.init(shd)
     game.shader = shd
@@ -21,6 +26,14 @@ function game.init(shd)
         io.write("player: " .. tostring(game.player) .. "\n")
     end
 
+    game.h = hero:new()
+    game.h.sprite = game.player
+
+    local m = mob:new()
+    m.sprite = game.player
+
+    local l = require("level")
+    game.level = l:new()
 end
 
 
@@ -39,8 +52,16 @@ io.write("gdc: " .. tostring(gdc) .. "\n")
 io.write("viewport: " .. tostring(viewport) .. "\n")
 io.write("camera: " .. tostring(camera) .. "\n")
 
-function game.on_update(dt)
+function game:update(dt)
     -- input management
+    if input.is_key_pressed(input_mgr, key.KEY_SPACE) then
+        self.cd:set("test", 5, nil)
+    end
+
+    if self.cd:has("test") then
+        log.info("cd: " .. tostring(self.cd:get("test")))
+    end
+    --[[
     if input.is_key_pressed(input_mgr, key.KEY_RIGHT) then
         game.player_x = game.player_x + 100 * dt
     elseif input.is_key_pressed(input_mgr, key.KEY_LEFT) then
@@ -52,32 +73,23 @@ function game.on_update(dt)
     elseif input.is_key_pressed(input_mgr, key.KEY_DOWN) then
         game.player_y = game.player_y - 100 * dt
     end
+    ]]
 
-    -- set the render target we want to render to
-    gd.set_render_target(render_target)
+    game.level:update(dt)
 
-    -- clear it
-    window.clear(win)
+    game.h:pre_update()
+    game.h:update(dt)
+    game.h:post_update()
+    --sprite.draw(game.player, gdc, game.player_x, game.player_y, viewport, 0, game.scale, camera)
+    sprite.draw(game.h.sprite, gdc, game.h.sprite_x, game.h.sprite_y, viewport, 0, game.scale, camera)
 
-    sprite.draw(game.player, gdc, game.player_x, game.player_y, viewport, 0, game.scale, camera)
-
-    -- Gets the viewport calculated by the adapter
-    vp = viewport_adapter.get_viewport(adapter)
-    vp_x = viewport_adapter.get_viewport_min_x(adapter)
-    vp_y = viewport_adapter.get_viewport_min_y(adapter)
-
-    -- Reset the render target to the screen
-    gd.set_render_target(nil);
-
-    -- clear the screen to black
-    gd.clear(color.black)
-    gd.apply_viewport(vp);
-    gd.apply_shader(gdc, screen_shader);
-    gd.set_uniform_float2(screen_shader, "resolution", DESIGN_WIDTH, DESIGN_HEIGHT);
-    gd.set_uniform_mat4(screen_shader, "transform", identity_matrix);
-    gd.set_uniform_float2(screen_shader, "scale", inverse_multiplier, inverse_multiplier);
-    gd.set_uniform_float2(screen_shader, "viewport", vp_x, vp_y);
-    gd.draw_quad_to_screen(screen_shader, render_target);
+    for idx in pairs(G.mobs) do
+        m = G.mobs[idx]
+        m:pre_update()
+        m:update(dt)
+        m:post_update()
+        sprite.draw(m.sprite, gdc, m.sprite_x, m.sprite_y, viewport, 0, game.scale, camera)
+    end
 
 end
 

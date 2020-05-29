@@ -1,3 +1,8 @@
+main = {}
+G = {
+    all = {}, -- all entities
+    mobs = {}, -- all mobs
+}
 local assets_dir = sdl.assets_dir()
 log.info(assets_dir .. "\n")
 package.path = package.path .. ";" .. assets_dir .."?.lua" .. ";?/init.lua"
@@ -31,9 +36,6 @@ DESIGN_HEIGHT = 240
 -- Globals
 log.info("Begin of main.lua\n");
 
-log.debug("test entitiy: " .. entity.test_entity .. "\n")
-entity.say_test()
-
 color.azure = color.new(191.0 / 255.0, 1.0, 1.0, 1.0)
 color.white = color.new(1.0, 1.0, 1.0, 1.0)
 color.black = color.new(0, 0, 0, 1.0)
@@ -49,7 +51,7 @@ function on_init()
     adapter = viewport_adapter.new(win, "scaling", "pixel_perfect", DESIGN_WIDTH, DESIGN_HEIGHT, DESIGN_WIDTH, DESIGN_HEIGHT);
     io.write("adapter: " .. tostring(adapter) .."\n")
 
-    local shd = shader.load_from_file(assets_dir .. "shaders/default_vert.glsl", assets_dir .. "shaders/default_frag.glsl")
+    default_shader = shader.load_from_file(assets_dir .. "shaders/default_vert.glsl", assets_dir .. "shaders/default_frag.glsl")
     io.write("default shader: " .. tostring(shd) .. "\n")
 
     screen_shader = shader.load_from_file(assets_dir .. "shaders/screen_vert.glsl", assets_dir .. "shaders/screen_frag.glsl")
@@ -59,25 +61,63 @@ function on_init()
     io.write("render_target: " .. tostring(render_target) .. "\n")
 
     local intro = require("scenes/intro")
-    game = require("scenes/game")
+    io.write("intro: " .. tostring(intro) .."\n")
 
-    intro.init(shd)
+    intro.init(default_shader)
 
     scene = intro
+
 end
 
-function on_update(dt)
-    scene.on_update(dt)
+function main.on_update(dt)
+    io.write("dt: " .. tostring(dt) .. "\n")
+    if not scene then
+        log.error("no scene to run")
+        return
+    end
+    io.write("scene: " .. tostring(scene) .. "\n")
 
-    --[[
-    io.write(dt)
-    io.write("player: " .. tostring(player) .. "\n")
-    io.write("gdc: " .. tostring(gdc) .. "\n")
-    io.write("viewport: " .. tostring(viewport) .. "\n")
-    io.write("scale: " .. tostring(scale) .. "\n")
-    io.write("camera: " .. tostring(camera) .. "\n")
-    ]]
-    --io.write(tostring(scale.y))
+    scene:pre_update(dt)
+
+    -- set the render target we want to render to
+    gd.set_render_target(render_target)
+
+    -- clear it
+    window.clear(win)
+
+    -- Create a viewport that corresponds to the size of our render target
+    center = lkazmath.kmVec2New();
+    center.x = DESIGN_WIDTH / 2;
+    center.y = DESIGN_HEIGHT / 2;
+    viewport = lkazmath.kmAABB2New();
+    lkazmath.kmAABB2Initialize(viewport, center, DESIGN_WIDTH, DESIGN_HEIGHT, 0)
+
+    -- A simple identity matrix
+    identity_matrix = lkazmath.kmMat4New()
+    lkazmath.kmMat4Identity(identity_matrix)
+
+    scene:update(dt)
+
+    -- Gets the viewport calculated by the adapter
+    vp = viewport_adapter.get_viewport(adapter)
+    io.write("vp: " .. tostring(vp) .. "\n")
+    vp_x = viewport_adapter.get_viewport_min_x(adapter)
+    vp_y = viewport_adapter.get_viewport_min_y(adapter)
+    io.write("vp_x: " .. tostring(vp_x) .. "\n")
+    io.write("vp_y: " .. tostring(vp_y) .. "\n")
+    -- Reset the render target to the screen
+    gd.set_render_target(nil);
+    gd.clear(color.black)
+    gd.apply_viewport(vp);
+    gd.apply_shader(gdc, screen_shader);
+    gd.set_uniform_float2(screen_shader, "resolution", DESIGN_WIDTH, DESIGN_HEIGHT);
+    gd.set_uniform_mat4(screen_shader, "transform", identity_matrix);
+    gd.set_uniform_float2(screen_shader, "scale", inverse_multiplier, inverse_multiplier);
+    gd.set_uniform_float2(screen_shader, "viewport", vp_x, vp_y);
+    gd.draw_quad_to_screen(screen_shader, render_target);
+
+    scene:post_update(dt)
+
 end
 
 function get_window()
