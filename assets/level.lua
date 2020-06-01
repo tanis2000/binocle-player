@@ -37,7 +37,21 @@ function level:new()
         local mat = material.new()
         material.set_texture(mat, tex)
         material.set_shader(mat, default_shader)
-        self.tileset_sprite = sprite.from_material(mat)
+        self.tiles = {}
+        log.info("num tiles: " .. tostring(ts.tilecount))
+        for i = 0, ts.tilecount do
+            log.info(tostring(i))
+            self.tiles[i] = {}
+            self.tiles[i].gid = i
+            self.tiles[i].sprite = sprite.from_material(mat)
+            local cy = math.floor(i / const.GRID)
+            local cx = math.floor(i % const.GRID)
+            local sub = subtexture.subtexture_with_texture(tex, 16 * cx, (ts.imageheight - 16) - (16 * cy), 16, 16)
+            sprite.set_subtexture(self.tiles[i].sprite, sub)
+        end
+        self.tileset = {
+            sprite = sprite.from_material(mat),
+        }
     end
 
     return self
@@ -68,8 +82,23 @@ function level:has_collision(x, y)
 end
 
 function level:render()
-    log.info(tostring(self.tileset_sprite))
-    sprite.draw(self.tileset_sprite, gdc, 0, 0, viewport, 0, self.scale, camera)
+    for idx in pairs(self.map.layers) do
+        local layer = self.map.layers[idx]
+        if layer.name == "base" or layer.name == "background" then
+            for i in pairs(layer.data) do
+                --log.info(tostring(i))
+                local value = layer.data[i] - 1
+                local cy = math.floor((i-1) / layer.width)
+                local cx = math.floor((i-1) % layer.width)
+                if value ~= -1 then
+                    io.write("v: " .. tostring(value) .. "cx: " .. cx .. "cy: " .. cy .. "\n")
+                    sprite.draw(self.tiles[value].sprite, gdc, cx * const.GRID, (layer.height-1) * const.GRID - cy * const.GRID, viewport, 0, self.scale, cam)
+                end
+            end
+        end
+    end
+    --sprite.draw(self.tileset.sprite, gdc, 0, 0, viewport, 0, self.scale, camera)
+    --sprite.draw(self.tiles[32].sprite, gdc, 0, 0, viewport, 0, self.scale, camera)
 end
 
 function level:update(dt)

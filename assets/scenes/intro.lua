@@ -32,7 +32,7 @@ function intro:update(dt)
     y = (DESIGN_HEIGHT - (intro.TEX_HEIGHT * scale.y)) / 2.0
 
     io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
-    sprite.draw(intro.logo, gdc, x, y, viewport, 0, scale, camera)
+    sprite.draw(intro.logo, gdc, x, y, viewport, 0, scale, cam)
 
     if input.is_key_pressed(input_mgr, key.KEY_SPACE) then
         local game = require("scenes/game")

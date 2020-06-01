@@ -12,6 +12,16 @@ function hero:update(dt)
         self.dx = self.dx + spd * dt * self.time_mul
         self.dir = 1
     end
+
+    local camera_x = camera.x(cam)
+    local camera_y = camera.y(cam)
+    if input.is_key_pressed(input_mgr, key.KEY_UP) then
+        camera_y = camera_y + spd * dt * self.time_mul
+    elseif input.is_key_pressed(input_mgr, key.KEY_DOWN) then
+        camera_y = camera_y - spd * dt * self.time_mul
+    end
+    camera.set_position(cam, camera_x, camera_y)
+
 end
 
 return hero

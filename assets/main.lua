@@ -51,6 +51,9 @@ function on_init()
     adapter = viewport_adapter.new(win, "scaling", "pixel_perfect", DESIGN_WIDTH, DESIGN_HEIGHT, DESIGN_WIDTH, DESIGN_HEIGHT);
     io.write("adapter: " .. tostring(adapter) .."\n")
 
+    cam = camera.new(adapter)
+    io.write("cam: " .. tostring(cam) .."\n")
+
     default_shader = shader.load_from_file(assets_dir .. "shaders/default_vert.glsl", assets_dir .. "shaders/default_frag.glsl")
     io.write("default shader: " .. tostring(shd) .. "\n")
 
@@ -130,5 +133,9 @@ function get_adapter()
     return adapter
 end
 
+function get_camera()
+    io.write("get_camera cam: " .. tostring(cam) .."\n")
+    return cam
+end
 
 io.write("End of main.lua\n");
