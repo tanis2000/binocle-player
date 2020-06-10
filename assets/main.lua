@@ -36,7 +36,7 @@ DESIGN_HEIGHT = 240
 -- Globals
 log.info("Begin of main.lua\n");
 
-color.azure = color.new(191.0 / 255.0, 1.0, 1.0, 1.0)
+color.azure = color.new(192.0 / 255.0, 1.0, 1.0, 1.0)
 color.white = color.new(1.0, 1.0, 1.0, 1.0)
 color.black = color.new(0, 0, 0, 1.0)
 
@@ -48,16 +48,19 @@ function on_init()
     window.set_background_color(win, bg_color)
     window.set_minimum_size(win, DESIGN_WIDTH, DESIGN_HEIGHT)
 
-    adapter = viewport_adapter.new(win, "scaling", "pixel_perfect", DESIGN_WIDTH, DESIGN_HEIGHT, DESIGN_WIDTH, DESIGN_HEIGHT);
+    adapter = viewport_adapter.new(win, "scaling", "pixel_perfect",
+        DESIGN_WIDTH, DESIGN_HEIGHT, DESIGN_WIDTH, DESIGN_HEIGHT);
     io.write("adapter: " .. tostring(adapter) .."\n")
 
     cam = camera.new(adapter)
     io.write("cam: " .. tostring(cam) .."\n")
 
-    default_shader = shader.load_from_file(assets_dir .. "shaders/default_vert.glsl", assets_dir .. "shaders/default_frag.glsl")
-    io.write("default shader: " .. tostring(shd) .. "\n")
+    default_shader = shader.load_from_file(assets_dir .. "shaders/default_vert.glsl",
+        assets_dir .. "shaders/default_frag.glsl")
+    io.write("default shader: " .. tostring(default_shader) .. "\n")
 
-    screen_shader = shader.load_from_file(assets_dir .. "shaders/screen_vert.glsl", assets_dir .. "shaders/screen_frag.glsl")
+    screen_shader = shader.load_from_file(assets_dir .. "shaders/screen_vert.glsl",
+        assets_dir .. "shaders/screen_frag.glsl")
     io.write("screen shader: " .. tostring(screen_shader) .. "\n")
 
     render_target = gd.create_render_target(DESIGN_WIDTH, DESIGN_HEIGHT, true, GL_RGBA8)
@@ -138,4 +141,5 @@ function get_camera()
     return cam
 end
 
-io.write("End of main.lua\n");
+io.write("End of main.lua\n")
+

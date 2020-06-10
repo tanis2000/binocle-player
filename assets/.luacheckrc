@@ -1,9 +1,25 @@
-std = {
+allow_defined = true
+stds.binocle = {
   -- these globals can be set and accessed.
-  globals = { "_init", "_draw", "_update", "_update60" },
+  globals = { "on_init", "on_update" },
 
   -- these globals can only be accessed.
   read_globals = {
+    -- embedded modules
+    'color',
+    'gd',
+    'input',
+    'log',
+    'lkazmath',
+    'sdl',
+    'shader',
+    'viewport_adapter',
+    'window',
+
+    -- global variables
+    'gdc',
+    'input_mgr',
+    'inverse_multiplier',
     --[[
       copy(
         `-- from ${location.href} ${(new Date()).toISOString()}\n` +
@@ -118,3 +134,5 @@ std = {
     'trace', -- trace()
   }
 }
+
+std = "min+binocle"

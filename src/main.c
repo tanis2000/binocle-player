@@ -1,6 +1,6 @@
 //
 //  Binocle
-//  Copyright(C)2015-2018 Valerio Santinelli
+//  Copyright(C)2015-2020 Valerio Santinelli
 //
 
 #include <stdio.h>
