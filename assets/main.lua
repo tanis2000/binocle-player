@@ -48,6 +48,8 @@ function on_init()
     window.set_background_color(win, bg_color)
     window.set_minimum_size(win, DESIGN_WIDTH, DESIGN_HEIGHT)
 
+    input_mgr = input.new()
+
     adapter = viewport_adapter.new(win, "scaling", "pixel_perfect",
         DESIGN_WIDTH, DESIGN_HEIGHT, DESIGN_WIDTH, DESIGN_HEIGHT);
     io.write("adapter: " .. tostring(adapter) .."\n")
@@ -139,6 +141,11 @@ end
 function get_camera()
     io.write("get_camera cam: " .. tostring(cam) .."\n")
     return cam
+end
+
+function get_input_mgr()
+    io.write("get_input_mgr input_mgr: " .. tostring(input_mgr) .."\n")
+    return input_mgr
 end
 
 io.write("End of main.lua\n")

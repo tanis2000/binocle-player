@@ -24,6 +24,7 @@
 #include <binocle_window_wrap.h>
 #include <binocle_viewport_adapter_wrap.h>
 #include <binocle_camera_wrap.h>
+#include <binocle_input_wrap.h>
 
 #define BINOCLE_MATH_IMPL
 #include "binocle_math.h"
@@ -38,7 +39,7 @@
 
 // TODO: remove after we're done with Lua bindings
 binocle_window *window;
-binocle_input input;
+binocle_input *input;
 binocle_viewport_adapter *adapter;
 binocle_camera *camera;
 binocle_sprite *player;
@@ -80,8 +81,8 @@ int lua_set_globals() {
   //lua_pushlightuserdata(lua.L, (void *)&camera);
   //lua_setglobal(lua.L, "camera");
 
-  lua_pushlightuserdata(lua.L, (void *)&input);
-  lua_setglobal(lua.L, "input_mgr");
+  //lua_pushlightuserdata(lua.L, (void *)&input);
+  //lua_setglobal(lua.L, "input_mgr");
 
   //lua_pushlightuserdata(lua.L, (void *)&window);
   //lua_setglobal(lua.L, "win");
@@ -129,15 +130,15 @@ void main_loop() {
   float dt = binocle_window_get_frame_time(window) / 1000.0f;
   elapsed_time += dt;
 
-  binocle_input_update(&input);
+  binocle_input_update(input);
 
-  if (input.resized) {
+  if (input->resized) {
     kmVec2 oldWindowSize = {.x = window->width, .y = window->height};
-    window->width = input.newWindowSize.x;
-    window->height = input.newWindowSize.y;
+    window->width = input->newWindowSize.x;
+    window->height = input->newWindowSize.y;
     // Update the pixel-perfect rescaling viewport adapter
-    binocle_viewport_adapter_reset(camera->viewport_adapter, oldWindowSize, input.newWindowSize);
-    input.resized = false;
+    binocle_viewport_adapter_reset(camera->viewport_adapter, oldWindowSize, input->newWindowSize);
+    input->resized = false;
   }
 
 /*
@@ -162,7 +163,7 @@ void main_loop() {
 
   lua_set_globals();
   if (lua_on_update(dt)) {
-    input.quit_requested = true;
+    input->quit_requested = true;
   }
 
   //binocle_sprite_batch_end(&sprite_batch, binocle_camera_get_viewport(camera));
@@ -243,7 +244,18 @@ int main(int argc, char *argv[])
   l_binocle_camera_t *cam = luaL_checkudata(lua.L, 0, "binocle_camera");
   camera = cam->camera;
 
-  input = binocle_input_new();
+  //input = binocle_input_new();
+  lua_getglobal(lua.L, "get_input_mgr");
+  if (lua_pcall(lua.L, 0, 1, 0) != 0) {
+    binocle_log_error("can't get the input_mgr from Lua");
+  }
+  if (!lua_isuserdata(lua.L, 0)) {
+    binocle_log_error("returned value is not userdata");
+  }
+  l_binocle_input_t *input_mgr = luaL_checkudata(lua.L, 0, "binocle_input");
+  input = input_mgr->input;
+
+
   char filename[1024];
   sprintf(filename, "%s%s", binocle_assets_dir, "wabbit_alpha.png");
   binocle_image *image = binocle_image_load(filename);
@@ -290,7 +302,7 @@ int main(int argc, char *argv[])
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop, 0, 1);
 #else
-  while (!input.quit_requested) {
+  while (!input->quit_requested) {
     main_loop();
   }
 #endif
