@@ -5,6 +5,7 @@ intro.TEX_WIDTH = 1682
 intro.TEX_HEIGHT = 479
 
 function intro.init(shd)
+    intro.name = "intro"
     local assets_dir = sdl.assets_dir()
     local image_filename = assets_dir .. "img/binocle-logo-full.png"
     intro.img = image.load(image_filename)
@@ -34,6 +35,8 @@ function intro:update(dt)
     io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
     sprite.draw(intro.logo, gdc, x, y, viewport, 0, scale, cam)
 
+    io.write("input: " .. tostring(dump(input)) .. "\n")
+    io.write("input_mgr: " .. tostring(dump(input_mgr)) .. "\n")
     if input.is_key_pressed(input_mgr, key.KEY_SPACE) then
         local game = require("scenes/game")
         io.write("game: " .. tostring(game) .. "\n")

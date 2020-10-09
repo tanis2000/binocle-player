@@ -83,7 +83,7 @@ function main.on_update(dt)
         log.error("no scene to run")
         return
     end
-    io.write("scene: " .. tostring(scene) .. "\n")
+    io.write("scene: " .. tostring(scene.name) .. "\n")
 
     scene:pre_update(dt)
 
@@ -146,6 +146,19 @@ end
 function get_input_mgr()
     io.write("get_input_mgr input_mgr: " .. tostring(input_mgr) .."\n")
     return input_mgr
+end
+
+function dump(o)
+    if type(o) == 'table' then
+        local s = '{ '
+        for k,v in pairs(o) do
+            if type(k) ~= 'number' then k = '"'..k..'"' end
+            s = s .. '['..k..'] = ' .. dump(v) .. ','
+        end
+        return s .. '} '
+    else
+        return tostring(o)
+    end
 end
 
 io.write("End of main.lua\n")
