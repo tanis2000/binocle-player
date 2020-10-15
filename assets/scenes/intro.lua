@@ -33,7 +33,7 @@ function intro:update(dt)
     y = (DESIGN_HEIGHT - (intro.TEX_HEIGHT * scale.y)) / 2.0
 
     io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
-    sprite.draw(intro.logo, gdc, x, y, viewport, 0, scale, cam)
+    sprite.draw(intro.logo, gd_instance, x, y, viewport, 0, scale, cam)
 
     io.write("input: " .. tostring(dump(input)) .. "\n")
     io.write("input_mgr: " .. tostring(dump(input_mgr)) .. "\n")

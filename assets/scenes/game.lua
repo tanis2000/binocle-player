@@ -80,15 +80,15 @@ function game:update(dt)
     game.h:pre_update()
     game.h:update(dt)
     game.h:post_update()
-    --sprite.draw(game.player, gdc, game.player_x, game.player_y, viewport, 0, game.scale, camera)
-    sprite.draw(game.h.sprite, gdc, game.h.sprite_x, game.h.sprite_y, viewport, 0, game.scale, cam)
+    --sprite.draw(game.player, gd_instance, game.player_x, game.player_y, viewport, 0, game.scale, camera)
+    sprite.draw(game.h.sprite, gd_instance, game.h.sprite_x, game.h.sprite_y, viewport, 0, game.scale, cam)
 
     for idx in pairs(G.mobs) do
         m = G.mobs[idx]
         m:pre_update()
         m:update(dt)
         m:post_update()
-        sprite.draw(m.sprite, gdc, m.sprite_x, m.sprite_y, viewport, 0, game.scale, cam)
+        sprite.draw(m.sprite, gd_instance, m.sprite_x, m.sprite_y, viewport, 0, game.scale, cam)
     end
 
 end

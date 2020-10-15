@@ -17,7 +17,7 @@ stds.binocle = {
     'window',
 
     -- global variables
-    'gdc',
+    'gd_instance',
     'input_mgr',
     'inverse_multiplier',
     --[[

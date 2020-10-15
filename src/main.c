@@ -25,6 +25,7 @@
 #include <binocle_viewport_adapter_wrap.h>
 #include <binocle_camera_wrap.h>
 #include <binocle_input_wrap.h>
+#include <binocle_gd_wrap.h>
 
 #define BINOCLE_MATH_IMPL
 #include "binocle_math.h"
@@ -44,7 +45,7 @@ binocle_viewport_adapter *adapter;
 binocle_camera *camera;
 binocle_sprite *player;
 kmVec2 player_pos;
-binocle_gd gd;
+binocle_gd *gd;
 binocle_bitmapfont *font;
 binocle_image *font_image;
 binocle_texture *font_texture;
@@ -60,8 +61,8 @@ float elapsed_time = 0;
 SDL_mutex *lua_mutex;
 
 int lua_set_globals() {
-  lua_pushlightuserdata(lua.L, (void *)&gd);
-  lua_setglobal(lua.L, "gdc");
+  //lua_pushlightuserdata(lua.L, (void *)&gd);
+  //lua_setglobal(lua.L, "gdc");
 
   lua_pushlightuserdata(lua.L, (void *)&sprite_batch);
   lua_setglobal(lua.L, "sprite_batch");
@@ -288,11 +289,20 @@ int main(int argc, char *argv[])
   font_sprite_pos.x = 0;
   font_sprite_pos.y = -256;
 
-  gd = binocle_gd_new();
-  binocle_gd_init(&gd);
+  //gd = binocle_gd_new();
+  //binocle_gd_init(&gd);
+  lua_getglobal(lua.L, "get_gd_instance");
+  if (lua_pcall(lua.L, 0, 1, 0) != 0) {
+    binocle_log_error("can't get the gd_instance from Lua");
+  }
+  if (!lua_isuserdata(lua.L, 0)) {
+    binocle_log_error("returned value is not userdata");
+  }
+  l_binocle_gd_t *gd_instance = luaL_checkudata(lua.L, 0, "binocle_gd");
+  gd = gd_instance->gd;
 
   sprite_batch = binocle_sprite_batch_new();
-  sprite_batch.gd = &gd;
+  sprite_batch.gd = gd;
 
 
 

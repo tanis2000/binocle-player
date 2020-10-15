@@ -65,8 +65,15 @@ function on_init()
         assets_dir .. "shaders/screen_frag.glsl")
     io.write("screen shader: " .. tostring(screen_shader) .. "\n")
 
+    gd_instance = gd.new()
+    gd.init(gd_instance)
+    io.write("gd_instance: " .. tostring(gd_instance) .. "\n")
+
     render_target = gd.create_render_target(DESIGN_WIDTH, DESIGN_HEIGHT, true, GL_RGBA8)
     io.write("render_target: " .. tostring(render_target) .. "\n")
+
+    --sb = sprite_batch.new()
+    --sb.set_gd(gd)
 
     local intro = require("scenes/intro")
     io.write("intro: " .. tostring(intro) .."\n")
@@ -117,7 +124,7 @@ function main.on_update(dt)
     gd.set_render_target(nil);
     gd.clear(color.black)
     gd.apply_viewport(vp);
-    gd.apply_shader(gdc, screen_shader);
+    gd.apply_shader(gd_instance, screen_shader);
     gd.set_uniform_float2(screen_shader, "resolution", DESIGN_WIDTH, DESIGN_HEIGHT);
     gd.set_uniform_mat4(screen_shader, "transform", identity_matrix);
     gd.set_uniform_float2(screen_shader, "scale", inverse_multiplier, inverse_multiplier);
@@ -146,6 +153,11 @@ end
 function get_input_mgr()
     io.write("get_input_mgr input_mgr: " .. tostring(input_mgr) .."\n")
     return input_mgr
+end
+
+function get_gd_instance()
+    io.write("get_gd_instance gd: " .. tostring(gd_instance) .."\n")
+    return gd_instance
 end
 
 function dump(o)
