@@ -72,8 +72,8 @@ function on_init()
     render_target = gd.create_render_target(DESIGN_WIDTH, DESIGN_HEIGHT, true, GL_RGBA8)
     io.write("render_target: " .. tostring(render_target) .. "\n")
 
-    --sb = sprite_batch.new()
-    --sb.set_gd(gd)
+    sb = sprite_batch.new()
+    sprite_batch.set_gd(sb, gd_instance)
 
     local intro = require("scenes/intro")
     io.write("intro: " .. tostring(intro) .."\n")
@@ -158,6 +158,11 @@ end
 function get_gd_instance()
     io.write("get_gd_instance gd: " .. tostring(gd_instance) .."\n")
     return gd_instance
+end
+
+function get_sprite_batch_instance()
+    io.write("get_sprite_batch_instance sb: " .. tostring(sb) .."\n")
+    return sb
 end
 
 function dump(o)

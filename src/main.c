@@ -26,6 +26,7 @@
 #include <binocle_camera_wrap.h>
 #include <binocle_input_wrap.h>
 #include <binocle_gd_wrap.h>
+#include <binocle_sprite_wrap.h>
 
 #define BINOCLE_MATH_IMPL
 #include "binocle_math.h"
@@ -55,7 +56,7 @@ kmVec2 font_sprite_pos;
 char *binocle_assets_dir;
 binocle_lua lua;
 binocle_app app;
-binocle_sprite_batch sprite_batch;
+binocle_sprite_batch *sprite_batch;
 binocle_shader *shader;
 float elapsed_time = 0;
 SDL_mutex *lua_mutex;
@@ -64,8 +65,8 @@ int lua_set_globals() {
   //lua_pushlightuserdata(lua.L, (void *)&gd);
   //lua_setglobal(lua.L, "gdc");
 
-  lua_pushlightuserdata(lua.L, (void *)&sprite_batch);
-  lua_setglobal(lua.L, "sprite_batch");
+  //lua_pushlightuserdata(lua.L, (void *)&sprite_batch);
+  //lua_setglobal(lua.L, "sprite_batch");
 
   //lua_pushlightuserdata(lua.L, (void *)&adapter.viewport);
   //lua_setglobal(lua.L, "viewport");
@@ -301,8 +302,17 @@ int main(int argc, char *argv[])
   l_binocle_gd_t *gd_instance = luaL_checkudata(lua.L, 0, "binocle_gd");
   gd = gd_instance->gd;
 
-  sprite_batch = binocle_sprite_batch_new();
-  sprite_batch.gd = gd;
+  //sprite_batch = binocle_sprite_batch_new();
+  //sprite_batch.gd = gd;
+  lua_getglobal(lua.L, "get_sprite_batch_instance");
+  if (lua_pcall(lua.L, 0, 1, 0) != 0) {
+    binocle_log_error("can't get the sprite_batch_instance from Lua");
+  }
+  if (!lua_isuserdata(lua.L, 0)) {
+    binocle_log_error("returned value is not userdata");
+  }
+  l_binocle_sprite_batch_t *sprite_batch_instance = luaL_checkudata(lua.L, 0, "binocle_sprite_batch");
+  sprite_batch = sprite_batch_instance->sprite_batch;
 
 
 
