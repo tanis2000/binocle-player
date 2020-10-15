@@ -127,7 +127,7 @@ function main.on_update(dt)
     gd.apply_shader(gd_instance, screen_shader);
     gd.set_uniform_float2(screen_shader, "resolution", DESIGN_WIDTH, DESIGN_HEIGHT);
     gd.set_uniform_mat4(screen_shader, "transform", identity_matrix);
-    gd.set_uniform_float2(screen_shader, "scale", inverse_multiplier, inverse_multiplier);
+    gd.set_uniform_float2(screen_shader, "scale", viewport_adapter.get_inverse_multiplier(adapter), viewport_adapter.get_inverse_multiplier(adapter));
     gd.set_uniform_float2(screen_shader, "viewport", vp_x, vp_y);
     gd.draw_quad_to_screen(screen_shader, render_target);
 

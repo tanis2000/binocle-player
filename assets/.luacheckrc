@@ -19,7 +19,10 @@ stds.binocle = {
     -- global variables
     'gd_instance',
     'input_mgr',
-    'inverse_multiplier',
+
+    -- color
+    'new', -- new()
+
     --[[
       copy(
         `-- from ${location.href} ${(new Date()).toISOString()}\n` +
