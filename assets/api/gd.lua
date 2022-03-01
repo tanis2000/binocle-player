@@ -13,7 +13,8 @@ local TextureFormat = {
 function m.new() end
 
 ---@param gd GraphicsDevice an instance of GraphicsDevice
-function m.init(gd) end
+---@param win Window an instance of Window
+function m.init(gd, win) end
 
 ---@param w number width
 ---@param h number height

@@ -57,48 +57,48 @@ function on_init()
     cam = camera.new(adapter)
     io.write("cam: " .. tostring(cam) .."\n")
 
-    default_shader = shader.load_from_file(assets_dir .. "shaders/default_vert.glsl",
-        assets_dir .. "shaders/default_frag.glsl")
-    io.write("default shader: " .. tostring(default_shader) .. "\n")
-
-    screen_shader = shader.load_from_file(assets_dir .. "shaders/screen_vert.glsl",
-        assets_dir .. "shaders/screen_frag.glsl")
-    io.write("screen shader: " .. tostring(screen_shader) .. "\n")
+    --default_shader = shader.load_from_file(assets_dir .. "shaders/default_vert.glsl",
+    --    assets_dir .. "shaders/default_frag.glsl")
+    --io.write("default shader: " .. tostring(default_shader) .. "\n")
+    --
+    --screen_shader = shader.load_from_file(assets_dir .. "shaders/screen_vert.glsl",
+    --    assets_dir .. "shaders/screen_frag.glsl")
+    --io.write("screen shader: " .. tostring(screen_shader) .. "\n")
 
     gd_instance = gd.new()
-    gd.init(gd_instance)
+    gd.init(gd_instance, win)
     io.write("gd_instance: " .. tostring(gd_instance) .. "\n")
 
-    render_target = gd.create_render_target(DESIGN_WIDTH, DESIGN_HEIGHT, true, GL_RGBA8)
-    io.write("render_target: " .. tostring(render_target) .. "\n")
+    --render_target = gd.create_render_target(DESIGN_WIDTH, DESIGN_HEIGHT, true, GL_RGBA8)
+    --io.write("render_target: " .. tostring(render_target) .. "\n")
 
     sb = sprite_batch.new()
     sprite_batch.set_gd(sb, gd_instance)
-
-    local intro = require("scenes/intro")
-    io.write("intro: " .. tostring(intro) .."\n")
-
-    intro.init(default_shader)
-
-    scene = intro
 
 end
 
 function main.on_update(dt)
     io.write("dt: " .. tostring(dt) .. "\n")
     if not scene then
-        log.error("no scene to run")
-        return
+        --log.error("no scene to run")
+        local intro = require("scenes/intro")
+        io.write("intro: " .. tostring(intro) .."\n")
+
+        io.write("defaultShader: " .. tostring(shader.defaultShader()) .."\n")
+        intro.init(shader.defaultShader())
+
+        scene = intro
+        --return
     end
     io.write("scene: " .. tostring(scene.name) .. "\n")
 
     scene:pre_update(dt)
 
     -- set the render target we want to render to
-    gd.set_render_target(render_target)
+    --gd.set_render_target(render_target)
 
     -- clear it
-    window.clear(win)
+    --window.clear(win)
 
     -- Create a viewport that corresponds to the size of our render target
     center = lkazmath.kmVec2New();
@@ -121,15 +121,15 @@ function main.on_update(dt)
     io.write("vp_x: " .. tostring(vp_x) .. "\n")
     io.write("vp_y: " .. tostring(vp_y) .. "\n")
     -- Reset the render target to the screen
-    gd.set_render_target(nil);
-    gd.clear(color.black)
-    gd.apply_viewport(vp);
-    gd.apply_shader(gd_instance, screen_shader);
-    gd.set_uniform_float2(screen_shader, "resolution", DESIGN_WIDTH, DESIGN_HEIGHT);
-    gd.set_uniform_mat4(screen_shader, "transform", identity_matrix);
-    gd.set_uniform_float2(screen_shader, "scale", viewport_adapter.get_inverse_multiplier(adapter), viewport_adapter.get_inverse_multiplier(adapter));
-    gd.set_uniform_float2(screen_shader, "viewport", vp_x, vp_y);
-    gd.draw_quad_to_screen(screen_shader, render_target);
+    --gd.set_render_target(nil);
+    --gd.clear(color.black)
+    --gd.apply_viewport(vp);
+    --gd.apply_shader(gd_instance, screen_shader);
+    --gd.set_uniform_float2(screen_shader, "resolution", DESIGN_WIDTH, DESIGN_HEIGHT);
+    --gd.set_uniform_mat4(screen_shader, "transform", identity_matrix);
+    --gd.set_uniform_float2(screen_shader, "scale", viewport_adapter.get_inverse_multiplier(adapter), viewport_adapter.get_inverse_multiplier(adapter));
+    --gd.set_uniform_float2(screen_shader, "viewport", vp_x, vp_y);
+    --gd.draw_quad_to_screen(screen_shader, render_target);
 
     scene:post_update(dt)
 

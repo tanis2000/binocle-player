@@ -36,7 +36,7 @@ function level:new()
         local tex = texture.from_image(img)
         local mat = material.new()
         material.set_texture(mat, tex)
-        material.set_shader(mat, default_shader)
+        material.set_shader(mat, shader.defaultShader())
         self.tiles = {}
         log.info("num tiles: " .. tostring(ts.tilecount))
         for i = 0, ts.tilecount do

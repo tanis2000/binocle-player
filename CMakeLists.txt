@@ -9,7 +9,7 @@ if("${CMAKE_VERSION}" VERSION_GREATER 3.1)
 endif()
 
 # cmake modules directory
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/binocle-c/build/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/binocle-c/cmake")
 
 # Enables CMake database for YCM
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
@@ -35,11 +35,7 @@ SET(VERSION_MINOR "1")
 SET(VERSION_PATCH "0")
 SET(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-if (IOS OR EMSCRIPTEN)
-    set(BINOCLE_LINK_LIBRARIES binocle-static lua)
-else()
-    set(BINOCLE_LINK_LIBRARIES binocle-static luajit-5.1)
-endif()
+set(BINOCLE_LINK_LIBRARIES binocle-static lua)
 
 if (MSVC)
 	message("Including Windows defines")
