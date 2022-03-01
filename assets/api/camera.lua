@@ -2,7 +2,7 @@
 local m = {}
 
 ---@class Camera
-local GraphicsDevice = {}
+local Camera = {}
 
 ---@param adapter ViewportAdapter
 ---@return camera Camera
