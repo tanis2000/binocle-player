@@ -5,10 +5,10 @@ function hero:update(dt)
     entity.update(self, dt)
 
     local spd = 10
-    if input.is_key_pressed(input_mgr, key.KEY_LEFT) then
+    if input.is_key_pressed(input_mgr, key.KEY_LEFT) or input.is_key_pressed(input_mgr, key.KEY_A) then
         self.dx = self.dx - spd * dt * self.time_mul
         self.dir = -1
-    elseif input.is_key_pressed(input_mgr, key.KEY_RIGHT) then
+    elseif input.is_key_pressed(input_mgr, key.KEY_RIGHT) or input.is_key_pressed(input_mgr, key.KEY_D) then
         self.dx = self.dx + spd * dt * self.time_mul
         self.dir = 1
     end

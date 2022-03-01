@@ -12,9 +12,7 @@
 #include "binocle_viewport_adapter.h"
 #include "binocle_camera.h"
 #include <binocle_input.h>
-#include <binocle_texture.h>
 #include <binocle_sprite.h>
-#include <binocle_shader.h>
 #include <binocle_lua.h>
 #include <binocle_app.h>
 #include <binocle_window_wrap.h>
@@ -32,6 +30,27 @@
 #define DESIGN_WIDTH 320
 #define DESIGN_HEIGHT 240
 
+#if defined(BINOCLE_MACOS) && defined(BINOCLE_METAL)
+#include "../../assets/shaders/metal/default-metal-macosx.h"
+#include "../../assets/shaders/metal/screen-metal-macosx.h"
+#endif
+
+typedef struct default_shader_params_t {
+  float projectionMatrix[16];
+  float modelMatrix[16];
+  float viewMatrix[16];
+} default_shader_params_t;
+
+typedef struct screen_shader_fs_params_t {
+  float resolution[2];
+  float scale[2];
+  float viewport[2];
+} screen_shader_fs_params_t;
+
+typedef struct screen_shader_vs_params_t {
+  float transform[16];
+} screen_shader_vs_params_t;
+
 binocle_window *window;
 binocle_input *input;
 binocle_camera *camera;
@@ -42,6 +61,28 @@ binocle_lua lua;
 binocle_app app;
 float elapsed_time = 0;
 SDL_mutex *lua_mutex;
+binocle_shader default_shader;
+binocle_shader screen_shader;
+
+int l_default_shader(lua_State *L) {
+  binocle_shader *a = lua_newuserdata(L, sizeof(default_shader));
+  SDL_memcpy(a, &default_shader, sizeof(default_shader));
+  return 1;
+}
+int l_screen_shader(lua_State *L) {
+  binocle_shader *a = lua_newuserdata(L, sizeof(screen_shader));
+  SDL_memcpy(a, &screen_shader, sizeof(screen_shader));
+  return 1;
+}
+
+void lua_inject_shaders() {
+  static const struct luaL_Reg lib [] = {
+    {"defaultShader", l_default_shader},
+    {"screenShader", l_screen_shader},
+    {NULL, NULL}
+  };
+  luaL_openlib(lua.L, "shader", lib, 0);
+}
 
 void lua_bridge_window() {
   lua_getglobal(lua.L, "get_window");
@@ -157,17 +198,24 @@ void main_loop() {
   }
    */
 
+  // Gets the viewport calculated by the adapter
+  kmAABB2 vp = binocle_viewport_adapter_get_viewport(*camera->viewport_adapter);
+
+  // Render to screen
+  binocle_gd_render(gd, window, DESIGN_WIDTH, DESIGN_HEIGHT, vp);
+
   binocle_window_refresh(window);
   binocle_window_end_frame(window);
 }
 
 int main(int argc, char *argv[])
 {
-  binocle_assets_dir = binocle_sdl_assets_dir();
-  lua_mutex = SDL_CreateMutex();
-
+  binocle_app_desc_t app_desc = {0};
   app = binocle_app_new();
-  binocle_app_init(&app);
+  binocle_app_init(&app, &app_desc);
+  binocle_assets_dir = binocle_sdl_assets_dir();
+
+  lua_mutex = SDL_CreateMutex();
 
   lua = binocle_lua_new();
   binocle_lua_init(&lua);
@@ -176,16 +224,116 @@ int main(int argc, char *argv[])
   sprintf(main_lua, "%s%s", binocle_assets_dir, "boot.lua");
   binocle_lua_run_script(&lua, main_lua);
 
+
   if (lua_on_init()) {
     binocle_sdl_exit();
     exit(1);
   }
+
+
+#ifdef BINOCLE_GL
+  // Default shader
+  char vert[1024];
+  sprintf(vert, "%s%s", binocle_assets_dir, "shaders/default_vert.glsl");
+  char frag[1024];
+  sprintf(frag, "%s%s", binocle_assets_dir, "shaders/default_frag.glsl");
+
+  char *shader_vs_src;
+  size_t shader_vs_src_size;
+  binocle_sdl_load_text_file(vert, &shader_vs_src, &shader_vs_src_size);
+
+  char *shader_fs_src;
+  size_t shader_fs_src_size;
+  binocle_sdl_load_text_file(frag, &shader_fs_src, &shader_fs_src_size);
+#endif
+
+  binocle_shader_desc default_shader_desc = {
+#ifdef BINOCLE_GL
+    .vs.source = shader_vs_src,
+#else
+    .vs.byte_code = default_vs_bytecode,
+    .vs.byte_code_size = sizeof(default_vs_bytecode),
+#endif
+    .attrs = {
+      [0].name = "vertexPosition",
+      [1].name = "vertexColor",
+      [2].name = "vertexTCoord",
+    },
+    .vs.uniform_blocks[0] = {
+      .size = sizeof(default_shader_params_t),
+      .uniforms = {
+        [0] = { .name = "projectionMatrix", .type = BINOCLE_UNIFORMTYPE_MAT4},
+        [1] = { .name = "viewMatrix", .type = BINOCLE_UNIFORMTYPE_MAT4},
+        [2] = { .name = "modelMatrix", .type = BINOCLE_UNIFORMTYPE_MAT4},
+      }
+    },
+#ifdef BINOCLE_GL
+    .fs.source = shader_fs_src,
+#else
+    .fs.byte_code = default_fs_bytecode,
+    .fs.byte_code_size = sizeof(default_fs_bytecode),
+#endif
+    .fs.images[0] = { .name = "tex0", .type = BINOCLE_IMAGETYPE_2D},
+  };
+  default_shader = binocle_backend_make_shader(&default_shader_desc);
+
+#ifdef BINOCLE_GL
+  // Screen shader
+  sprintf(vert, "%s%s", binocle_assets_dir, "shaders/screen_vert.glsl");
+  sprintf(frag, "%s%s", binocle_assets_dir, "shaders/screen_frag.glsl");
+
+  char *screen_shader_vs_src;
+  size_t screen_shader_vs_src_size;
+  binocle_sdl_load_text_file(vert, &screen_shader_vs_src, &screen_shader_vs_src_size);
+
+  char *screen_shader_fs_src;
+  size_t screen_shader_fs_src_size;
+  binocle_sdl_load_text_file(frag, &screen_shader_fs_src, &screen_shader_fs_src_size);
+#endif
+
+  binocle_shader_desc screen_shader_desc = {
+#ifdef BINOCLE_GL
+    .vs.source = screen_shader_vs_src,
+#else
+    .vs.byte_code = screen_vs_bytecode,
+    .vs.byte_code_size = sizeof(screen_vs_bytecode),
+#endif
+    .attrs = {
+      [0].name = "position"
+    },
+    .vs.uniform_blocks[0] = {
+      .size = sizeof(screen_shader_vs_params_t),
+      .uniforms = {
+        [0] = { .name = "transform", .type = BINOCLE_UNIFORMTYPE_MAT4},
+      },
+    },
+#ifdef BINOCLE_GL
+    .fs.source = screen_shader_fs_src,
+#else
+    .fs.byte_code = screen_fs_bytecode,
+    .fs.byte_code_size = sizeof(screen_fs_bytecode),
+#endif
+    .fs.images[0] = { .name = "texture", .type = BINOCLE_IMAGETYPE_2D},
+    .fs.uniform_blocks[0] = {
+      .size = sizeof(screen_shader_fs_params_t),
+      .uniforms = {
+        [0] = { .name = "resolution", .type = BINOCLE_UNIFORMTYPE_FLOAT2 },
+        [1] = { .name = "scale", .type = BINOCLE_UNIFORMTYPE_FLOAT2 },
+        [2] = { .name = "viewport", .type = BINOCLE_UNIFORMTYPE_FLOAT2 },
+      },
+    },
+  };
+  screen_shader = binocle_backend_make_shader(&screen_shader_desc);
+
+  lua_inject_shaders();
 
   lua_bridge_window();
   lua_bridge_camera();
   lua_bridge_input();
   lua_bridge_gd();
   lua_bridge_sprite_batch();
+
+  binocle_gd_setup_default_pipeline(gd, DESIGN_WIDTH, DESIGN_HEIGHT, default_shader, screen_shader);
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop, 0, 1);
@@ -196,6 +344,7 @@ int main(int argc, char *argv[])
 #endif
   binocle_log_info("Quit requested");
   SDL_DestroyMutex(lua_mutex);
+  binocle_app_destroy(&app);
   binocle_sdl_exit();
 }
 
