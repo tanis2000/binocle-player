@@ -25,7 +25,7 @@ end
 
 function cooldown:update(dt)
     local count = 0
-    io.write("cooldowns:" .. tostring(self) .. "\n")
+    --io.write("cooldowns:" .. tostring(self) .. "\n")
     for idx in pairs(self.cooldowns) do
         --log.info("this cd: "..tostring(self.cooldowns[idx]))
         self.cooldowns[idx].remaining = self.cooldowns[idx].remaining - dt

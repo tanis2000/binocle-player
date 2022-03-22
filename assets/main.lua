@@ -78,19 +78,19 @@ function on_init()
 end
 
 function main.on_update(dt)
-    io.write("dt: " .. tostring(dt) .. "\n")
+    --io.write("dt: " .. tostring(dt) .. "\n")
     if not scene then
         --log.error("no scene to run")
         local intro = require("scenes/intro")
-        io.write("intro: " .. tostring(intro) .."\n")
+        --io.write("intro: " .. tostring(intro) .."\n")
 
-        io.write("defaultShader: " .. tostring(shader.defaultShader()) .."\n")
+        --io.write("defaultShader: " .. tostring(shader.defaultShader()) .."\n")
         intro.init(shader.defaultShader())
 
         scene = intro
         --return
     end
-    io.write("scene: " .. tostring(scene.name) .. "\n")
+    --io.write("scene: " .. tostring(scene.name) .. "\n")
 
     scene:pre_update(dt)
 
@@ -115,11 +115,11 @@ function main.on_update(dt)
 
     -- Gets the viewport calculated by the adapter
     vp = viewport_adapter.get_viewport(adapter)
-    io.write("vp: " .. tostring(vp) .. "\n")
+    --io.write("vp: " .. tostring(vp) .. "\n")
     vp_x = viewport_adapter.get_viewport_min_x(adapter)
     vp_y = viewport_adapter.get_viewport_min_y(adapter)
-    io.write("vp_x: " .. tostring(vp_x) .. "\n")
-    io.write("vp_y: " .. tostring(vp_y) .. "\n")
+    --io.write("vp_x: " .. tostring(vp_x) .. "\n")
+    --io.write("vp_y: " .. tostring(vp_y) .. "\n")
     -- Reset the render target to the screen
     --gd.set_render_target(nil);
     --gd.clear(color.black)

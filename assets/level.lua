@@ -91,7 +91,7 @@ function level:render()
                 local cy = math.floor((i-1) / layer.width)
                 local cx = math.floor((i-1) % layer.width)
                 if value ~= -1 then
-                    io.write("v: " .. tostring(value) .. "cx: " .. cx .. "cy: " .. cy .. "\n")
+                    -- io.write("v: " .. tostring(value) .. "cx: " .. cx .. "cy: " .. cy .. "\n")
                     sprite.draw(self.tiles[value].sprite, gd_instance, cx * const.GRID, (layer.height-1) * const.GRID - cy * const.GRID, viewport, 0, self.scale, cam)
                 end
             end
@@ -102,7 +102,7 @@ function level:render()
 end
 
 function level:update(dt)
-    log.info("level update")
+    -- log.info("level update")
     process:update(dt)
     self:render()
 end
