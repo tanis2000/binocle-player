@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #ifdef __EMSCRIPTEN__
-#include "emscripten.h"
+#include <emscripten.h>
 #endif
 #include "binocle_sdl.h"
 #include "binocle_window.h"
@@ -35,6 +35,12 @@
 #include "../../assets/shaders/metal/screen-metal-macosx.h"
 #endif
 
+#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+#define SHADER_PATH "gles"
+#else
+#define SHADER_PATH "gl33"
+#endif
+
 typedef struct default_shader_params_t {
   float projectionMatrix[16];
   float modelMatrix[16];
@@ -61,16 +67,16 @@ binocle_lua lua;
 binocle_app app;
 float elapsed_time = 0;
 SDL_mutex *lua_mutex;
-binocle_shader default_shader;
-binocle_shader screen_shader;
+sg_shader default_shader;
+sg_shader screen_shader;
 
 int l_default_shader(lua_State *L) {
-  binocle_shader *a = lua_newuserdata(L, sizeof(default_shader));
+  sg_shader *a = lua_newuserdata(L, sizeof(default_shader));
   SDL_memcpy(a, &default_shader, sizeof(default_shader));
   return 1;
 }
 int l_screen_shader(lua_State *L) {
-  binocle_shader *a = lua_newuserdata(L, sizeof(screen_shader));
+  sg_shader *a = lua_newuserdata(L, sizeof(screen_shader));
   SDL_memcpy(a, &screen_shader, sizeof(screen_shader));
   return 1;
 }
@@ -234,9 +240,9 @@ int main(int argc, char *argv[])
 #ifdef BINOCLE_GL
   // Default shader
   char vert[1024];
-  sprintf(vert, "%s%s", binocle_assets_dir, "shaders/default_vert.glsl");
+  sprintf(vert, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, "default_vert.glsl");
   char frag[1024];
-  sprintf(frag, "%s%s", binocle_assets_dir, "shaders/default_frag.glsl");
+  sprintf(frag, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, "default_frag.glsl");
 
   char *shader_vs_src;
   size_t shader_vs_src_size;
@@ -247,7 +253,7 @@ int main(int argc, char *argv[])
   binocle_sdl_load_text_file(frag, &shader_fs_src, &shader_fs_src_size);
 #endif
 
-  binocle_shader_desc default_shader_desc = {
+  sg_shader_desc default_shader_desc = {
 #ifdef BINOCLE_GL
     .vs.source = shader_vs_src,
 #else
@@ -262,9 +268,9 @@ int main(int argc, char *argv[])
     .vs.uniform_blocks[0] = {
       .size = sizeof(default_shader_params_t),
       .uniforms = {
-        [0] = { .name = "projectionMatrix", .type = BINOCLE_UNIFORMTYPE_MAT4},
-        [1] = { .name = "viewMatrix", .type = BINOCLE_UNIFORMTYPE_MAT4},
-        [2] = { .name = "modelMatrix", .type = BINOCLE_UNIFORMTYPE_MAT4},
+        [0] = { .name = "projectionMatrix", .type = SG_UNIFORMTYPE_MAT4},
+        [1] = { .name = "viewMatrix", .type = SG_UNIFORMTYPE_MAT4},
+        [2] = { .name = "modelMatrix", .type = SG_UNIFORMTYPE_MAT4},
       }
     },
 #ifdef BINOCLE_GL
@@ -273,14 +279,14 @@ int main(int argc, char *argv[])
     .fs.byte_code = default_fs_bytecode,
     .fs.byte_code_size = sizeof(default_fs_bytecode),
 #endif
-    .fs.images[0] = { .name = "tex0", .type = BINOCLE_IMAGETYPE_2D},
+    .fs.images[0] = { .name = "tex0", .image_type = SG_IMAGETYPE_2D},
   };
-  default_shader = binocle_backend_make_shader(&default_shader_desc);
+  default_shader = sg_make_shader(&default_shader_desc);
 
 #ifdef BINOCLE_GL
   // Screen shader
-  sprintf(vert, "%s%s", binocle_assets_dir, "shaders/screen_vert.glsl");
-  sprintf(frag, "%s%s", binocle_assets_dir, "shaders/screen_frag.glsl");
+  sprintf(vert, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, "screen_vert.glsl");
+  sprintf(frag, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, "screen_frag.glsl");
 
   char *screen_shader_vs_src;
   size_t screen_shader_vs_src_size;
@@ -291,7 +297,7 @@ int main(int argc, char *argv[])
   binocle_sdl_load_text_file(frag, &screen_shader_fs_src, &screen_shader_fs_src_size);
 #endif
 
-  binocle_shader_desc screen_shader_desc = {
+  sg_shader_desc screen_shader_desc = {
 #ifdef BINOCLE_GL
     .vs.source = screen_shader_vs_src,
 #else
@@ -304,7 +310,7 @@ int main(int argc, char *argv[])
     .vs.uniform_blocks[0] = {
       .size = sizeof(screen_shader_vs_params_t),
       .uniforms = {
-        [0] = { .name = "transform", .type = BINOCLE_UNIFORMTYPE_MAT4},
+        [0] = { .name = "transform", .type = SG_UNIFORMTYPE_MAT4},
       },
     },
 #ifdef BINOCLE_GL
@@ -313,17 +319,17 @@ int main(int argc, char *argv[])
     .fs.byte_code = screen_fs_bytecode,
     .fs.byte_code_size = sizeof(screen_fs_bytecode),
 #endif
-    .fs.images[0] = { .name = "texture", .type = BINOCLE_IMAGETYPE_2D},
+    .fs.images[0] = { .name = "tex0", .image_type = SG_IMAGETYPE_2D},
     .fs.uniform_blocks[0] = {
       .size = sizeof(screen_shader_fs_params_t),
       .uniforms = {
-        [0] = { .name = "resolution", .type = BINOCLE_UNIFORMTYPE_FLOAT2 },
-        [1] = { .name = "scale", .type = BINOCLE_UNIFORMTYPE_FLOAT2 },
-        [2] = { .name = "viewport", .type = BINOCLE_UNIFORMTYPE_FLOAT2 },
+        [0] = { .name = "resolution", .type = SG_UNIFORMTYPE_FLOAT2 },
+        [1] = { .name = "scale", .type = SG_UNIFORMTYPE_FLOAT2 },
+        [2] = { .name = "viewport", .type = SG_UNIFORMTYPE_FLOAT2 },
       },
     },
   };
-  screen_shader = binocle_backend_make_shader(&screen_shader_desc);
+  screen_shader = sg_make_shader(&screen_shader_desc);
 
   lua_inject_shaders();
 
