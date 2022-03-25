@@ -1,6 +1,6 @@
-local entity = require("entity")
-local hero = require("en/hero")
-local mob = require("en/mob")
+local Entity = require("entity")
+local Hero = require("en/hero")
+local Mob = require("en/mob")
 local process = require("process")
 
 local game = process:new()
@@ -26,14 +26,16 @@ function game.init(shd)
         io.write("player: " .. tostring(game.player) .. "\n")
     end
 
-    game.h = hero:new()
-    game.h.sprite = game.player
+    game.h = Hero()
+    game.h:set_pos_grid(10, 5)
+    --game.h.sprite = game.player
 
-    local m = mob:new()
+    local m = Mob()
     m.sprite = game.player
 
     local l = require("level")
     game.level = l:new()
+    gd.set_offscreen_clear_color(gd_instance, 0, 0, 0, 1)
 end
 
 
@@ -59,21 +61,22 @@ function game:update(dt)
     end
 
     if self.cd:has("test") then
-        log.info("cd: " .. tostring(self.cd:get("test")))
-    end
-    --[[
-    if input.is_key_pressed(input_mgr, key.KEY_RIGHT) then
-        game.player_x = game.player_x + 100 * dt
-    elseif input.is_key_pressed(input_mgr, key.KEY_LEFT) then
-        game.player_x = game.player_x - 100 * dt
+        --log.info("cd: " .. tostring(self.cd:get("test")))
     end
 
-    if input.is_key_pressed(input_mgr, key.KEY_UP) then
-        game.player_y = game.player_y + 100 * dt
-    elseif input.is_key_pressed(input_mgr, key.KEY_DOWN) then
-        game.player_y = game.player_y - 100 * dt
+    if input.is_key_pressed(input_mgr, key.KEY_L) then
+        camera.set_position(cam, camera.x(cam) + 100 * dt, camera.y(cam))
+        io.write(camera.x(cam).."\n")
+    elseif input.is_key_pressed(input_mgr, key.J) then
+        camera.set_position(cam, camera.x(cam) - 100 * dt, camera.y(cam))
     end
-    ]]
+
+    if input.is_key_pressed(input_mgr, key.I) then
+        camera.set_position(cam, camera.x(cam), camera.y(cam) + 100 * dt)
+    elseif input.is_key_pressed(input_mgr, key.K) then
+        camera.set_position(cam, camera.x(cam), camera.y(cam) - 100 * dt)
+    end
+
 
     game.level:update(dt)
 
@@ -82,6 +85,7 @@ function game:update(dt)
     game.h:post_update()
     --sprite.draw(game.player, gd_instance, game.player_x, game.player_y, viewport, 0, game.scale, camera)
     sprite.draw(game.h.sprite, gd_instance, game.h.sprite_x, game.h.sprite_y, viewport, 0, game.scale, cam)
+    game.h:draw_debug()
 
     for idx in pairs(G.mobs) do
         m = G.mobs[idx]

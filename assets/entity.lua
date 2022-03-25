@@ -1,77 +1,145 @@
-local entity = {
-    cx = 0,
-    cy = 0,
-    xr = 0.5,
-    yr = 1.0,
+local lume = require("lib.lume")
+local Object = require("lib.classic")
+local cooldown = require("cooldown")
 
-    dx = 0.0,
-    dy = 0.0,
-    bdx = 0.0,
-    bdy = 0.0,
+---@type table
+local Entity = Object:extend()
 
-    frict = 0.82,
-    bump_frict = 0.93,
+function Entity.new(self)
+    self.cx = 0
+    self.cy = 0
+    self.xr = 0.5
+    self.yr = 0
 
-    hei = const.GRID,
-    radius = const.GRID * 0.5,
+    self.dx = 0.0
+    self.dy = 0.0
+    self.bdx = 0.0
+    self.bdy = 0.0
 
-    sprite_x = 0,
-    sprite_y = 0,
-    sprite_scale_x = 1.0, -- the current scale (calculated per frame)
-    sprite_scale_y = 1.0, -- the current scale (calculated per frame)
-    sprite_scale_set_x = 1.0, -- the scale we have set
-    sprite_scale_set_y = 1.0, -- the scale we have set
+    self.gravity = 0.025
 
-    time_mul = 1, -- time multiplier
-    dir = 1, -- direction the entity is facing
-}
+    self.frict = 0.82
+    self.bump_frict = 0.93
 
-function entity:new (o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    G.all[#G.all+1] = self
-    return o
+    self.hei = const.GRID
+    self.radius = const.GRID * 0.5
+
+    self.sprite_x = 0
+    self.sprite_y = 0
+    self.sprite_scale_x = 1.0 -- the current scale (calculated per frame)
+    self.sprite_scale_y = 1.0 -- the current scale (calculated per frame)
+    self.sprite_scale_set_x = 1.0 -- the scale we have set
+    self.sprite_scale_set_y = 1.0 -- the scale we have set
+
+    self.time_mul = 1 -- time multiplier
+    self.dir = 1 -- direction the entity is facing
+
+    self.animations = {}
+    self.animation = nil
+    self.animation_timer = 0
+    self.animation_frame = 1
 end
 
-function entity:set_pos_grid(x, y)
+function Entity:load_image(filename, width, height)
+    local assets_dir = sdl.assets_dir()
+    local image_filename = assets_dir .. filename
+    local img = image.load(image_filename)
+    local tex = texture.from_image(img)
+    local mat = material.new()
+
+    material.set_texture(mat, tex)
+    material.set_shader(mat, shader.defaultShader())
+    self.sprite = sprite.from_material(mat)
+    self.frames = {}
+    local original_image_width, original_image_height = image.get_info(img)
+    for y = 0, original_image_height / height - 1 do
+        for x = 0, original_image_width / width - 1 do
+            local frame = subtexture.subtexture_with_texture(tex, x * width, y * height, width, width)
+            sprite.set_subtexture(self.sprite, frame)
+            table.insert(self.frames, frame)
+        end
+    end
+end
+
+function Entity.set_pos_grid(self, x, y)
     self.cx = x
     self.cy = y
     self.xr = 0.5
-    self.yr = 1
+    self.yr = 0
 end
 
-function entity:set_pos_pixel(x, y)
+function Entity.set_pos_pixel(self, x, y)
     self.cx = math.floor(x/const.GRID)
     self.cy = math.floor(y/const.GRID)
     self.xr = (x - self.cx * const.GRID)/const.GRID
     self.yr = (y - self.cy * const.GRID)/const.GRID
 end
 
-function entity:bump(x, y)
+function Entity.bump(self, x, y)
     self.bdx = self.bdx + x
     self.bdy = self.bdy + y
 end
 
-function entity:cancel_velocities()
+function Entity.cancel_velocities(self)
     self.dx = 0
     self.dy = 0
     self.bdx = 0
     self.bdy = 0
 end
 
-function entity:pre_update()
+function Entity.on_ground(self)
+    return G.game.level:has_wall_collision(self.cx, self.cy-1) and self.yr == 0 and self.dy <= 0
+end
+
+function Entity.pre_update(self)
     -- update cooldowns?
     -- update AI?
 end
 
-function entity:update(dt)
+function Entity.on_touch_wall(self)
+
+end
+
+function Entity.on_land(self)
+
+end
+
+function Entity.on_pre_step_x(self)
+    -- Right collision
+    if self.xr > 0.8 and G.game.level:has_wall_collision(self.cx+1, self.cy) then
+        self:on_touch_wall(1)
+        self.xr = 0.8
+    end
+
+    -- Left collision
+    if self.xr < 0.2 and G.game.level:has_wall_collision(self.cx-1, self.cy) then
+        self:on_touch_wall(-1)
+        self.xr = 0.2
+    end
+end
+
+function Entity.on_pre_step_y(self)
+    -- Down
+    if self.yr < 0.0 and G.game.level:has_wall_collision(self.cx, self.cy - 1) then
+        self.dy = 0
+        self.yr = 0
+        self:on_land()
+    end
+
+    -- Up
+    if self.yr > 0.5 and G.game.level:has_wall_collision(self.cx, self.cy + 1) then
+        self.yr = 0.5
+    end
+end
+
+function Entity.update(self, dt)
     -- X
     local steps = math.ceil(math.abs((self.dx + self.bdx) * self.time_mul))
     local step = ((self.dx + self.bdx) * self.time_mul) / steps
     while (steps > 0) do
         self.xr = self.xr + step
         -- add X collisions checks
+        self:on_pre_step_x()
         while (self.xr > 1) do
             self.xr = self.xr - 1
             self.cx = self.cx + 1
@@ -92,11 +160,16 @@ function entity:update(dt)
     end
 
     -- Y
+    if not self:on_ground() then
+        self.dy = self.dy - self.gravity
+    end
+
     steps = math.ceil(math.abs((self.dy + self.bdy) * self.time_mul))
     step = ((self.dy + self.bdy) * self.time_mul) / steps
     while (steps > 0) do
         self.yr = self.yr + step
         -- add Y collisions checks
+        self:on_pre_step_y()
         while (self.yr > 1) do
             self.yr = self.yr - 1
             self.cy = self.cy + 1
@@ -115,9 +188,11 @@ function entity:update(dt)
     if (math.abs(self.bdy) <= 0.0005 * self.time_mul) then
         self.bdy = 0
     end
+
+    self:update_animation(dt)
 end
 
-function entity:post_update()
+function Entity.post_update(self)
     if self.sprite == nil then
         return
     end
@@ -128,28 +203,87 @@ function entity:post_update()
     self.sprite_scale_y = self.sprite_scale_set_y
 end
 
-function entity:get_foot_x()
+function Entity:draw_debug()
+    local s = string.format("(%.0f,%.0f)", self.cx, self.cy)
+    ttfont.draw_string(default_font, s, gd_instance, self:get_head_x(), self:get_head_y(), viewport, color.white);
+end
+
+function Entity.get_foot_x(self)
     return (self.cx + self.xr) * const.GRID
 end
 
-function entity:get_foot_y()
+function Entity.get_foot_y(self)
     return (self.cy + self.yr) * const.GRID
 end
 
-function entity:get_head_x()
+function Entity.get_head_x(self)
     return self:get_foot_x()
 end
 
-function entity:get_head_y()
+function Entity.get_head_y(self)
     return self:get_foot_y() - self.hei
 end
 
-function entity:get_center_x()
+function Entity.get_center_x(self)
     return self:get_foot_x()
 end
 
-function entity:get_center_y()
+function Entity.get_center_y(self)
     return self:get_foot_y() - self.hei * 0.5
 end
 
-return entity
+function Entity.add_animation(self, idx, frames, period, loop)
+    self.animations[idx] = {
+        frames = lume.clone(frames),
+        period = period ~= 0 and 1 / math.abs(period) or 1,
+        loop = loop == nil and true or loop
+    }
+end
+
+function Entity.play_animation(self, idx, force)
+    self.animation = self.animations[idx]
+
+    if force or self.animation ~= self.animation then
+        self.animationTimer = self.animation.period
+        self.animationFrame = 1
+        self.frame = lume.first(self.animation.frames)
+    end
+end
+
+function Entity.stop_animation(self)
+    self.animation = nil
+end
+
+function Entity.update_animation(self, dt)
+    if not self.animation then
+        return
+    end
+
+    self.animation_timer = self.animation_timer - dt
+
+    if self.animation_timer <= 0 then
+        self.animation_frame = self.animation_frame + 1
+
+        local anim = self.animation
+
+        if self.animation_frame > #anim.frames then
+            if anim.loop == true then
+                self.animation_frame = 1
+            else
+                self:stop_animation()
+
+                if type(anim.loop) == "function" then
+                    anim.loop()
+                end
+
+                return
+            end
+        end
+
+        self.animation_timer = self.animation_timer + anim.period
+        self.frame = anim.frames[self.animation_frame]
+        sprite.set_subtexture(self.sprite, self.frames[self.frame])
+    end
+end
+
+return Entity

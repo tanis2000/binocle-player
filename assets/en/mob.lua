@@ -1,17 +1,18 @@
-local entity = require("entity")
+local Entity = require("entity")
 local cpoint = require("cpoint")
 
-local mob = entity:new()
+local Mob = Entity:extend()
 
-function mob:new()
+function Mob:new()
+    Mob.super.new(self)
     self.start_pt = cpoint:new(0, 0)
     self.wander_ang = 0
     G.mobs[#G.mobs+1] = self
     return self
 end
 
-function mob:update(dt)
-    entity.update(self, dt)
+function Mob:update(dt)
+    Entity.update(self, dt)
     local tx = self.start_pt:get_center_x()
     local ty = self.start_pt:get_center_y()
     local a = math.atan2(ty - self:get_center_y(), tx - self:get_center_x())
@@ -24,4 +25,4 @@ function mob:update(dt)
     self.dy = self.dy + math.sin(self.wander_ang)*s*dt
 end
 
-return mob
+return Mob

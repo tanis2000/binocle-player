@@ -1,9 +1,9 @@
 return {
-  version = "1.2",
+  version = "1.5",
   luaversion = "5.1",
-  tiledversion = "1.3.4",
+  tiledversion = "1.7.2",
   orientation = "orthogonal",
-  renderorder = "right-down",
+  renderorder = "right-up",
   width = 30,
   height = 100,
   tilewidth = 16,
@@ -24,6 +24,7 @@ return {
       image = "s4m_ur4i-metroidvania-1.3.png",
       imagewidth = 256,
       imageheight = 448,
+      objectalignment = "unspecified",
       tileoffset = {
         x = 0,
         y = 0
@@ -34,7 +35,7 @@ return {
         height = 16
       },
       properties = {},
-      terrains = {},
+      wangsets = {},
       tilecount = 448,
       tiles = {}
     }
@@ -42,16 +43,18 @@ return {
   layers = {
     {
       type = "tilelayer",
-      id = 10,
-      name = "background",
       x = 0,
       y = 0,
       width = 30,
       height = 100,
+      id = 10,
+      name = "background",
       visible = true,
       opacity = 1,
       offsetx = 0,
       offsety = 0,
+      parallaxx = 1,
+      parallaxy = 1,
       properties = {},
       encoding = "lua",
       data = {
@@ -159,16 +162,18 @@ return {
     },
     {
       type = "tilelayer",
-      id = 11,
-      name = "base",
       x = 0,
       y = 0,
       width = 30,
       height = 100,
+      id = 11,
+      name = "collisions",
       visible = true,
       opacity = 1,
       offsetx = 0,
       offsety = 0,
+      parallaxx = 1,
+      parallaxy = 1,
       properties = {},
       encoding = "lua",
       data = {
@@ -276,16 +281,18 @@ return {
     },
     {
       type = "tilelayer",
-      id = 12,
-      name = "objects",
       x = 0,
       y = 0,
       width = 30,
       height = 100,
+      id = 12,
+      name = "objects",
       visible = true,
       opacity = 1,
       offsetx = 0,
       offsety = 0,
+      parallaxx = 1,
+      parallaxy = 1,
       properties = {},
       encoding = "lua",
       data = {

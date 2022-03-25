@@ -1,16 +1,35 @@
-local entity = require("entity")
-local hero = entity:new()
+local Entity = require("entity")
+local Hero = Entity:extend()
 
-function hero:update(dt)
-    entity.update(self, dt)
+function Hero:new()
+    Hero.super.new(self)
+    self:load_image("img/player.png", 32, 32)
+    self:add_animation("idle", {
+        1,
+        2
+    }, 8)
+    self:add_animation("run", {
+        3,
+        4
+    }, 14)
+end
 
-    local spd = 10
+function Hero:update(dt)
+    Hero.super.update(self, dt)
+
+    local spd = 5
     if input.is_key_pressed(input_mgr, key.KEY_LEFT) or input.is_key_pressed(input_mgr, key.KEY_A) then
         self.dx = self.dx - spd * dt * self.time_mul
         self.dir = -1
     elseif input.is_key_pressed(input_mgr, key.KEY_RIGHT) or input.is_key_pressed(input_mgr, key.KEY_D) then
         self.dx = self.dx + spd * dt * self.time_mul
         self.dir = 1
+    end
+
+    if input.is_key_pressed(input_mgr, key.KEY_SPACE) then
+        if self:on_ground() then
+            self.dy = 0.9
+        end
     end
 
     local camera_x = camera.x(cam)
@@ -22,6 +41,11 @@ function hero:update(dt)
     end
     camera.set_position(cam, camera_x, camera_y)
 
+    if self.dx ~= 0 then
+        self:play_animation("run")
+    else
+        self:play_animation("idle")
+    end
 end
 
-return hero
+return Hero

@@ -2,7 +2,7 @@ local const = require("const")
 local process = require("process")
 local map = require("maps/s4m_ur4i-metroidvania-1")
 
-local level = process:new()
+local level = process:new(nil, nil)
 
 function level:new()
     log.info("new")
@@ -16,12 +16,13 @@ function level:new()
     for idx in pairs(map.layers) do
         local layer = map.layers[idx]
         if layer.name == "collisions" then
-            for i in layer.data do
+            for i in pairs(layer.data) do
                 local value = layer.data[i]
-                local cy = math.floor(i / const.GRID)
-                local cx = math.floor(i % const.GRID)
+                local cy = layer.height - 1 - math.floor((i-1) / layer.width)
+                local cx = math.floor((i-1) % layer.width) - 1
                 if value ~= 0 then
-                    self.set_collision(cx, cy)
+                    --print(cx, cy)
+                    self:set_collision(cx, cy, true)
                 end
             end
         end
@@ -40,7 +41,7 @@ function level:new()
         self.tiles = {}
         log.info("num tiles: " .. tostring(ts.tilecount))
         for i = 0, ts.tilecount do
-            log.info(tostring(i))
+            --log.info(tostring(i))
             self.tiles[i] = {}
             self.tiles[i].gid = i
             self.tiles[i].sprite = sprite.from_material(mat)
@@ -57,12 +58,18 @@ function level:new()
     return self
 end
 
-function level:coord_id(x, y)
-    return x * y + self.width
+function level:coord_id(cx, cy)
+    return cx + cy * self.width
 end
 
 function level:set_collision(x, y, v)
-    self.coll_map[self:coord_id(x, y)] = v
+    if self:is_valid(x, y) then
+        if v then
+            self.coll_map[self:coord_id(x, y)] = v
+        else
+            self.coll_map[self:coord_id(x, y)] = nil
+        end
+    end
 end
 
 function level:is_valid(cx, cy)
@@ -70,21 +77,27 @@ function level:is_valid(cx, cy)
 end
 
 function level:has_collision(x, y)
+    --print(x, y)
     if not self:is_valid(x, y) then
         return true
     else
         local v = self.coll_map[self:coord_id(x, y)]
-        if v ~= nil and v ~= 0 then
+        print(v)
+        if v ~= nil then
             return true
         end
     end
     return false
 end
 
+function level:has_wall_collision(cx, cy)
+    return self:has_collision(cx, cy)
+end
+
 function level:render()
     for idx in pairs(self.map.layers) do
         local layer = self.map.layers[idx]
-        if layer.name == "base" or layer.name == "background" then
+        if layer.name == "collisions" or layer.name == "background" then
             for i in pairs(layer.data) do
                 --log.info(tostring(i))
                 local value = layer.data[i] - 1

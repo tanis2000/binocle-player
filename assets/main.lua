@@ -1,7 +1,10 @@
 main = {}
+---@type table
 G = {
     all = {}, -- all entities
     mobs = {}, -- all mobs
+    scale = 2,
+    title = "Binocle Player",
 }
 local assets_dir = sdl.assets_dir()
 log.info(assets_dir .. "\n")
@@ -40,8 +43,10 @@ color.azure = color.new(192.0 / 255.0, 1.0, 1.0, 1.0)
 color.white = color.new(1.0, 1.0, 1.0, 1.0)
 color.black = color.new(0, 0, 0, 1.0)
 
+local quit_requests = 0
+
 function on_init()
-    win = window.new(DESIGN_WIDTH, DESIGN_HEIGHT, "Binocle Player")
+    win = window.new(DESIGN_WIDTH * G.scale, DESIGN_HEIGHT * G.scale, G.title)
     io.write("win: " .. tostring(win) .."\n")
     bg_color = color.black
     io.write("bg_color: " .. tostring(bg_color) .."\n")
@@ -75,6 +80,13 @@ function on_init()
     sb = sprite_batch.new()
     sprite_batch.set_gd(sb, gd_instance)
 
+    -- Create a viewport that corresponds to the size of our render target
+    center = lkazmath.kmVec2New();
+    center.x = DESIGN_WIDTH / 2;
+    center.y = DESIGN_HEIGHT / 2;
+    viewport = lkazmath.kmAABB2New();
+    lkazmath.kmAABB2Initialize(viewport, center, DESIGN_WIDTH, DESIGN_HEIGHT, 0)
+
 end
 
 function main.on_update(dt)
@@ -100,16 +112,18 @@ function main.on_update(dt)
     -- clear it
     --window.clear(win)
 
-    -- Create a viewport that corresponds to the size of our render target
-    center = lkazmath.kmVec2New();
-    center.x = DESIGN_WIDTH / 2;
-    center.y = DESIGN_HEIGHT / 2;
-    viewport = lkazmath.kmAABB2New();
-    lkazmath.kmAABB2Initialize(viewport, center, DESIGN_WIDTH, DESIGN_HEIGHT, 0)
 
     -- A simple identity matrix
     identity_matrix = lkazmath.kmMat4New()
     lkazmath.kmMat4Identity(identity_matrix)
+
+    if input.is_key_down(input_mgr, key.KEY_ESCAPE) then
+        quit_requests = quit_requests + 1
+        print(quit_requests)
+        if quit_requests > 1 then
+            input.set_quit_requested(input_mgr, true)
+        end
+    end
 
     scene:update(dt)
 

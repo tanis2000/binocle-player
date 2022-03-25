@@ -26,6 +26,7 @@
 #include "binocle_gd.h"
 #include "binocle_log.h"
 #include "binocle_bitmapfont.h"
+#include "binocle_ttfont.h"
 
 #define DESIGN_WIDTH 320
 #define DESIGN_HEIGHT 240
@@ -69,6 +70,7 @@ float elapsed_time = 0;
 SDL_mutex *lua_mutex;
 sg_shader default_shader;
 sg_shader screen_shader;
+binocle_ttfont *ttf;
 
 int l_default_shader(lua_State *L) {
   sg_shader *a = lua_newuserdata(L, sizeof(default_shader));
@@ -179,7 +181,7 @@ int lua_on_update(float dt) {
 
 void main_loop() {
   binocle_window_begin_frame(window);
-  float dt = binocle_window_get_frame_time(window) / 1000.0f;
+  float dt = (float)binocle_window_get_frame_time(window) / 1000.0f;
   elapsed_time += dt;
 
   binocle_input_update(input);
@@ -208,7 +210,7 @@ void main_loop() {
   kmAABB2 vp = binocle_viewport_adapter_get_viewport(*camera->viewport_adapter);
 
   // Render to screen
-  binocle_gd_render(gd, window, DESIGN_WIDTH, DESIGN_HEIGHT, vp);
+  binocle_gd_render(gd, window, DESIGN_WIDTH, DESIGN_HEIGHT, vp, camera->viewport_adapter->scale_matrix, camera->viewport_adapter->inverse_multiplier);
 
   binocle_window_refresh(window);
   binocle_window_end_frame(window);

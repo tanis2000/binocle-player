@@ -1,5 +1,5 @@
 local process = require("process")
-local intro = process:new()
+local intro = process:new(nil, nil)
 
 intro.TEX_WIDTH = 1682
 intro.TEX_HEIGHT = 479
@@ -23,17 +23,21 @@ function intro.init(shd)
     intro.azure_color = color.new(191.0 / 255.0, 1.0, 1.0, 1.0)
     intro.white_color = color.new(1.0, 1.0, 1.0, 1.0)
     intro.black_color = color.new(0, 0, 0, 1.0)
+
+    gd.set_offscreen_clear_color(gd_instance, 1, 1, 1, 1)
+
+    default_font = ttfont.from_file(assets_dir .. "font/default.ttf", 8, shader.defaultShader());
 end
 
 function intro:update(dt)
     -- By default we scale our logo by 1/3
-    scale = lkazmath.kmVec2New();
+    local scale = lkazmath.kmVec2New();
     scale.x = DESIGN_WIDTH / intro.TEX_WIDTH
     scale.y = DESIGN_HEIGHT / intro.TEX_WIDTH
 
     -- Center the logo in the render target
-    x = (DESIGN_WIDTH - (intro.TEX_WIDTH * scale.x)) / 2.0
-    y = (DESIGN_HEIGHT - (intro.TEX_HEIGHT * scale.y)) / 2.0
+    local x = (DESIGN_WIDTH - (intro.TEX_WIDTH * scale.x)) / 2.0
+    local y = (DESIGN_HEIGHT - (intro.TEX_HEIGHT * scale.y)) / 2.0
 
     --io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
     sprite.draw(intro.logo, gd_instance, x, y, viewport, 0, scale, cam)
@@ -45,7 +49,13 @@ function intro:update(dt)
         --io.write("game: " .. tostring(game) .. "\n")
         game.init(intro.shader)
         scene = game
+        G.game = game
     end
+
+    local s = "Press SPACE to START"
+    local width = ttfont.get_string_width(default_font, s)
+    ttfont.draw_string(default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black);
+
 end
 
 return intro

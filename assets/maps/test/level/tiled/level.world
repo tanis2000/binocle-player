@@ -1,0 +1,8 @@
+{
+	"maps": [
+		{ "fileName": "0001_Your_typical_2D_platformer.tmx", "x": 0, "y": 0 },
+		{ "fileName": "0002_Top.tmx", "x": 352, "y": -352 },
+		{ "fileName": "0003_Bottom.tmx", "x": 80, "y": 336 }
+	],
+	"type": "world"
+}
