@@ -1,8 +1,11 @@
 local Entity = require("entity")
+local Bullet = require("en.bullet")
 local Hero = Entity:extend()
 
 function Hero:new()
     Hero.super.new(self)
+    self.hei = 32
+    self.wid = 32
     self:load_image("img/player.png", 32, 32)
     self:add_animation("idle", {
         1,
@@ -29,7 +32,12 @@ function Hero:update(dt)
     if input.is_key_pressed(input_mgr, key.KEY_SPACE) then
         if self:on_ground() then
             self.dy = 0.9
+            audio.play_sound(G.sounds["jump"])
         end
+    end
+
+    if input.is_key_pressed(input_mgr, key.KEY_E) then
+        self:shoot()
     end
 
     local camera_x = camera.x(cam)
@@ -46,6 +54,11 @@ function Hero:update(dt)
     else
         self:play_animation("idle")
     end
+end
+
+function Hero.shoot(self)
+    local b = Bullet()
+    b:set_pos_grid(self.cx, self.cy)
 end
 
 return Hero

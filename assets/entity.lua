@@ -22,7 +22,13 @@ function Entity.new(self)
     self.bump_frict = 0.93
 
     self.hei = const.GRID
+    self.wid = const.GRID
     self.radius = const.GRID * 0.5
+
+    -- Defines X alignment of entity at its attach point (0 to 1.0)
+    self.pivot_x = 0.5
+    -- Defines Y alignment of entity at its attach point (0 to 1.0)
+    self.pivot_y = 0
 
     self.sprite_x = 0
     self.sprite_y = 0
@@ -38,6 +44,8 @@ function Entity.new(self)
     self.animation = nil
     self.animation_timer = 0
     self.animation_frame = 1
+
+    self.destroyed = false
 end
 
 function Entity:load_image(filename, width, height)
@@ -59,6 +67,7 @@ function Entity:load_image(filename, width, height)
             table.insert(self.frames, frame)
         end
     end
+    sprite.set_origin(self.sprite, self.wid/2.0, 0)
 end
 
 function Entity.set_pos_grid(self, x, y)
@@ -204,32 +213,52 @@ function Entity.post_update(self)
 end
 
 function Entity:draw_debug()
-    local s = string.format("(%.0f,%.0f)", self.cx, self.cy)
-    ttfont.draw_string(default_font, s, gd_instance, self:get_head_x(), self:get_head_y(), viewport, color.white);
+    local s = string.format("(%.0f,%.0f) (%.0f, %.0f)", self.cx, self.cy, self:get_center_x(), self:get_center_y())
+    ttfont.draw_string(default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam);
+
+    local center = lkazmath.kmVec2New();
+    center.x = self:get_center_x()
+    center.y = self:get_center_y()
+
+    local rect = lkazmath.kmAABB2New();
+    lkazmath.kmAABB2Initialize(rect, center, self.wid, self.hei, 0)
+    gd.draw_rect(gd_instance, rect, color.trans_green, viewport, cam)
 end
 
-function Entity.get_foot_x(self)
-    return (self.cx + self.xr) * const.GRID
+function Entity:draw()
+    sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, G.game.scale, cam)
 end
 
-function Entity.get_foot_y(self)
-    return (self.cy + self.yr) * const.GRID
+function Entity.get_left(self)
+    return self:get_attach_x() + (0.0 - self.pivot_x) * self.wid
 end
 
-function Entity.get_head_x(self)
-    return self:get_foot_x()
+function Entity.get_right(self)
+    return self:get_attach_x() + (1.0 - self.pivot_x) * self.wid
 end
 
-function Entity.get_head_y(self)
-    return self:get_foot_y() - self.hei
+function Entity.get_top(self)
+    return self:get_attach_y() + (1.0 - self.pivot_y) * self.hei
+end
+
+function Entity.get_bottom(self)
+    return self:get_attach_y() + (0.0 - self.pivot_y) * self.hei
 end
 
 function Entity.get_center_x(self)
-    return self:get_foot_x()
+    return self:get_attach_x() + (0.5 - self.pivot_x) * self.wid
 end
 
 function Entity.get_center_y(self)
-    return self:get_foot_y() - self.hei * 0.5
+    return self:get_attach_y() + (0.5 - self.pivot_y) * self.hei
+end
+
+function Entity.get_attach_x(self)
+    return (self.cx + self.xr) * const.GRID
+end
+
+function Entity.get_attach_y(self)
+    return (self.cy + self.yr) * const.GRID
 end
 
 function Entity.add_animation(self, idx, frames, period, loop)
@@ -284,6 +313,10 @@ function Entity.update_animation(self, dt)
         self.frame = anim.frames[self.animation_frame]
         sprite.set_subtexture(self.sprite, self.frames[self.frame])
     end
+end
+
+function Entity.is_alive(self)
+    return not self.destroyed
 end
 
 return Entity

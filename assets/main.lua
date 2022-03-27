@@ -3,8 +3,11 @@ main = {}
 G = {
     all = {}, -- all entities
     mobs = {}, -- all mobs
+    bullets = {}, -- all bullets
     scale = 2,
     title = "Binocle Player",
+    musics = {},
+    sounds = {},
 }
 local assets_dir = sdl.assets_dir()
 log.info(assets_dir .. "\n")
@@ -42,6 +45,7 @@ log.info("Begin of main.lua\n");
 color.azure = color.new(192.0 / 255.0, 1.0, 1.0, 1.0)
 color.white = color.new(1.0, 1.0, 1.0, 1.0)
 color.black = color.new(0, 0, 0, 1.0)
+color.trans_green = color.new(0, 1, 0, 0.5)
 
 local quit_requests = 0
 
@@ -86,6 +90,18 @@ function on_init()
     center.y = DESIGN_HEIGHT / 2;
     viewport = lkazmath.kmAABB2New();
     lkazmath.kmAABB2Initialize(viewport, center, DESIGN_WIDTH, DESIGN_HEIGHT, 0)
+
+    audio_instance = audio.new()
+    audio.init(audio_instance)
+
+    local music = audio.load_music(audio_instance, assets_dir .. "music/rolemusic_37_ohmperios.mp3")
+    G.musics["main"] = music
+    audio.play_music(audio_instance, music)
+    audio.set_music_volume(audio_instance, G.musics["main"], 1.0)
+
+    local sound = audio.load_sound(audio_instance, assets_dir .. "sfx/jump.wav")
+    G.sounds["jump"] = sound
+    audio.set_sound_volume(G.sounds["jump"], 1.0)
 
 end
 
@@ -146,7 +162,9 @@ function main.on_update(dt)
     --gd.draw_quad_to_screen(screen_shader, render_target);
 
     scene:post_update(dt)
-
+    for idx, music in pairs(G.musics) do
+        audio.update_music_stream(audio_instance, music)
+    end
 end
 
 function get_window()
@@ -177,6 +195,11 @@ end
 function get_sprite_batch_instance()
     io.write("get_sprite_batch_instance sb: " .. tostring(sb) .."\n")
     return sb
+end
+
+function get_audio_instance()
+    io.write("get_audio_instance audio_instance: " .. tostring(audio_instance) .."\n")
+    return audio_instance
 end
 
 function dump(o)

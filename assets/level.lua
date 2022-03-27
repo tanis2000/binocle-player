@@ -19,7 +19,7 @@ function level:new()
             for i in pairs(layer.data) do
                 local value = layer.data[i]
                 local cy = layer.height - 1 - math.floor((i-1) / layer.width)
-                local cx = math.floor((i-1) % layer.width) - 1
+                local cx = math.floor((i-1) % layer.width)
                 if value ~= 0 then
                     --print(cx, cy)
                     self:set_collision(cx, cy, true)
@@ -47,8 +47,9 @@ function level:new()
             self.tiles[i].sprite = sprite.from_material(mat)
             local cy = math.floor(i / const.GRID)
             local cx = math.floor(i % const.GRID)
-            local sub = subtexture.subtexture_with_texture(tex, 16 * cx, (ts.imageheight - 16) - (16 * cy), 16, 16)
+            local sub = subtexture.subtexture_with_texture(tex, 16 * cx, (ts.imageheight - 16) - (16 * cy), self.map.tilewidth, self.map.tileheight)
             sprite.set_subtexture(self.tiles[i].sprite, sub)
+            sprite.set_origin(self.tiles[i].sprite, 0, 0)
         end
         self.tileset = {
             sprite = sprite.from_material(mat),
@@ -82,7 +83,7 @@ function level:has_collision(x, y)
         return true
     else
         local v = self.coll_map[self:coord_id(x, y)]
-        print(v)
+        --print(v)
         if v ~= nil then
             return true
         end

@@ -27,6 +27,8 @@
 #include "binocle_log.h"
 #include "binocle_bitmapfont.h"
 #include "binocle_ttfont.h"
+#include "binocle_audio.h"
+#include "binocle_audio_wrap.h"
 
 #define DESIGN_WIDTH 320
 #define DESIGN_HEIGHT 240
@@ -63,6 +65,7 @@ binocle_input *input;
 binocle_camera *camera;
 binocle_gd *gd;
 binocle_sprite_batch *sprite_batch;
+binocle_audio *audio;
 char *binocle_assets_dir;
 binocle_lua lua;
 binocle_app app;
@@ -70,7 +73,6 @@ float elapsed_time = 0;
 SDL_mutex *lua_mutex;
 sg_shader default_shader;
 sg_shader screen_shader;
-binocle_ttfont *ttf;
 
 int l_default_shader(lua_State *L) {
   sg_shader *a = lua_newuserdata(L, sizeof(default_shader));
@@ -150,6 +152,18 @@ void lua_bridge_sprite_batch() {
   }
   l_binocle_sprite_batch_t *sprite_batch_instance = luaL_checkudata(lua.L, 0, "binocle_sprite_batch");
   sprite_batch = sprite_batch_instance->sprite_batch;
+}
+
+void lua_bridge_audio() {
+  lua_getglobal(lua.L, "get_audio_instance");
+  if (lua_pcall(lua.L, 0, 1, 0) != 0) {
+    binocle_log_error("can't get the audio_instance from Lua");
+  }
+  if (!lua_isuserdata(lua.L, 0)) {
+    binocle_log_error("returned value is not userdata");
+  }
+  l_binocle_audio_t *audio_instance = luaL_checkudata(lua.L, 0, "binocle_audio");
+  audio = audio_instance->audio;
 }
 
 int lua_on_init() {
@@ -340,8 +354,10 @@ int main(int argc, char *argv[])
   lua_bridge_input();
   lua_bridge_gd();
   lua_bridge_sprite_batch();
+  lua_bridge_audio();
 
   binocle_gd_setup_default_pipeline(gd, DESIGN_WIDTH, DESIGN_HEIGHT, default_shader, screen_shader);
+  binocle_gd_setup_flat_pipeline(gd);
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop, 0, 1);

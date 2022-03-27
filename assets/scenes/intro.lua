@@ -54,7 +54,7 @@ function intro:update(dt)
 
     local s = "Press SPACE to START"
     local width = ttfont.get_string_width(default_font, s)
-    ttfont.draw_string(default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black);
+    ttfont.draw_string(default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam);
 
 end
 
