@@ -37,7 +37,9 @@ function Hero:update(dt)
     end
 
     if input.is_key_pressed(input_mgr, key.KEY_E) then
-        self:shoot()
+        if not self.cd:has("shoot") then
+            self:shoot()
+        end
     end
 
     local camera_x = camera.x(cam)
@@ -56,9 +58,12 @@ function Hero:update(dt)
     end
 end
 
+function Hero:post_update(dt)
+    Hero.super.post_update(self, dt)
+end
 function Hero.shoot(self)
-    local b = Bullet()
-    b:set_pos_grid(self.cx, self.cy)
+    local b = Bullet(self)
+    self.cd:set("shoot", 0.1)
 end
 
 return Hero

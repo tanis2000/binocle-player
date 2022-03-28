@@ -1,29 +1,34 @@
-local cooldown = {
-    cooldowns = {
---[[
-        __tostring = function()
-            for idx in pairs(self) do
-                return tostring(self[idx])
-            end
-        end
-        ]]
-    }
-}
+local Object = require("lib.classic")
 
-function cooldown:set(name, seconds, func)
-    local cd = {
-        name = name,
-        total = seconds,
-        remaining = seconds,
-        func = func,
-        __tostring = function()
-            return "name: " .. self.name .. ", total: " .. self.total .. ", remaining: " .. self.remaining
-        end
-    }
+---@class CooldownInstance
+local CooldownInstance = Object:extend()
+
+function CooldownInstance.new(self, name, seconds, func)
+    CooldownInstance.super.new(self)
+    self.name = name
+    self.total = seconds
+    self.remaining = seconds
+    self.func = func
+end
+
+function CooldownInstance.__tostring(self)
+    return "name: " .. self.name .. ", total: " .. self.total .. ", remaining: " .. self.remaining
+end
+
+---@class Cooldown
+local Cooldown = Object:extend()
+
+function Cooldown.new(self)
+    Cooldown.super.new(self)
+    self.cooldowns = {}
+end
+
+function Cooldown:set(name, seconds, func)
+    local cd = CooldownInstance(name, seconds, func)
     self.cooldowns[name] = cd
 end
 
-function cooldown:update(dt)
+function Cooldown:update(dt)
     local count = 0
     --io.write("cooldowns:" .. tostring(self) .. "\n")
     for idx in pairs(self.cooldowns) do
@@ -37,7 +42,7 @@ function cooldown:update(dt)
     --log.info("count "..tostring(count))
 end
 
-function cooldown:has(name)
+function Cooldown:has(name)
     if self.cooldowns[name] then
         if self.cooldowns[name].remaining > 0 then
             return true
@@ -46,13 +51,13 @@ function cooldown:has(name)
     return false
 end
 
-function cooldown:unset(name)
+function Cooldown:unset(name)
     if self.cooldowns[name] then
         self.cooldowns[name] = nil
     end
 end
 
-function cooldown:get(name)
+function Cooldown:get(name)
     if self:has(name) then
         return self.cooldowns[name].remaining
     else
@@ -60,4 +65,10 @@ function cooldown:get(name)
     end
 end
 
-return cooldown
+function Cooldown.__tostring(self)
+    for idx, cd in pairs(self.cooldowns) do
+        return string.format("%s\n", cd)
+    end
+end
+
+return Cooldown

@@ -2,63 +2,61 @@ local Entity = require("entity")
 local Hero = require("en/hero")
 local Mob = require("en/mob")
 local Enemy = require("en/enemy")
-local process = require("process")
+local Process = require("Process")
 
-local game = process:new()
+local Game = Process:extend()
 
-function game.init(shd)
-    game.shader = shd
+function Game:new(shd)
+    Game.super.new(self)
+    self.name = "game"
+    self.shader = shd
     local assets_dir = sdl.assets_dir()
     local image_filename = assets_dir .. "wabbit_alpha.png"
-    game.img = image.load(image_filename)
-    io.write("image: " .. tostring(game.img) .. "\n")
-    game.tex = texture.from_image(game.img)
-    io.write("tex: " .. tostring(game.tex) .. "\n")
-    game.mat = material.new()
+    self.img = image.load(image_filename)
+    io.write("image: " .. tostring(self.img) .. "\n")
+    self.tex = texture.from_image(self.img)
+    io.write("tex: " .. tostring(self.tex) .. "\n")
+    self.mat = material.new()
 
-    material.set_texture(game.mat, game.tex)
-    material.set_shader(game.mat, shd)
-    io.write("material: " .. tostring(game.mat) .. "\n")
-    game.player = sprite.from_material(game.mat)
+    material.set_texture(self.mat, self.tex)
+    material.set_shader(self.mat, shd)
+    io.write("material: " .. tostring(self.mat) .. "\n")
+    self.player = sprite.from_material(self.mat)
 
-    if game.player == nil or game.player == nullptr then
+    if self.player == nil or self.player == nullptr then
         io.write("player is nil")
     else
-        io.write("player: " .. tostring(game.player) .. "\n")
+        io.write("player: " .. tostring(self.player) .. "\n")
     end
 
-    game.h = Hero()
-    game.h:set_pos_grid(10, 5)
+    self.h = Hero()
+    self.h:set_pos_grid(10, 5)
     --game.h.sprite = game.player
 
     local enemy = Enemy()
     enemy:set_pos_grid(13, 5)
 
     local m = Mob()
-    m.sprite = game.player
+    m.sprite = self.player
 
     local l = require("level")
-    game.level = l:new()
+    self.level = l:new()
+    self:add_child(l)
     gd.set_offscreen_clear_color(gd_instance, 0, 0, 0, 1)
+
+    -- TODO remove this stuff when we get rid of the old mob
+    self.player_x = 100
+    self.player_y = 100
+
+    self.scale = lkazmath.kmVec2New()
+
+    self.scale.x = 1.0
+    self.scale.y = 1.0
+    -- TODO end of removal
 end
 
-
-game.player_x = 100
-game.player_y = 100
-
-game.scale = lkazmath.kmVec2New()
-
-game.scale.x = 1.0
-game.scale.y = 1.0
-io.write("scale: " .. tostring(game.scale) .. "\n")
-io.write("scale.x: " .. tostring(game.scale.x) .. "\n")
-io.write("scale.y: " .. tostring(game.scale.y) .. "\n")
-
-io.write("gdc: " .. tostring(gdc) .. "\n")
-io.write("viewport: " .. tostring(viewport) .. "\n")
-io.write("camera: " .. tostring(camera) .. "\n")
-
-function game:update(dt)
+function Game:update(dt)
+    Game.super.update(self, dt)
     -- input management
     if input.is_key_pressed(input_mgr, key.KEY_SPACE) then
         self.cd:set("test", 5, nil)
@@ -82,34 +80,45 @@ function game:update(dt)
     end
 
 
-    game.level:update(dt)
+    self.level:update(dt)
 
-    game.h:pre_update()
-    game.h:update(dt)
-    game.h:post_update()
-    --sprite.draw(game.player, gd_instance, game.player_x, game.player_y, viewport, 0, game.scale, camera)
-    --sprite.draw(game.h.sprite, gd_instance, game.h.sprite_x, game.h.sprite_y, viewport, 0, game.scale, cam)
-    game.h:draw()
-    game.h:draw_debug()
+    self.h:pre_update(dt)
+    self.h:update(dt)
+
 
     for idx in pairs(G.mobs) do
         m = G.mobs[idx]
-        m:pre_update()
+        m:pre_update(dt)
         m:update(dt)
-        m:post_update()
-        m:draw()
-        sprite.draw(m.sprite, gd_instance, m.sprite_x, m.sprite_y, viewport, 0, game.scale, cam)
     end
 
     for idx in pairs(G.bullets) do
         b = G.bullets[idx]
-        b:pre_update()
+        b:pre_update(dt)
         b:update(dt)
-        b:post_update()
-        b:draw()
-        b:draw_debug()
     end
 
 end
 
-return game
+function Game:post_update(dt)
+    Game.super.post_update(self, dt)
+
+    for idx in pairs(G.mobs) do
+        m = G.mobs[idx]
+        m:post_update(dt)
+        m:draw()
+        sprite.draw(m.sprite, gd_instance, m.sprite_x, m.sprite_y, viewport, 0, self.scale, cam)
+    end
+
+    for _, b in pairs(G.bullets) do
+        b:post_update(dt)
+        b:draw()
+        b:draw_debug()
+    end
+
+    self.h:post_update(dt)
+    self.h:draw()
+    self.h:draw_debug()
+end
+
+return Game

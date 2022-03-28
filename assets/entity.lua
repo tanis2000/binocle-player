@@ -1,6 +1,6 @@
 local lume = require("lib.lume")
 local Object = require("lib.classic")
-local cooldown = require("cooldown")
+local Cooldown = require("cooldown")
 
 ---@type table
 local Entity = Object:extend()
@@ -46,20 +46,23 @@ function Entity.new(self)
     self.animation_frame = 1
 
     self.destroyed = false
+
+    self.image = nil
+
+    self.has_collisions = true
+    self.cd = Cooldown()
 end
 
 function Entity:load_image(filename, width, height)
-    local assets_dir = sdl.assets_dir()
-    local image_filename = assets_dir .. filename
-    local img = image.load(image_filename)
-    local tex = texture.from_image(img)
+    self.image = G.cache.load(filename)
+    local tex = texture.from_image(self.image)
     local mat = material.new()
 
     material.set_texture(mat, tex)
     material.set_shader(mat, shader.defaultShader())
     self.sprite = sprite.from_material(mat)
     self.frames = {}
-    local original_image_width, original_image_height = image.get_info(img)
+    local original_image_width, original_image_height = image.get_info(self.image)
     for y = 0, original_image_height / height - 1 do
         for x = 0, original_image_width / width - 1 do
             local frame = subtexture.subtexture_with_texture(tex, x * width, y * height, width, width)
@@ -100,8 +103,8 @@ function Entity.on_ground(self)
     return G.game.level:has_wall_collision(self.cx, self.cy-1) and self.yr == 0 and self.dy <= 0
 end
 
-function Entity.pre_update(self)
-    -- update cooldowns?
+function Entity.pre_update(self, dt)
+    self.cd:update(dt)
     -- update AI?
 end
 
@@ -115,13 +118,13 @@ end
 
 function Entity.on_pre_step_x(self)
     -- Right collision
-    if self.xr > 0.8 and G.game.level:has_wall_collision(self.cx+1, self.cy) then
+    if self.has_collisions and self.xr > 0.8 and G.game.level:has_wall_collision(self.cx+1, self.cy) then
         self:on_touch_wall(1)
         self.xr = 0.8
     end
 
     -- Left collision
-    if self.xr < 0.2 and G.game.level:has_wall_collision(self.cx-1, self.cy) then
+    if self.has_collisions and self.xr < 0.2 and G.game.level:has_wall_collision(self.cx-1, self.cy) then
         self:on_touch_wall(-1)
         self.xr = 0.2
     end
@@ -129,14 +132,14 @@ end
 
 function Entity.on_pre_step_y(self)
     -- Down
-    if self.yr < 0.0 and G.game.level:has_wall_collision(self.cx, self.cy - 1) then
+    if self.has_collisions and self.yr < 0.0 and G.game.level:has_wall_collision(self.cx, self.cy - 1) then
         self.dy = 0
         self.yr = 0
         self:on_land()
     end
 
     -- Up
-    if self.yr > 0.5 and G.game.level:has_wall_collision(self.cx, self.cy + 1) then
+    if self.has_collisions and self.yr > 0.5 and G.game.level:has_wall_collision(self.cx, self.cy + 1) then
         self.yr = 0.5
     end
 end
@@ -226,7 +229,10 @@ function Entity:draw_debug()
 end
 
 function Entity:draw()
-    sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, G.game.scale, cam)
+    local scale = lkazmath.kmVec2New()
+    scale.x = self.sprite_scale_x
+    scale.y = self.sprite_scale_y
+    sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, scale, cam)
 end
 
 function Entity.get_left(self)
@@ -317,6 +323,24 @@ end
 
 function Entity.is_alive(self)
     return not self.destroyed
+end
+
+function Entity.on_dispose(self)
+    -- TODO dispose of sprite, material, texture, etc...
+end
+
+function Entity.dir_to(self, en)
+    if en.get_center_x() < self.get_center_x() then
+        return -1
+    end
+    return 1
+end
+
+function Entity.dir_to_ang(self)
+    if self.dir == 1 then
+        return 0
+    end
+    return math.pi
 end
 
 return Entity

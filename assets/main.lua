@@ -1,6 +1,7 @@
 main = {}
 ---@type table
 G = {
+    cache = nil,
     all = {}, -- all entities
     mobs = {}, -- all mobs
     bullets = {}, -- all bullets
@@ -18,6 +19,8 @@ package.path = package.path .. ";" .. assets_dir .."?.lua" .. ";?/init.lua"
 --local ffi = require("ffi")
 const = require("const")
 local entity = require("entity")
+local Intro = require("scenes/intro")
+G.cache = require("cache")
 
 -- FFI definitions (try to avoid as much as possible)
 --ffi.cdef[[
@@ -48,6 +51,8 @@ color.black = color.new(0, 0, 0, 1.0)
 color.trans_green = color.new(0, 1, 0, 0.5)
 
 local quit_requests = 0
+---@class Intro
+local intro = nil
 
 function on_init()
     win = window.new(DESIGN_WIDTH * G.scale, DESIGN_HEIGHT * G.scale, G.title)
@@ -97,23 +102,18 @@ function on_init()
     local music = audio.load_music(audio_instance, assets_dir .. "music/rolemusic_37_ohmperios.mp3")
     G.musics["main"] = music
     audio.play_music(audio_instance, music)
-    audio.set_music_volume(audio_instance, G.musics["main"], 1.0)
+    audio.set_music_volume(audio_instance, G.musics["main"], 0.0)
 
     local sound = audio.load_sound(audio_instance, assets_dir .. "sfx/jump.wav")
     G.sounds["jump"] = sound
-    audio.set_sound_volume(G.sounds["jump"], 1.0)
-
+    audio.set_sound_volume(G.sounds["jump"], 0.0)
 end
 
 function main.on_update(dt)
     --io.write("dt: " .. tostring(dt) .. "\n")
     if not scene then
-        --log.error("no scene to run")
-        local intro = require("scenes/intro")
-        --io.write("intro: " .. tostring(intro) .."\n")
-
-        --io.write("defaultShader: " .. tostring(shader.defaultShader()) .."\n")
-        intro.init(shader.defaultShader())
+        intro = Intro()
+        intro:init(shader.defaultShader())
 
         scene = intro
         --return

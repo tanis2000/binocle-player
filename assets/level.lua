@@ -1,11 +1,12 @@
 local const = require("const")
-local process = require("process")
+local Process = require("process")
 local map = require("maps/s4m_ur4i-metroidvania-1")
 
-local level = process:new(nil, nil)
+local Level = Process:extend()
 
-function level:new()
-    log.info("new")
+function Level:new()
+    Level.super.new(self)
+    self.name = "level"
     self.map = map
     self.coll_map = {}
     self.width = map.width
@@ -59,11 +60,11 @@ function level:new()
     return self
 end
 
-function level:coord_id(cx, cy)
+function Level:coord_id(cx, cy)
     return cx + cy * self.width
 end
 
-function level:set_collision(x, y, v)
+function Level:set_collision(x, y, v)
     if self:is_valid(x, y) then
         if v then
             self.coll_map[self:coord_id(x, y)] = v
@@ -73,11 +74,11 @@ function level:set_collision(x, y, v)
     end
 end
 
-function level:is_valid(cx, cy)
+function Level:is_valid(cx, cy)
     return cx >= 0 and cx < self.width and cy >= 0 and cy <= self.height
 end
 
-function level:has_collision(x, y)
+function Level:has_collision(x, y)
     --print(x, y)
     if not self:is_valid(x, y) then
         return true
@@ -91,11 +92,11 @@ function level:has_collision(x, y)
     return false
 end
 
-function level:has_wall_collision(cx, cy)
+function Level:has_wall_collision(cx, cy)
     return self:has_collision(cx, cy)
 end
 
-function level:render()
+function Level:render()
     for idx in pairs(self.map.layers) do
         local layer = self.map.layers[idx]
         if layer.name == "collisions" or layer.name == "background" then
@@ -115,11 +116,16 @@ function level:render()
     --sprite.draw(self.tiles[32].sprite, gd_instance, 0, 0, viewport, 0, self.scale, camera)
 end
 
-function level:update(dt)
+function Level:update(dt)
     -- log.info("level update")
-    process:update(dt)
+    Level.super.update(self, dt)
+    --self:render()
+end
+
+function Level:post_update(dt)
+    Level.super.post_update(self, dt)
     self:render()
 end
 
 
-return level
+return Level
