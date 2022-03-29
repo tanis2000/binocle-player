@@ -29,6 +29,8 @@
 #include "binocle_ttfont.h"
 #include "binocle_audio.h"
 #include "binocle_audio_wrap.h"
+#include "gui.h"
+#include "imgui_lua_bindings.h"
 
 #define DESIGN_WIDTH 320
 #define DESIGN_HEIGHT 240
@@ -159,10 +161,10 @@ void lua_bridge_audio() {
   if (lua_pcall(lua.L, 0, 1, 0) != 0) {
     binocle_log_error("can't get the audio_instance from Lua");
   }
-  if (!lua_isuserdata(lua.L, 0)) {
+  if (!lua_isuserdata(lua.L, -1)) {
     binocle_log_error("returned value is not userdata");
   }
-  l_binocle_audio_t *audio_instance = luaL_checkudata(lua.L, 0, "binocle_audio");
+  l_binocle_audio_t *audio_instance = luaL_checkudata(lua.L, -1, "binocle_audio");
   audio = audio_instance->audio;
 }
 
@@ -193,12 +195,26 @@ int lua_on_update(float dt) {
   return 0;
 }
 
+int lua_on_destroy() {
+  SDL_LockMutex(lua_mutex);
+  lua_getglobal(lua.L, "on_destroy");
+  int result = lua_pcall(lua.L, 0, 0, 0);
+  if (result) {
+    binocle_log_error("Failed to run function on_destroy: %s\n", lua_tostring(lua.L, -1));
+    SDL_UnlockMutex(lua_mutex);
+    return 1;
+  }
+  SDL_UnlockMutex(lua_mutex);
+  return 0;
+}
+
 void main_loop() {
   binocle_window_begin_frame(window);
   float dt = (float)binocle_window_get_frame_time(window) / 1000.0f;
   elapsed_time += dt;
 
   binocle_input_update(input);
+  gui_pass_input_to_imgui(input);
 
   if (input->resized) {
     kmVec2 oldWindowSize = {.x = window->width, .y = window->height};
@@ -220,11 +236,23 @@ void main_loop() {
   }
    */
 
+  // Render all drawables to the offscreen RT
+  binocle_gd_render_offscreen(gd);
+
+  // Render all flat shaded instances (rect, circle, etc..)
+  binocle_gd_render_flat(gd);
+
+  // Render imgui to its own render target
+  //gui_draw(window, input, dt);
+
   // Gets the viewport calculated by the adapter
   kmAABB2 vp = binocle_viewport_adapter_get_viewport(*camera->viewport_adapter);
 
-  // Render to screen
-  binocle_gd_render(gd, window, DESIGN_WIDTH, DESIGN_HEIGHT, vp, camera->viewport_adapter->scale_matrix, camera->viewport_adapter->inverse_multiplier);
+  // Render the game to screen
+  binocle_gd_render_screen(gd, window, DESIGN_WIDTH, DESIGN_HEIGHT, vp, camera->viewport_adapter->scale_matrix, camera->viewport_adapter->inverse_multiplier);
+
+  // Render the editor UI imgui render target to the screen
+  gui_render_to_screen(gd, window, window->width, window->height, vp, camera->viewport_adapter->scale_matrix, 1);
 
   binocle_window_refresh(window);
   binocle_window_end_frame(window);
@@ -356,9 +384,15 @@ int main(int argc, char *argv[])
   lua_bridge_sprite_batch();
   lua_bridge_audio();
 
+  lState = lua.L;
+  LoadImguiBindings();
+
   binocle_gd_setup_default_pipeline(gd, DESIGN_WIDTH, DESIGN_HEIGHT, default_shader, screen_shader);
   binocle_gd_setup_flat_pipeline(gd);
 
+  gui_init_imgui(window->width, window->height);
+  //gui_setup_imgui_to_offscreen_pipeline(gd, binocle_assets_dir);
+  gui_setup_screen_pipeline(screen_shader);
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop, 0, 1);
 #else
@@ -367,6 +401,8 @@ int main(int argc, char *argv[])
   }
 #endif
   binocle_log_info("Quit requested");
+  lua_on_destroy();
+  binocle_lua_destroy(&lua);
   SDL_DestroyMutex(lua_mutex);
   binocle_app_destroy(&app);
   binocle_sdl_exit();

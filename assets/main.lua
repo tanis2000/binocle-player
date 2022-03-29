@@ -2,7 +2,7 @@ main = {}
 ---@type table
 G = {
     cache = nil,
-    all = {}, -- all entities
+    entities = {}, -- all entities
     mobs = {}, -- all mobs
     bullets = {}, -- all bullets
     scale = 2,
@@ -98,6 +98,7 @@ function on_init()
 
     audio_instance = audio.new()
     audio.init(audio_instance)
+    io.write("audio_instance: " .. tostring(audio_instance) .. "\n")
 
     local music = audio.load_music(audio_instance, assets_dir .. "music/rolemusic_37_ohmperios.mp3")
     G.musics["main"] = music
@@ -130,8 +131,8 @@ function main.on_update(dt)
 
 
     -- A simple identity matrix
-    identity_matrix = lkazmath.kmMat4New()
-    lkazmath.kmMat4Identity(identity_matrix)
+    --identity_matrix = lkazmath.kmMat4New()
+    --lkazmath.kmMat4Identity(identity_matrix)
 
     if input.is_key_down(input_mgr, key.KEY_ESCAPE) then
         quit_requests = quit_requests + 1
@@ -144,10 +145,10 @@ function main.on_update(dt)
     scene:update(dt)
 
     -- Gets the viewport calculated by the adapter
-    vp = viewport_adapter.get_viewport(adapter)
+    --vp = viewport_adapter.get_viewport(adapter)
     --io.write("vp: " .. tostring(vp) .. "\n")
-    vp_x = viewport_adapter.get_viewport_min_x(adapter)
-    vp_y = viewport_adapter.get_viewport_min_y(adapter)
+    --vp_x = viewport_adapter.get_viewport_min_x(adapter)
+    --vp_y = viewport_adapter.get_viewport_min_y(adapter)
     --io.write("vp_x: " .. tostring(vp_x) .. "\n")
     --io.write("vp_y: " .. tostring(vp_y) .. "\n")
     -- Reset the render target to the screen
@@ -164,6 +165,12 @@ function main.on_update(dt)
     scene:post_update(dt)
     for idx, music in pairs(G.musics) do
         audio.update_music_stream(audio_instance, music)
+    end
+end
+
+function on_destroy()
+    if G.game ~= nil then
+        G.game:on_destroy()
     end
 end
 

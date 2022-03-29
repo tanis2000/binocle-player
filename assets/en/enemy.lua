@@ -3,6 +3,7 @@ local Enemy = Entity:extend()
 
 function Enemy:new()
     Enemy.super.new(self)
+    self.name = "enemy " .. #G.mobs+1
     G.mobs[#G.mobs+1] = self
     self.hei = 32
     self.wid = 32

@@ -30,6 +30,10 @@ function Entity.new(self)
     -- Defines Y alignment of entity at its attach point (0 to 1.0)
     self.pivot_y = 0
 
+    self.sprite = nil
+    self.material = nil
+    self.texture = nil
+
     self.sprite_x = 0
     self.sprite_y = 0
     self.sprite_scale_x = 1.0 -- the current scale (calculated per frame)
@@ -51,21 +55,24 @@ function Entity.new(self)
 
     self.has_collisions = true
     self.cd = Cooldown()
+
+    self.name = "entity " .. #G.entities+1
+    G.entities[#G.entities+1] = self
 end
 
 function Entity:load_image(filename, width, height)
     self.image = G.cache.load(filename)
-    local tex = texture.from_image(self.image)
-    local mat = material.new()
+    self.texture = texture.from_image(self.image)
+    self.material = material.new()
 
-    material.set_texture(mat, tex)
-    material.set_shader(mat, shader.defaultShader())
-    self.sprite = sprite.from_material(mat)
+    material.set_texture(self.material, self.texture)
+    material.set_shader(self.material, shader.defaultShader())
+    self.sprite = sprite.from_material(self.material)
     self.frames = {}
     local original_image_width, original_image_height = image.get_info(self.image)
     for y = 0, original_image_height / height - 1 do
         for x = 0, original_image_width / width - 1 do
-            local frame = subtexture.subtexture_with_texture(tex, x * width, y * height, width, width)
+            local frame = subtexture.subtexture_with_texture(self.texture, x * width, y * height, width, width)
             sprite.set_subtexture(self.sprite, frame)
             table.insert(self.frames, frame)
         end
@@ -217,22 +224,22 @@ end
 
 function Entity:draw_debug()
     local s = string.format("(%.0f,%.0f) (%.0f, %.0f)", self.cx, self.cy, self:get_center_x(), self:get_center_y())
-    ttfont.draw_string(default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam);
+    ttfont.draw_string(G.default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam);
 
-    local center = lkazmath.kmVec2New();
-    center.x = self:get_center_x()
-    center.y = self:get_center_y()
-
-    local rect = lkazmath.kmAABB2New();
-    lkazmath.kmAABB2Initialize(rect, center, self.wid, self.hei, 0)
-    gd.draw_rect(gd_instance, rect, color.trans_green, viewport, cam)
+    --local center = lkazmath.kmVec2New();
+    --center.x = self:get_center_x()
+    --center.y = self:get_center_y()
+    --
+    --local rect = lkazmath.kmAABB2New();
+    --lkazmath.kmAABB2Initialize(rect, center, self.wid, self.hei, 0)
+    gd.draw_rect(gd_instance, self:get_center_x(), self:get_center_y(), self.wid, self.hei, color.trans_green, viewport, cam)
 end
 
 function Entity:draw()
-    local scale = lkazmath.kmVec2New()
-    scale.x = self.sprite_scale_x
-    scale.y = self.sprite_scale_y
-    sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, scale, cam)
+    --local scale = lkazmath.kmVec2New()
+    --scale.x = self.sprite_scale_x
+    --scale.y = self.sprite_scale_y
+    sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam)
 end
 
 function Entity.get_left(self)
@@ -325,8 +332,16 @@ function Entity.is_alive(self)
     return not self.destroyed
 end
 
+function Entity.kill(self)
+    self.destroyed = true
+end
+
 function Entity.on_dispose(self)
     -- TODO dispose of sprite, material, texture, etc...
+    lume.remove(G.entities, self)
+    sprite.destroy(self.sprite)
+    material.destroy(self.material)
+    --texture.destroy(self.texture)
 end
 
 function Entity.dir_to(self, en)

@@ -6,6 +6,7 @@ function Intro:new()
     Intro.super.new(self)
     self.TEX_WIDTH = 1682
     self.TEX_HEIGHT = 479
+    self.default_font = nil
 end
 
 
@@ -31,21 +32,24 @@ function Intro:init(shd)
 
     gd.set_offscreen_clear_color(gd_instance, 1, 1, 1, 1)
 
-    default_font = ttfont.from_file(assets_dir .. "font/default.ttf", 8, shader.defaultShader());
+    G.default_font = ttfont.from_file(assets_dir .. "font/default.ttf", 8, shader.defaultShader());
 end
 
 function Intro:update(dt)
     -- By default we scale our logo by 1/3
-    local scale = lkazmath.kmVec2New();
-    scale.x = DESIGN_WIDTH / self.TEX_WIDTH
-    scale.y = DESIGN_HEIGHT / self.TEX_WIDTH
+    --local scale = lkazmath.kmVec2New();
+    --scale.x = DESIGN_WIDTH / self.TEX_WIDTH
+    --scale.y = DESIGN_HEIGHT / self.TEX_WIDTH
+
+    local scale_x = DESIGN_WIDTH / self.TEX_WIDTH
+    local scale_y = DESIGN_HEIGHT / self.TEX_WIDTH
 
     -- Center the logo in the render target
-    local x = (DESIGN_WIDTH - (self.TEX_WIDTH * scale.x)) / 2.0
-    local y = (DESIGN_HEIGHT - (self.TEX_HEIGHT * scale.y)) / 2.0
+    local x = (DESIGN_WIDTH - (self.TEX_WIDTH * scale_x)) / 2.0
+    local y = (DESIGN_HEIGHT - (self.TEX_HEIGHT * scale_y)) / 2.0
 
     --io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
-    sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale, cam)
+    sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale_x, scale_y, cam)
 
     --io.write("input: " .. tostring(dump(input)) .. "\n")
     --io.write("input_mgr: " .. tostring(dump(input_mgr)) .. "\n")
@@ -53,12 +57,18 @@ function Intro:update(dt)
         local game = Game(self.shader)
         scene = game
         G.game = game
+        self:on_destroy()
     end
 
     local s = "Press SPACE to START"
-    local width = ttfont.get_string_width(default_font, s)
-    ttfont.draw_string(default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam);
+    local width = ttfont.get_string_width(G.default_font, s)
+    ttfont.draw_string(G.default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam);
 
+end
+
+function Intro:on_destroy()
+    print("intro:on_destroy()")
+    ttfont.destroy(G.default_font)
 end
 
 return Intro

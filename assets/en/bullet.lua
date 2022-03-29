@@ -14,6 +14,7 @@ function Bullet:new(owner)
 
     self.speed = 1.0
     self.ang = owner:dir_to_ang()
+    self.name = "bullet " .. #G.bullets+1
     table.insert(G.bullets, self)
 end
 
@@ -37,6 +38,7 @@ function Bullet:update(dt)
             -- hit the mob
             print("hit")
             -- remove this from the scene
+            self:kill()
             lume.remove(G.bullets, self)
         end
     end
@@ -44,6 +46,7 @@ function Bullet:update(dt)
     if not G.game.level:is_valid(self.cx, self.cy) or G.game.level:has_collision(self.cx, self.cy) then
         -- remove this from the scene
         print("wall")
+        self:kill()
         lume.remove(G.bullets, self)
     end
 end

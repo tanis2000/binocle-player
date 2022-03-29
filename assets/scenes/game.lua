@@ -2,7 +2,8 @@ local Entity = require("entity")
 local Hero = require("en/hero")
 local Mob = require("en/mob")
 local Enemy = require("en/enemy")
-local Process = require("Process")
+local Process = require("process")
+local DebugGui = require("debuggui")
 
 local Game = Process:extend()
 
@@ -36,13 +37,17 @@ function Game:new(shd)
     local enemy = Enemy()
     enemy:set_pos_grid(13, 5)
 
-    local m = Mob()
-    m.sprite = self.player
+    --local m = Mob()
+    --m.sprite = self.player
 
     local l = require("level")
     self.level = l:new()
     self:add_child(l)
     gd.set_offscreen_clear_color(gd_instance, 0, 0, 0, 1)
+
+    self.debugGui = DebugGui()
+
+    self.default_font = ttfont.from_file(assets_dir .. "font/default.ttf", 8, shader.defaultShader());
 
     -- TODO remove this stuff when we get rid of the old mob
     self.player_x = 100
@@ -53,6 +58,15 @@ function Game:new(shd)
     self.scale.x = 1.0
     self.scale.y = 1.0
     -- TODO end of removal
+end
+
+function Game:pre_update(dt)
+    Game.super.pre_update(self, dt)
+
+    for idx in pairs(G.entities) do
+        en = G.entities[idx]
+        en:pre_update(dt)
+    end
 end
 
 function Game:update(dt)
@@ -82,43 +96,60 @@ function Game:update(dt)
 
     self.level:update(dt)
 
-    self.h:pre_update(dt)
-    self.h:update(dt)
+    --self.h:pre_update(dt)
+    --self.h:update(dt)
 
 
-    for idx in pairs(G.mobs) do
-        m = G.mobs[idx]
-        m:pre_update(dt)
-        m:update(dt)
+    for idx in pairs(G.entities) do
+        en = G.entities[idx]
+        en:update(dt)
     end
 
-    for idx in pairs(G.bullets) do
-        b = G.bullets[idx]
-        b:pre_update(dt)
-        b:update(dt)
-    end
+    --for idx in pairs(G.bullets) do
+    --    b = G.bullets[idx]
+    --    b:pre_update(dt)
+    --    b:update(dt)
+    --end
 
+    self.debugGui:update(dt)
 end
 
 function Game:post_update(dt)
     Game.super.post_update(self, dt)
 
-    for idx in pairs(G.mobs) do
-        m = G.mobs[idx]
-        m:post_update(dt)
-        m:draw()
-        sprite.draw(m.sprite, gd_instance, m.sprite_x, m.sprite_y, viewport, 0, self.scale, cam)
+    for idx in pairs(G.entities) do
+        en = G.entities[idx]
+        en:post_update(dt)
+        en:draw()
+        en:draw_debug()
+        --sprite.draw(m.sprite, gd_instance, m.sprite_x, m.sprite_y, viewport, 0, self.scale, cam)
     end
 
-    for _, b in pairs(G.bullets) do
-        b:post_update(dt)
-        b:draw()
-        b:draw_debug()
-    end
+    --for _, b in pairs(G.bullets) do
+    --    b:post_update(dt)
+    --    b:draw()
+    --    b:draw_debug()
+    --end
 
-    self.h:post_update(dt)
-    self.h:draw()
-    self.h:draw_debug()
+    --self.h:post_update(dt)
+    --self.h:draw()
+    --self.h:draw_debug()
+
+    self:garbage_collect()
+end
+
+function Game:garbage_collect()
+    for idx in pairs(G.entities) do
+        en = G.entities[idx]
+        if en.destroyed then
+            print("dispose")
+            en:on_dispose()
+        end
+    end
+end
+
+function Game:on_destroy()
+    ttfont.destroy(self.default_font)
 end
 
 return Game
