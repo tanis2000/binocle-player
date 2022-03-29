@@ -127,5 +127,20 @@ function Level:post_update(dt)
     self:render()
 end
 
+function Level:get_c_wid()
+    return self.width
+end
+
+function Level:get_c_hei()
+    return self.height
+end
+
+function Level:get_px_wid()
+    return self:get_c_wid() * const.GRID
+end
+
+function Level:get_px_hei()
+    return self:get_c_hei() * const.GRID
+end
 
 return Level

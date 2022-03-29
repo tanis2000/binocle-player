@@ -4,6 +4,7 @@ local Mob = require("en/mob")
 local Enemy = require("en/enemy")
 local Process = require("process")
 local DebugGui = require("debuggui")
+local GameCamera = require("gamecamera")
 
 local Game = Process:extend()
 
@@ -48,6 +49,10 @@ function Game:new(shd)
     self.debugGui = DebugGui()
 
     self.default_font = ttfont.from_file(assets_dir .. "font/default.ttf", 8, shader.defaultShader());
+
+    self.camera = GameCamera()
+    self:add_child(self.camera)
+    --self.camera:track_entity(self.h)
 
     -- TODO remove this stuff when we get rid of the old mob
     self.player_x = 100

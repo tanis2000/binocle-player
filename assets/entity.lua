@@ -1,8 +1,9 @@
 local lume = require("lib.lume")
+local const = require("const")
 local Object = require("lib.classic")
 local Cooldown = require("cooldown")
 
----@type table
+---@class Entity
 local Entity = Object:extend()
 
 function Entity.new(self)

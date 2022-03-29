@@ -5,7 +5,6 @@ G = {
     entities = {}, -- all entities
     mobs = {}, -- all mobs
     bullets = {}, -- all bullets
-    scale = 2,
     title = "Binocle Player",
     musics = {},
     sounds = {},
@@ -17,7 +16,7 @@ package.path = package.path .. ";" .. assets_dir .."?.lua" .. ";?/init.lua"
 -- Imports
 -- ffi can only be used with luajit (hence on desktop only, no wasm or mobile)
 --local ffi = require("ffi")
-const = require("const")
+local const = require("const")
 local entity = require("entity")
 local Intro = require("scenes/intro")
 G.cache = require("cache")
@@ -39,8 +38,8 @@ G.cache = require("cache")
 
 -- Constants
 GL_RGBA8 = 0x8058
-DESIGN_WIDTH = 320
-DESIGN_HEIGHT = 240
+DESIGN_WIDTH = const.DESIGN_WIDTH
+DESIGN_HEIGHT = const.DESIGN_HEIGHT
 
 -- Globals
 log.info("Begin of main.lua\n");
@@ -55,7 +54,7 @@ local quit_requests = 0
 local intro = nil
 
 function on_init()
-    win = window.new(DESIGN_WIDTH * G.scale, DESIGN_HEIGHT * G.scale, G.title)
+    win = window.new(DESIGN_WIDTH * const.SCALE, DESIGN_HEIGHT * const.SCALE, G.title)
     io.write("win: " .. tostring(win) .."\n")
     bg_color = color.black
     io.write("bg_color: " .. tostring(bg_color) .."\n")

@@ -2,7 +2,6 @@ local Cooldown = require("cooldown")
 local lume = require("lib.lume")
 local Object = require("lib.classic")
 
----@type table
 ---@class Process
 local Process = Object:extend()
 
