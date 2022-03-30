@@ -671,7 +671,14 @@ IMGUI_FUNCTION(Bullet)
 CALL_FUNCTION_NO_RET(Bullet)
 END_IMGUI_FUNC
 //    IMGUI_API bool          BeginCombo(const char* label, const char* preview_value, ImGuiComboFlags flags = 0);
-// Unsupported arg type  ImGuiComboFlags flags = 0
+IMGUI_FUNCTION(BeginCombo)
+LABEL_ARG(label)
+LABEL_ARG(preview_value)
+OPTIONAL_INT_ARG(flags, 0)
+CALL_FUNCTION(BeginCombo, bool, label, preview_value, flags)
+IF_RET_ADD_END_STACK(5)
+PUSH_BOOL(ret)
+END_IMGUI_FUNC
 //    IMGUI_API void          EndCombo(); // only call EndCombo() if BeginCombo() returns true!
 IMGUI_FUNCTION(EndCombo)
 CALL_FUNCTION_NO_RET(EndCombo)
@@ -952,20 +959,21 @@ END_IMGUI_FUNC
 // Unsupported arg type const void* ptr_id
 // Unsupported arg type  va_list args) IM_FMTLIST(2
 //    IMGUI_API bool          TreeNodeEx(const char* label, ImGuiTreeNodeFlags flags = 0);
-// Unsupported arg type  ImGuiTreeNodeFlags flags = 0
+IMGUI_FUNCTION(TreeNodeEx)
+LABEL_ARG(label)
+OPTIONAL_INT_ARG(flags, 0)
+CALL_FUNCTION(TreeNodeEx, bool, label, flags)
+PUSH_BOOL(ret)
+END_IMGUI_FUNC
 //    IMGUI_API bool          TreeNodeEx(const char* str_id, ImGuiTreeNodeFlags flags, const char* fmt, ...) IM_FMTARGS(3);
-// Unsupported arg type  ImGuiTreeNodeFlags flags
 // Unsupported arg type  ...) IM_FMTARGS(3
 //    IMGUI_API bool          TreeNodeEx(const void* ptr_id, ImGuiTreeNodeFlags flags, const char* fmt, ...) IM_FMTARGS(3);
 // Unsupported arg type const void* ptr_id
-// Unsupported arg type  ImGuiTreeNodeFlags flags
 // Unsupported arg type  ...) IM_FMTARGS(3
 //    IMGUI_API bool          TreeNodeExV(const char* str_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args) IM_FMTLIST(3);
-// Unsupported arg type  ImGuiTreeNodeFlags flags
 // Unsupported arg type  va_list args) IM_FMTLIST(3
 //    IMGUI_API bool          TreeNodeExV(const void* ptr_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args) IM_FMTLIST(3);
 // Unsupported arg type const void* ptr_id
-// Unsupported arg type  ImGuiTreeNodeFlags flags
 // Unsupported arg type  va_list args) IM_FMTLIST(3
 //    IMGUI_API void          TreePush(const char* str_id);                                       // ~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
 IMGUI_FUNCTION(TreePush)
@@ -992,9 +1000,21 @@ END_IMGUI_FUNC
 //    IMGUI_API void          SetNextTreeNodeOpen(bool is_open, ImGuiCond cond = 0);              // set next TreeNode/CollapsingHeader open state.
 // Unsupported arg type  ImGuiCond cond = 0
 //    IMGUI_API bool          CollapsingHeader(const char* label, ImGuiTreeNodeFlags flags = 0);  // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
-// Unsupported arg type  ImGuiTreeNodeFlags flags = 0
+IMGUI_FUNCTION(CollapsingHeader)
+LABEL_ARG(label)
+OPTIONAL_INT_ARG(flags, 0)
+CALL_FUNCTION(CollapsingHeader, bool, label, flags)
+PUSH_BOOL(ret)
+END_IMGUI_FUNC
 //    IMGUI_API bool          CollapsingHeader(const char* label, bool* p_open, ImGuiTreeNodeFlags flags = 0); // when 'p_open' isn't NULL, display an additional small close button on upper right of the header
-// Unsupported arg type  ImGuiTreeNodeFlags flags = 0
+IMGUI_FUNCTION(CollapsingHeader_3)
+LABEL_ARG(label)
+BOOL_POINTER_ARG(p_open)
+OPTIONAL_INT_ARG(flags, 0)
+CALL_FUNCTION(CollapsingHeader, bool, label, p_open, flags)
+PUSH_BOOL(ret)
+END_BOOL_POINTER(p_open)
+END_IMGUI_FUNC
 //    IMGUI_API bool          Selectable(const char* label, bool selected = false, ImGuiSelectableFlags flags = 0, const ImVec2& size = ImVec2 0 0);  // "bool selected" carry the selection state (read-only). Selectable() is clicked is returns true so you can modify your selection state. size.x==0.0: use remaining width, size.x>0.0: specify width. size.y==0.0: use label height, size.y>0.0: specify height
 IMGUI_FUNCTION(Selectable)
 LABEL_ARG(label)

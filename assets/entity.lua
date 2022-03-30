@@ -82,8 +82,8 @@ function Entity:load_image(filename, width, height)
 end
 
 function Entity.set_pos_grid(self, x, y)
-    self.cx = x
-    self.cy = y
+    self.cx = math.floor(x)
+    self.cy = math.floor(y)
     self.xr = 0.5
     self.yr = 0
 end

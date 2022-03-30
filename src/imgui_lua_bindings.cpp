@@ -390,6 +390,7 @@ static const struct luaL_Reg imguilib [] = {
   {"Button", impl_Button},
   { "NewFrame", l_gui_wrap_new_frame },
   { "Render", l_gui_wrap_render_frame },
+  { "RenderToScreen", l_gui_wrap_render_to_screen },
   {NULL, NULL}
 };
 

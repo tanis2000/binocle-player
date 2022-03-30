@@ -14,7 +14,7 @@ function GameCamera:new()
     self.raw_focus:set_level_case(0, 0)
     self.clamped_focus = LPoint()
     self.clamped_focus:set_level_case(0, 0)
-    self.clamp_to_level_bounds = false
+    self.clamp_to_level_bounds = true
     self.dx = 0
     self.dy = 0
 
@@ -38,7 +38,7 @@ function GameCamera:get_left()
 end
 
 function GameCamera:get_right()
-    return math.floor(self:get_left() + (self:get_px_wid() - 1))
+    return math.floor(self.clamped_focus.get_level_x() + self:get_px_wid() * 0.5)
 end
 
 function GameCamera:get_top()
@@ -46,7 +46,7 @@ function GameCamera:get_top()
 end
 
 function GameCamera:get_bottom()
-    return math.floor(self:get_top() - (self:get_px_hei() - 1))
+    return math.floor(self.clamped_focus.get_level_y() - self:get_px_hei() * 0.5)
 end
 
 function GameCamera:get_center_x()
@@ -130,8 +130,8 @@ function GameCamera:bump(x, y)
 end
 
 function GameCamera:apply()
-    local cam_x = self.clamped_focus:get_level_x() + self:get_px_wid() * 0.5
-    local cam_y = self.clamped_focus:get_level_y() + self:get_px_hei() * 0.5
+    local cam_x = math.floor(self.clamped_focus:get_level_x() - self:get_px_wid() * 0.5)
+    local cam_y = math.floor(self.clamped_focus:get_level_y() - self:get_px_hei() * 0.5)
     camera.set_position(cam, cam_x, cam_y)
 end
 
@@ -153,11 +153,11 @@ function GameCamera:update(dt)
         local a = self.raw_focus:ang_to(nil, nil, tx, ty)
         local dist_x = math.abs(tx - self.raw_focus:get_level_x())
         if (dist_x >= self.dead_zone_pct_x * self:get_px_wid()) then
-            self.dx = self.dx + math.cos(a) * (0.8 * dist_x - self.dead_zone_pct_x * self:get_px_wid()) * spd_x * dt
+            self.dx = self.dx + math.cos(a) * (0.8 * dist_x - self.dead_zone_pct_x * self:get_px_wid()) * spd_x
         end
         local dist_y = math.abs(ty - self.raw_focus:get_level_y())
         if (dist_y >= self.dead_zone_pct_y * self:get_px_hei()) then
-            self.dy = self.dy + math.cos(a) * (0.8 * dist_y - self.dead_zone_pct_y * self:get_px_hei()) * spd_y * dt
+            self.dy = self.dy + math.sin(a) * (0.8 * dist_y - self.dead_zone_pct_y * self:get_px_hei()) * spd_y
         end
     end
 
@@ -184,22 +184,27 @@ function GameCamera:update(dt)
         end
     end
 
-    self.raw_focus:set_level_x(self.raw_focus:get_level_x() + self.dx * dt)
-    self.dx = self.dx * math.pow(frict_x, dt)
-    self.raw_focus:set_level_y(self.raw_focus:get_level_y() + self.dy * dt)
-    self.dy = self.dy * math.pow(frict_y, dt)
-
+    self.raw_focus:set_level_x(self.raw_focus:get_level_x() + self.dx)
+    self.dx = self.dx * math.pow(frict_x, 1)
+    if math.abs(self.dx) < 0.01 then
+        self.dx = 0
+    end
+    self.raw_focus:set_level_y(self.raw_focus:get_level_y() + self.dy)
+    self.dy = self.dy * math.pow(frict_y, 1)
+    if math.abs(self.dy) < 0.01 then
+        self.dy = 0
+    end
     if self.clamp_to_level_bounds then
         if level:get_px_wid() < self:get_px_wid() then
             self.clamped_focus:set_level_x(level:get_px_wid() * 0.5) -- centered small level
         else
-            self.clamped_focus:set_level_x(lume.clamp(self.raw_focus:get_level_x(), self:get_px_wid() * 0.5, level:get_px_wid() - self:get_px_wid()))
+            self.clamped_focus:set_level_x(lume.clamp(self.raw_focus:get_level_x(), self:get_px_wid() * 0.5, level:get_px_wid() - self:get_px_wid() * 0.5))
         end
 
         if level:get_px_hei() < self:get_px_hei() then
             self.clamped_focus:set_level_y(level:get_px_hei() * 0.5) -- centered small level
         else
-            self.clamped_focus:set_level_y(lume.clamp(self.raw_focus:get_level_y(), self:get_px_hei() * 0.5, level:get_px_hei() - self:get_px_hei()))
+            self.clamped_focus:set_level_y(lume.clamp(self.raw_focus:get_level_y(), self:get_px_hei() * 0.5, level:get_px_hei() - self:get_px_hei() * 0.5))
         end
     else
         self.clamped_focus:set_level_x(self.raw_focus:get_level_x())

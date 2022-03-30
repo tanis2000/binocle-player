@@ -22,4 +22,5 @@ void gui_render_to_screen(struct binocle_gd *gd, struct binocle_window *window, 
 void gui_setup_screen_pipeline(struct sg_shader display_shader);
 int l_gui_wrap_new_frame(struct lua_State *L);
 int l_gui_wrap_render_frame(struct lua_State *L);
+int l_gui_wrap_render_to_screen(struct lua_State *L);
 #endif //BINOCLE_C_ADVENTURE_GAME_GUI_H

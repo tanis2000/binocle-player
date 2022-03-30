@@ -8,6 +8,7 @@ G = {
     title = "Binocle Player",
     musics = {},
     sounds = {},
+    debug = false,
 }
 local assets_dir = sdl.assets_dir()
 log.info(assets_dir .. "\n")
@@ -133,6 +134,11 @@ function main.on_update(dt)
     --identity_matrix = lkazmath.kmMat4New()
     --lkazmath.kmMat4Identity(identity_matrix)
 
+    if input.is_key_down(input_mgr, key.KEY_1) then
+        G.debug = not G.debug
+        print(G.debug)
+    end
+
     if input.is_key_down(input_mgr, key.KEY_ESCAPE) then
         quit_requests = quit_requests + 1
         print(quit_requests)
@@ -164,6 +170,11 @@ function main.on_update(dt)
     scene:post_update(dt)
     for idx, music in pairs(G.musics) do
         audio.update_music_stream(audio_instance, music)
+    end
+
+    gd.render_screen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, viewport, cam)
+    if G.debug then
+        imgui.RenderToScreen(gd_instance, win, viewport, cam)
     end
 end
 

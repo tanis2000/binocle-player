@@ -52,7 +52,7 @@ function Game:new(shd)
 
     self.camera = GameCamera()
     self:add_child(self.camera)
-    --self.camera:track_entity(self.h)
+    self.camera:track_entity(self.h)
 
     -- TODO remove this stuff when we get rid of the old mob
     self.player_x = 100

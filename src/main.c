@@ -249,10 +249,10 @@ void main_loop() {
   kmAABB2 vp = binocle_viewport_adapter_get_viewport(*camera->viewport_adapter);
 
   // Render the game to screen
-  binocle_gd_render_screen(gd, window, DESIGN_WIDTH, DESIGN_HEIGHT, vp, camera->viewport_adapter->scale_matrix, camera->viewport_adapter->inverse_multiplier);
+//  binocle_gd_render_screen(gd, window, DESIGN_WIDTH, DESIGN_HEIGHT, vp, camera->viewport_adapter->scale_matrix, camera->viewport_adapter->inverse_multiplier);
 
   // Render the editor UI imgui render target to the screen
-  gui_render_to_screen(gd, window, window->width, window->height, vp, camera->viewport_adapter->scale_matrix, 1);
+//  gui_render_to_screen(gd, window, window->width, window->height, vp, camera->viewport_adapter->scale_matrix, 1);
 
   binocle_window_refresh(window);
   binocle_window_end_frame(window);

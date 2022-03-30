@@ -11,6 +11,10 @@
 #include "cimgui.h"
 #include "lua.h"
 #include "binocle_window_wrap.h"
+#include "binocle_gd_wrap.h"
+#include "binocle_camera_wrap.h"
+#include "binocle_camera.h"
+#include "binocle_viewport_adapter.h"
 
 #define MAX_LOG_ENTRIES 4096
 #define max_ui_vertices (1 << 16)
@@ -947,5 +951,14 @@ void gui_wrap_render_frame() {
 
 int l_gui_wrap_render_frame(lua_State *L) {
   gui_wrap_render_frame();
+  return 0;
+}
+
+int l_gui_wrap_render_to_screen(lua_State *L) {
+  l_binocle_gd_t *gd = luaL_checkudata(L, 1, "binocle_gd");
+  l_binocle_window_t *window = luaL_checkudata(L, 2, "binocle_window");
+  kmAABB2 **vp = lua_touserdata(L, 3);
+  l_binocle_camera_t *camera = luaL_checkudata(L, 4, "binocle_camera");
+  gui_render_to_screen(gd->gd, window->window, window->window->width, window->window->height, **vp, camera->camera->viewport_adapter->scale_matrix, 1);
   return 0;
 }
