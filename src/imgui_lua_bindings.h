@@ -11,6 +11,6 @@
 #define EXTERN
 #endif
 
-struct lua_State* lState;
+EXTERN void SetLuaState(struct lua_State* lState);
 EXTERN void LoadImguiBindings();
 #endif //BINOCLE_PLAYER_IMGUI_LUA_BINDINGS_H

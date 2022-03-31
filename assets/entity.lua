@@ -41,6 +41,7 @@ function Entity.new(self)
     self.sprite_scale_y = 1.0 -- the current scale (calculated per frame)
     self.sprite_scale_set_x = 1.0 -- the scale we have set
     self.sprite_scale_set_y = 1.0 -- the scale we have set
+    self.visible = true
 
     self.time_mul = 1 -- time multiplier
     self.dir = 1 -- direction the entity is facing
@@ -224,23 +225,17 @@ function Entity.post_update(self)
 end
 
 function Entity:draw_debug()
-    local s = string.format("(%.0f,%.0f) (%.0f, %.0f)", self.cx, self.cy, self:get_center_x(), self:get_center_y())
-    ttfont.draw_string(G.default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam);
-
-    --local center = lkazmath.kmVec2New();
-    --center.x = self:get_center_x()
-    --center.y = self:get_center_y()
-    --
-    --local rect = lkazmath.kmAABB2New();
-    --lkazmath.kmAABB2Initialize(rect, center, self.wid, self.hei, 0)
-    gd.draw_rect(gd_instance, self:get_center_x(), self:get_center_y(), self.wid, self.hei, color.trans_green, viewport, cam)
+    if G.debug then
+        local s = string.format("(%.0f,%.0f) (%.0f, %.0f)", self.cx, self.cy, self:get_center_x(), self:get_center_y())
+        ttfont.draw_string(G.default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam);
+        gd.draw_rect(gd_instance, self:get_center_x(), self:get_center_y(), self.wid, self.hei, color.trans_green, viewport, cam)
+    end
 end
 
 function Entity:draw()
-    --local scale = lkazmath.kmVec2New()
-    --scale.x = self.sprite_scale_x
-    --scale.y = self.sprite_scale_y
-    sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam)
+    if self.visible then
+        sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam)
+    end
 end
 
 function Entity.get_left(self)

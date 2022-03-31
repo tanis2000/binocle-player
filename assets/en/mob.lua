@@ -1,11 +1,12 @@
 local Entity = require("entity")
-local cpoint = require("cpoint")
+local LPoint = require("lpoint")
 
 local Mob = Entity:extend()
 
 function Mob:new()
     Mob.super.new(self)
-    self.start_pt = cpoint:new(0, 0)
+    self.start_pt = LPoint()
+    self.start_pt:set_level_case(0, 0)
     self.wander_ang = 0
     G.mobs[#G.mobs+1] = self
     return self

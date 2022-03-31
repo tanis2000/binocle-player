@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
   lua_bridge_sprite_batch();
   lua_bridge_audio();
 
-  lState = lua.L;
+  SetLuaState(lua.L);
   LoadImguiBindings();
 
   binocle_gd_setup_default_pipeline(gd, DESIGN_WIDTH, DESIGN_HEIGHT, default_shader, screen_shader);

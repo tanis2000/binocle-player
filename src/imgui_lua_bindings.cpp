@@ -40,6 +40,8 @@ static void ImEndStack(int type);
 
 #endif
 
+struct lua_State* lState;
+
 // Example lua run string function
 // returns NULL on success and error string on error
 const char * RunString(const char* szLua) {
@@ -523,4 +525,8 @@ EXTERN void LoadImguiBindings() {
   luaL_setfuncs(lState, imguilib, 0);
   PushImguiEnums(lState, "constant");
   lua_setglobal(lState, "imgui");
+}
+
+EXTERN void SetLuaState(struct lua_State* L) {
+  lState = L;
 }
