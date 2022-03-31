@@ -34,19 +34,19 @@ function GameCamera:new()
 end
 
 function GameCamera:get_left()
-    return math.floor(self.clamped_focus.get_level_x() - self:get_px_wid() * 0.5)
+    return math.floor(self.clamped_focus:get_level_x() - self:get_px_wid() * 0.5)
 end
 
 function GameCamera:get_right()
-    return math.floor(self.clamped_focus.get_level_x() + self:get_px_wid() * 0.5)
+    return math.floor(self.clamped_focus:get_level_x() + self:get_px_wid() * 0.5)
 end
 
 function GameCamera:get_top()
-    return math.floor(self.clamped_focus.get_level_y() + self:get_px_hei() * 0.5)
+    return math.floor(self.clamped_focus:get_level_y() + self:get_px_hei() * 0.5)
 end
 
 function GameCamera:get_bottom()
-    return math.floor(self.clamped_focus.get_level_y() - self:get_px_hei() * 0.5)
+    return math.floor(self.clamped_focus:get_level_y() - self:get_px_hei() * 0.5)
 end
 
 function GameCamera:get_center_x()

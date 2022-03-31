@@ -5,6 +5,7 @@ local Enemy = require("en/enemy")
 local Process = require("process")
 local DebugGui = require("debuggui")
 local GameCamera = require("gamecamera")
+local const = require("const")
 
 local Game = Process:extend()
 
@@ -145,8 +146,15 @@ end
 function Game:get_on_screen_entities()
     local entities = {}
 
+    local l = self.camera:get_left() - const.GRID
+    local b = self.camera:get_bottom() - const.GRID
+    local r = self.camera:get_right() + const.GRID
+    local t = self.camera:get_top() + const.GRID
+
     for _, en in pairs(G.entities) do
-        table.insert(entities, en)
+        if en:get_left() > l and en:get_right() < r and en:get_bottom() > b and en:get_top() < t then
+            table.insert(entities, en)
+        end
     end
 
     table.sort(entities, function(en1, en2)

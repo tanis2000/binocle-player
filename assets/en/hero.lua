@@ -68,7 +68,7 @@ function Hero:post_update(dt)
 end
 function Hero.shoot(self)
     local b = Bullet(self)
-    self.cd:set("shoot", 0.1)
+    self.cd:set("shoot", 0.15)
 end
 
 return Hero
