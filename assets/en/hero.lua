@@ -1,5 +1,6 @@
 local Entity = require("entity")
 local Bullet = require("en.bullet")
+local Fx = require("en.fx")
 local Hero = Entity:extend()
 
 function Hero:new()
@@ -33,6 +34,8 @@ function Hero:update(dt)
         if self:on_ground() then
             self.dy = 0.9
             audio.play_sound(G.sounds["jump"])
+            local fx = Fx("img/jump.png", 6, 0.3)
+            fx:set_pos_pixel(self:get_center_x(), self:get_bottom())
         end
     end
 
