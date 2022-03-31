@@ -1,6 +1,8 @@
 local lume = require("lib.lume")
 local M = require("m")
 local Entity = require("entity")
+local layers = require("layers")
+
 local Bullet = Entity:extend()
 
 function Bullet:new(owner)
@@ -8,6 +10,7 @@ function Bullet:new(owner)
     self.owner = owner
     self.hei = 4
     self.wid = 8
+    self.depth = layers.BULLETS
     self:load_image("img/bullet.png", 8, 4)
     self.has_collisions = false
     self:set_pos_pixel(owner:get_center_x(), owner:get_center_y())

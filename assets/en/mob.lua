@@ -1,5 +1,6 @@
 local Entity = require("entity")
 local LPoint = require("lpoint")
+local layers = require("layers")
 
 local Mob = Entity:extend()
 
@@ -8,6 +9,7 @@ function Mob:new()
     self.start_pt = LPoint()
     self.start_pt:set_level_case(0, 0)
     self.wander_ang = 0
+    self.depth = layers.MOBS
     G.mobs[#G.mobs+1] = self
     return self
 end

@@ -122,8 +122,7 @@ end
 function Game:post_update(dt)
     Game.super.post_update(self, dt)
 
-    for idx in pairs(G.entities) do
-        en = G.entities[idx]
+    for _, en in pairs(self:get_on_screen_entities()) do
         en:post_update(dt)
         en:draw()
         en:draw_debug()
@@ -142,6 +141,21 @@ function Game:post_update(dt)
 
     self:garbage_collect()
 end
+
+function Game:get_on_screen_entities()
+    local entities = {}
+
+    for _, en in pairs(G.entities) do
+        table.insert(entities, en)
+    end
+
+    table.sort(entities, function(en1, en2)
+        return en1.depth < en2.depth
+    end)
+
+    return entities
+end
+
 
 function Game:garbage_collect()
     for idx in pairs(G.entities) do

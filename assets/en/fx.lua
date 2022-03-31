@@ -1,6 +1,8 @@
 local lume = require("lib.lume")
 local M = require("m")
 local Entity = require("entity")
+local layers = require("layers")
+
 local Fx = Entity:extend()
 
 function Fx:new(filename, frames, duration)
@@ -10,6 +12,7 @@ function Fx:new(filename, frames, duration)
     local frame_width = original_image_width / frames
     self.hei = frame_width
     self.wid = original_image_height
+    self.depth = layers.FX
     self:load_image(filename, frame_width, original_image_height)
     local f = {}
     for frame = 1, frames do

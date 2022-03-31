@@ -1,6 +1,7 @@
 local const = require("const")
 local Process = require("process")
 local map = require("maps/s4m_ur4i-metroidvania-1")
+local layers = require("layers")
 
 local Level = Process:extend()
 

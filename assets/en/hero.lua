@@ -1,12 +1,14 @@
 local Entity = require("entity")
 local Bullet = require("en.bullet")
 local Fx = require("en.fx")
+local layers = require("layers")
 local Hero = Entity:extend()
 
 function Hero:new()
     Hero.super.new(self)
     self.hei = 32
     self.wid = 32
+    self.depth = layers.HERO
     self:load_image("img/player.png", 32, 32)
     self:add_animation("idle", {
         1,

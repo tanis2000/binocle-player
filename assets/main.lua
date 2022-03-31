@@ -112,6 +112,7 @@ end
 
 function main.on_update(dt)
     --io.write("dt: " .. tostring(dt) .. "\n")
+    sprite_batch.begin(sb, cam, shader.defaultShader())
     if not scene then
         intro = Intro()
         intro:init(shader.defaultShader())
@@ -176,6 +177,8 @@ function main.on_update(dt)
     if G.debug then
         imgui.RenderToScreen(gd_instance, win, viewport, cam)
     end
+
+    sprite_batch.finish(sb, cam)
 end
 
 function on_destroy()
