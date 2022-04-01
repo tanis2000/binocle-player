@@ -82,8 +82,6 @@ jobs:
 
       - name: Generate artefacts
         run: |
-          cp -v ./src/binocle/core/*.h ./build/${{ env.RELEASE_NAME }}/include
-          cp -v ./src/binocle/core/backend/*.h ./build/${{ env.RELEASE_NAME }}/include/backend
           cp -Rpv ./build/src/* ./build/${{ env.RELEASE_NAME }}
           cd build
           tar -czvf ${{ env.RELEASE_NAME }}.tar.gz ${{ env.RELEASE_NAME }}
