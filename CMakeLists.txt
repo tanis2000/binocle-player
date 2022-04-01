@@ -73,7 +73,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/physfs
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sokol
     ${CMAKE_SOURCE_DIR}/binocle-c/src/binocle/core
-    ${CMAKE_SOURCE_DIR}/src/gameplay
     ${CMAKE_SOURCE_DIR}/src/gui
 )
 
@@ -244,4 +243,3 @@ if (ANDROID)
 endif ()
 
 add_subdirectory(binocle-c/src)
-add_subdirectory(src/gameplay)
