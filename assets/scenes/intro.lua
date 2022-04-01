@@ -32,7 +32,7 @@ function Intro:init(shd)
 
     gd.set_offscreen_clear_color(gd_instance, 1, 1, 1, 1)
 
-    G.default_font = ttfont.from_file(assets_dir .. "font/default.ttf", 8, shader.defaultShader());
+    self.default_font = ttfont.from_file(assets_dir .. "font/default.ttf", 8, shader.defaultShader());
 end
 
 function Intro:update(dt)
@@ -61,14 +61,14 @@ function Intro:update(dt)
     end
 
     local s = "Press SPACE to START"
-    local width = ttfont.get_string_width(G.default_font, s)
-    ttfont.draw_string(G.default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam);
+    local width = ttfont.get_string_width(self.default_font, s)
+    ttfont.draw_string(self.default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam);
 
 end
 
 function Intro:on_destroy()
     print("intro:on_destroy()")
-    ttfont.destroy(G.default_font)
+    ttfont.destroy(self.default_font)
 end
 
 return Intro
