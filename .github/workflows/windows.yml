@@ -79,7 +79,7 @@ jobs:
         shell: cmd
         run: |
           copy /Y .\build\src\* .\build\${{ env.RELEASE_NAME }}
-          xcopy .\assets .\build\${{ env.RELEASE_NAME }} /s /y
+          xcopy .\assets .\build\${{ env.RELEASE_NAME }}\assets /s /y /f /i
           cd build
           7z a ./${{ env.RELEASE_NAME }}.zip ./${{ env.RELEASE_NAME }}
 
