@@ -58,6 +58,7 @@ function Intro:update(dt)
         scene = game
         G.game = game
         self:on_destroy()
+        return
     end
 
     local s = "Press SPACE to START"
