@@ -8,10 +8,12 @@ local Bullet = Entity:extend()
 function Bullet:new(owner)
     Bullet.super.new(self)
     self.owner = owner
-    self.hei = 4
-    self.wid = 8
+    self.hei = 2
+    self.wid = 4
+    self.pivot_x = 0.5
+    self.pivot_y = 0.5
     self.depth = layers.BULLETS
-    self:load_image("img/bullet.png", 8, 4)
+    self:load_image("data/img/bullet.png", 16, 16)
     self.has_collisions = false
     self:set_pos_pixel(owner:get_center_x(), owner:get_center_y())
 
@@ -37,12 +39,13 @@ function Bullet:update(dt)
     for _, en in pairs(G.mobs) do
         if en:is_alive() and self:get_center_x() >= en:get_center_x()-en.radius
         and self:get_center_x() <= en:get_center_x()+en.radius
-        and self:get_bottom() >= en:get_bottom() - en.hei and self:get_bottom() <= en:get_bottom() then
+        and self:get_bottom() >= en:get_bottom() and self:get_bottom() <= en:get_bottom() + en.hei then
             -- hit the mob
             print("hit")
             -- remove this from the scene
             self:kill()
             lume.remove(G.bullets, self)
+            en:hurt(1, self.dir)
         end
     end
 

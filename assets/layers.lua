@@ -4,6 +4,7 @@ local layers = {
     HERO = 3,
     BULLETS = 4,
     FX = 5,
+    TEXT = 6,
 }
 
 return layers

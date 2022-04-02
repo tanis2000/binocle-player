@@ -7,7 +7,7 @@ function DebugGui:draw(dt)
     end
 
     imgui.NewFrame(win, dt)
-    if imgui.Begin("Test") then
+    if imgui.Begin("Info") then
         imgui.TextUnformatted("Memory:   " .. string.format("%.2fmb", collectgarbage("count")/1024))
         imgui.TextUnformatted("Mobs:     " .. #G.mobs)
         imgui.TextUnformatted("Bullets:  " .. #G.mobs)
@@ -40,6 +40,7 @@ end
 function DebugGui:entity(en)
     imgui.TextUnformatted("Name: " .. en.name)
     imgui.TextUnformatted(string.format("Pixel position: %.2f,%.2f", en.sprite_x, en.sprite_y))
+    imgui.TextUnformatted(string.format("Center: %.2f,%.2f", en:get_center_x(), en:get_center_y()))
     local cx = en.cx
     local res = false
     res, cx = imgui.DragFloat("cx", cx, 1, 0, 0, "%.2f", 1)

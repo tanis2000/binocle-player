@@ -3,6 +3,8 @@ local Process = require("process")
 local map = require("maps.main")
 local layers = require("layers")
 local lume = require("lib.lume")
+local SayMark = require("en.saymark")
+local Ship = require("en.ship")
 
 local Level = Process:extend()
 
@@ -13,6 +15,7 @@ function Level:new()
     self.coll_map = {}
     self.hero_spawners = {}
     self.cat_spawners = {}
+    self.mob_spawners = {}
     self.collectors = {}
     self.width = map.width
     self.height = map.height
@@ -49,6 +52,13 @@ function Level:new()
                     }
                     self.cat_spawners[#self.cat_spawners+1] = spawner
                 end
+                if obj.name == "mob" then
+                    local spawner = {
+                        cx = obj.x / const.GRID,
+                        cy = self.map.width - (obj.y / const.GRID),
+                    }
+                    self.mob_spawners[#self.mob_spawners+1] = spawner
+                end
             end
         end
         if layer.name == "interactive" then
@@ -60,6 +70,17 @@ function Level:new()
                         cy = self.map.width - (obj.y / const.GRID),
                     }
                     self.collectors[#self.collectors+1] = collector
+                end
+                if obj.name == "say" then
+                    local s = SayMark(obj.properties["text"], obj.properties["trigger_distance"])
+                    local cx = obj.x / const.GRID
+                    local cy = self.map.width - (obj.y / const.GRID)
+                    s:set_pos_grid(cx, cy)
+                end
+                if obj.name == "ship" then
+                    local cx = obj.x / const.GRID
+                    local cy = self.map.width - (obj.y / const.GRID)
+                    Ship(cx, cy)
                 end
             end
         end
@@ -185,6 +206,10 @@ end
 
 function Level:get_cat_spawner()
     return lume.randomchoice(self.cat_spawners)
+end
+
+function Level:get_mob_spawner()
+    return lume.randomchoice(self.mob_spawners)
 end
 
 return Level

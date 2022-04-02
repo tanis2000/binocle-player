@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-up" width="50" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="11">
+<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-up" width="50" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="18">
  <editorsettings>
   <export target="main.lua" format="lua"/>
  </editorsettings>
@@ -90,8 +90,6 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,23,24,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,39,40,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -107,6 +105,8 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,23,24,0,0,0,27,28,29,30,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,39,40,0,0,0,43,44,45,46,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -115,10 +115,23 @@
 </data>
  </layer>
  <objectgroup id="4" name="interactive">
-  <object id="10" name="collector" gid="6" x="80" y="480" width="16" height="16"/>
+  <object id="10" name="collector" gid="6" x="80" y="720" width="16" height="16"/>
+  <object id="14" name="say" type="say" gid="7" x="80" y="720" width="16" height="16">
+   <properties>
+    <property name="text" value="This looks like some sort of cage... "/>
+    <property name="trigger_distance" type="int" value="2"/>
+   </properties>
+  </object>
+  <object id="16" name="ship" gid="7" x="192" y="720" width="16" height="16"/>
+  <object id="17" name="say" type="say" gid="7" x="160" y="720" width="16" height="16">
+   <properties>
+    <property name="text" value="Ouch! Bad landing..."/>
+    <property name="trigger_distance" type="int" value="2"/>
+   </properties>
+  </object>
  </objectgroup>
- <objectgroup id="2" name="spawners">
-  <object id="2" name="hero" gid="4" x="176" y="480" width="16" height="16"/>
+ <objectgroup id="2" name="spawners" visible="0">
+  <object id="2" name="hero" gid="4" x="160" y="720" width="16" height="16"/>
   <object id="3" name="cat" gid="3" x="448" y="480" width="16" height="16"/>
   <object id="4" name="cat" gid="3" x="432" y="560" width="16" height="16"/>
   <object id="5" name="cat" gid="3" x="512" y="688" width="16" height="16"/>
@@ -126,5 +139,8 @@
   <object id="7" name="cat" gid="3" x="160" y="624" width="16" height="16"/>
   <object id="8" name="cat" gid="3" x="656" y="720" width="16" height="16"/>
   <object id="9" name="cat" gid="3" x="272" y="720" width="16" height="16"/>
+  <object id="11" name="mob" gid="2" x="512" y="560" width="16" height="16"/>
+  <object id="12" name="mob" gid="2" x="368" y="480" width="16" height="16"/>
+  <object id="13" name="mob" gid="2" x="384" y="720" width="16" height="16"/>
  </objectgroup>
 </map>

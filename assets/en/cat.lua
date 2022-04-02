@@ -15,6 +15,9 @@ function Cat:new()
     self:add_animation("idle", {
         1,
     }, 8)
+    self:add_animation("carry", {
+        2,
+    }, 8)
 end
 
 function Cat:update(dt)

@@ -82,7 +82,7 @@ function Entity:load_image(filename, width, height)
             table.insert(self.frames, frame)
         end
     end
-    sprite.set_origin(self.sprite, self.wid/2.0, 0)
+    sprite.set_origin(self.sprite, width * self.pivot_x, height * self.pivot_y)
 end
 
 function Entity.set_pos_grid(self, x, y)
@@ -236,7 +236,7 @@ function Entity:draw_debug()
 end
 
 function Entity:draw()
-    if self.visible then
+    if self.visible and self.sprite then
         sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam)
         --sprite.draw_batch(sb, self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam, 0)
     end
@@ -339,15 +339,19 @@ end
 function Entity.on_dispose(self)
     -- TODO dispose of sprite, material, texture, etc...
     lume.remove(G.entities, self)
-    sprite.destroy(self.sprite)
-    self.sprite = nil
-    material.destroy(self.material)
-    self.material = nil
+    if self.sprite then
+        sprite.destroy(self.sprite)
+        self.sprite = nil
+    end
+    if self.material then
+        material.destroy(self.material)
+        self.material = nil
+    end
     --texture.destroy(self.texture)
 end
 
 function Entity.dir_to(self, en)
-    if en.get_center_x() < self.get_center_x() then
+    if en:get_center_x() < self:get_center_x() then
         return -1
     end
     return 1

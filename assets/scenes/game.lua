@@ -9,6 +9,7 @@ local Gui = require("gui")
 local const = require("const")
 local lume = require("lib.lume")
 local DayCycle = require("daycycle")
+local WaveSystem = require("wavesystem")
 
 local Game = Process:extend()
 
@@ -18,9 +19,6 @@ function Game:new(shd)
     self.shader = shd
     local assets_dir = sdl.assets_dir()
     self.h = Hero()
-
-    local mob = Mob()
-    mob:set_pos_grid(13, 5)
 
     local l = require("level")
     self.level = l:new()
@@ -50,15 +48,8 @@ function Game:new(shd)
     self.day_cycle = DayCycle()
     self:add_child(self.day_cycle)
 
-    -- TODO remove this stuff when we get rid of the old mob
-    self.player_x = 100
-    self.player_y = 100
-
-    self.scale = lkazmath.kmVec2New()
-
-    self.scale.x = 1.0
-    self.scale.y = 1.0
-    -- TODO end of removal
+    self.wave_system = WaveSystem()
+    self:add_child(self.wave_system)
 end
 
 function Game:pre_update(dt)
@@ -123,6 +114,12 @@ function Game:update(dt)
     self.gui.max_health = self.h.max_health
     self.gui.hour, self.gui.minute = self.day_cycle:get_time_of_day()
     gd.set_offscreen_clear_color(gd_instance, self.day_cycle:get_bg_color())
+
+
+    self.wave_system:update_position(self.camera:get_left(), self.camera:get_bottom(), self.camera:get_px_wid(), self.camera:get_px_hei())
+    if self.day_cycle.cycle == 2 and not self.wave_system.running then
+        self.wave_system:start_wave()
+    end
 
     self.debugGui:update(dt)
 end
