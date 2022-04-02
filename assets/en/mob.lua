@@ -58,5 +58,4 @@ function Mob:set_target(en)
     self.target = en
 end
 
-
 return Mob
