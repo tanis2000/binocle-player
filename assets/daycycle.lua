@@ -4,7 +4,8 @@ local DayCycle = Process:extend()
 
 function DayCycle:new()
     DayCycle.super.new(self)
-    self.fullday_time = 60 -- seconds
+    --self.fullday_time = 60 -- seconds
+    self.fullday_time = 10 -- seconds
     self.time = 0 -- 6/24 * self.fullday_time -- 6 am is when daylight starts
     self.cycle = 1
     self.bg_colors = {
@@ -43,7 +44,7 @@ function DayCycle:get_bg_color()
     if nc > 2 then
         nc = 1
     end
-    print(ratio)
+
     local r = self.bg_colors[nc].r * ratio
     local g = self.bg_colors[nc].g * ratio
     local b = self.bg_colors[nc].b * ratio

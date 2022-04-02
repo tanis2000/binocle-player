@@ -3,17 +3,25 @@ local Bullet = require("en.bullet")
 local Fx = require("en.fx")
 local layers = require("layers")
 local lume = require("lib.lume")
+local SayText = require("en.saytext")
 local Hero = Entity:extend()
 
 function Hero:new()
     Hero.super.new(self)
-    self.hei = 32
-    self.wid = 32
+    self.name = "hero"
+    self.hei = 16
+    self.wid = 12
     self.depth = layers.HERO
     self.max_cats = 1
     self.cats = 0
     self.max_health = 100
     self.health = 100
+    self.cats_seen = 0
+    self.cats_sentences = {
+        "Hmmm... a cat... maybe I can pick it up",
+        "More cats, I wonder what they are doing here...",
+        "Maybe I can do something with them"
+    }
     self:load_image("data/img/hero.png", 32, 32)
     self:add_animation("idle1", {
         1,
@@ -36,6 +44,10 @@ function Hero:new()
     self:add_animation("jumpdown", {
         11,
     }, 14)
+    self:add_animation("shoot", {
+        12,
+        13,
+    }, 8)
 end
 
 function Hero:update(dt)
@@ -50,7 +62,7 @@ function Hero:update(dt)
         self.dir = 1
     end
 
-    if input.is_key_pressed(input_mgr, key.KEY_SPACE) then
+    if input.is_key_pressed(input_mgr, key.KEY_W) then
         if self:on_ground() then
             self.dy = 0.9
             audio.play_sound(G.sounds["jump"])
@@ -74,6 +86,7 @@ function Hero:update(dt)
     end
     camera.set_position(cam, camera_x, camera_y)
 
+    self:see_cats()
     self:collect_cats()
 
     if self.dy > 0 and not self:on_ground() then
@@ -82,6 +95,8 @@ function Hero:update(dt)
         self:play_animation("jumpdown")
     elseif self:on_ground() and self.dx ~= 0 then
         self:play_animation("run")
+    elseif self:is_shooting() then
+        self:play_animation("shoot")
     else
         local rnd = lume.random(0, 1)
         if rnd < 0.4 then
@@ -121,4 +136,41 @@ function Hero.heal(self, amount)
         self.health = self.max_health
     end
 end
+
+function Hero.is_shooting(self)
+    return self.cd:has("shoot")
+end
+
+function Hero.say(self, s)
+    print("saying "..s)
+    self:clear_saying()
+    SayText(self, s)
+end
+
+function Hero.clear_saying(self)
+    for _, en in pairs(G.entities) do
+        if en.owner and en.owner == self and en:is(SayText) then
+            en:kill()
+        end
+    end
+end
+
+function Hero.see_cats(self)
+    for _, c in pairs(G.cats) do
+        if self:dist_case(c) < 3 and not self.cd:has("cat_seen") then
+            self.cats_seen = self.cats_seen + 1
+            if self.cats_seen < #self.cats_sentences+1 then
+                print("cats")
+                self:say(self.cats_sentences[self.cats_seen])
+                self.cd:set("cat_seen", 10)
+                return
+            end
+        end
+    end
+end
+
+function Hero:__tostring()
+    return "Hero"
+end
+
 return Hero
