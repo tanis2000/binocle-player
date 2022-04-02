@@ -1,11 +1,14 @@
 local Entity = require("entity")
 local Hero = require("en/hero")
-local Mob = require("en/mob")
-local Enemy = require("en/enemy")
+local Mob = require("en.mob")
 local Process = require("process")
 local DebugGui = require("debuggui")
 local GameCamera = require("gamecamera")
+local Cat = require("en.cat")
+local Gui = require("gui")
 local const = require("const")
+local lume = require("lib.lume")
+local DayCycle = require("daycycle")
 
 local Game = Process:extend()
 
@@ -14,38 +17,20 @@ function Game:new(shd)
     self.name = "game"
     self.shader = shd
     local assets_dir = sdl.assets_dir()
-    local image_filename = assets_dir .. "wabbit_alpha.png"
-    self.img = image.load(image_filename)
-    io.write("image: " .. tostring(self.img) .. "\n")
-    self.tex = texture.from_image(self.img)
-    io.write("tex: " .. tostring(self.tex) .. "\n")
-    self.mat = material.new()
-
-    material.set_texture(self.mat, self.tex)
-    material.set_shader(self.mat, shd)
-    io.write("material: " .. tostring(self.mat) .. "\n")
-    self.player = sprite.from_material(self.mat)
-
-    if self.player == nil or self.player == nullptr then
-        io.write("player is nil")
-    else
-        io.write("player: " .. tostring(self.player) .. "\n")
-    end
-
     self.h = Hero()
-    self.h:set_pos_grid(10, 5)
-    --game.h.sprite = game.player
 
-    local enemy = Enemy()
-    enemy:set_pos_grid(13, 5)
-
-    --local m = Mob()
-    --m.sprite = self.player
+    local mob = Mob()
+    mob:set_pos_grid(13, 5)
 
     local l = require("level")
     self.level = l:new()
     self:add_child(l)
-    gd.set_offscreen_clear_color(gd_instance, 0, 0, 0, 1)
+
+    local hs = self.level:get_hero_spawner()
+    self.h:set_pos_grid(hs.cx, hs.cy)
+
+    gd.set_offscreen_clear_color(gd_instance, 73/256, 77/256, 126/256, 1)
+    gd.set_offscreen_clear_color(gd_instance, 242/256, 211/256, 171/256, 1)
 
     self.debugGui = DebugGui()
 
@@ -54,6 +39,16 @@ function Game:new(shd)
     self.camera = GameCamera()
     self:add_child(self.camera)
     self.camera:track_entity(self.h)
+    self.camera:center_on_target()
+
+    self:spawn_cats(3)
+
+    self.gui = Gui()
+    print(self.gui)
+    self:add_child(self.gui)
+
+    self.day_cycle = DayCycle()
+    self:add_child(self.day_cycle)
 
     -- TODO remove this stuff when we get rid of the old mob
     self.player_x = 100
@@ -71,7 +66,9 @@ function Game:pre_update(dt)
 
     for idx in pairs(G.entities) do
         en = G.entities[idx]
-        en:pre_update(dt)
+        if not en.destroyed then
+            en:pre_update(dt)
+        end
     end
 end
 
@@ -108,7 +105,9 @@ function Game:update(dt)
 
     for idx in pairs(G.entities) do
         en = G.entities[idx]
-        en:update(dt)
+        if not en.destroyed then
+            en:update(dt)
+        end
     end
 
     --for idx in pairs(G.bullets) do
@@ -117,6 +116,14 @@ function Game:update(dt)
     --    b:update(dt)
     --end
 
+    self.gui:update_position(self.camera:get_left(), self.camera:get_top())
+    self.gui.max_cats = self.h.max_cats
+    self.gui.carried_cats = self.h.cats
+    self.gui.health = self.h.health
+    self.gui.max_health = self.h.max_health
+    self.gui.hour, self.gui.minute = self.day_cycle:get_time_of_day()
+    gd.set_offscreen_clear_color(gd_instance, self.day_cycle:get_bg_color())
+
     self.debugGui:update(dt)
 end
 
@@ -124,21 +131,12 @@ function Game:post_update(dt)
     Game.super.post_update(self, dt)
 
     for _, en in pairs(self:get_on_screen_entities()) do
-        en:post_update(dt)
-        en:draw()
-        en:draw_debug()
-        --sprite.draw(m.sprite, gd_instance, m.sprite_x, m.sprite_y, viewport, 0, self.scale, cam)
+        if not en.destroyed then
+            en:post_update(dt)
+            en:draw()
+            en:draw_debug()
+        end
     end
-
-    --for _, b in pairs(G.bullets) do
-    --    b:post_update(dt)
-    --    b:draw()
-    --    b:draw_debug()
-    --end
-
-    --self.h:post_update(dt)
-    --self.h:draw()
-    --self.h:draw_debug()
 
     self:garbage_collect()
 end
@@ -166,7 +164,7 @@ end
 
 
 function Game:garbage_collect()
-    for idx in pairs(G.entities) do
+    for idx in lume.ripairs(G.entities) do
         en = G.entities[idx]
         if en.destroyed then
             print("dispose")
@@ -177,6 +175,14 @@ end
 
 function Game:on_destroy()
     ttfont.destroy(self.default_font)
+end
+
+function Game:spawn_cats(num)
+    for i = 1, num+1 do
+        local sp = self.level:get_cat_spawner()
+        local c = Cat()
+        c:set_pos_grid(sp.cx, sp.cy)
+    end
 end
 
 return Game

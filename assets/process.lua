@@ -26,6 +26,7 @@ function Process.new(self, parent)
 end
 
 function Process:add_child(child)
+    assert(child:is(Process))
     print("adding children " .. child:__tostring() .. " to " .. self:__tostring())
     print(child.id)
     if child.parent ~= nil then

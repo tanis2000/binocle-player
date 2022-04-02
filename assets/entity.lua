@@ -2,6 +2,7 @@ local lume = require("lib.lume")
 local const = require("const")
 local Object = require("lib.classic")
 local Cooldown = require("cooldown")
+local M = require("m")
 
 ---@class Entity
 local Entity = Object:extend()
@@ -229,7 +230,7 @@ end
 function Entity:draw_debug()
     if G.debug then
         local s = string.format("(%.0f,%.0f) (%.0f, %.0f)", self.cx, self.cy, self:get_center_x(), self:get_center_y())
-        ttfont.draw_string(self.default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam);
+        ttfont.draw_string(G.game.default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam);
         gd.draw_rect(gd_instance, self:get_center_x(), self:get_center_y(), self.wid, self.hei, color.trans_green, viewport, cam)
     end
 end
@@ -339,7 +340,9 @@ function Entity.on_dispose(self)
     -- TODO dispose of sprite, material, texture, etc...
     lume.remove(G.entities, self)
     sprite.destroy(self.sprite)
+    self.sprite = nil
     material.destroy(self.material)
+    self.material = nil
     --texture.destroy(self.texture)
 end
 
@@ -355,6 +358,22 @@ function Entity.dir_to_ang(self)
         return 0
     end
     return math.pi
+end
+
+function Entity.dist_case(self, en)
+    return M.dist(self.cx + self.xr, self.cy + self.yr, en.cx + en.xr, en.cy + en.yr)
+end
+
+function Entity.dist_case_free(self, tcx, tcy, txr, tyr)
+    if not txr then
+        txr = 0.5
+    end
+
+    if not tyr then
+        tyr = 0.5
+    end
+
+    return M.dist(self.cx + self.xr, self.cy + self.yr, tcx + txr, tcy + tyr)
 end
 
 return Entity

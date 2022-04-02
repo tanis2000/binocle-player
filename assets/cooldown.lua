@@ -35,6 +35,9 @@ function Cooldown:update(dt)
         --log.info("this cd: "..tostring(self.cooldowns[idx]))
         self.cooldowns[idx].remaining = self.cooldowns[idx].remaining - dt
         if self.cooldowns[idx].remaining <= 0 then
+            if self.cooldowns[idx].func then
+                self.cooldowns[idx].func()
+            end
             self.unset(self, self.cooldowns[idx].name)
         end
         count = count + 1

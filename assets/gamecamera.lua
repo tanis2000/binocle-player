@@ -5,6 +5,7 @@ local lume = require("lib.lume")
 local const = require("const")
 
 ---@class GameCamera
+---@type GameCamera
 local GameCamera = Process:extend()
 
 function GameCamera:new()
