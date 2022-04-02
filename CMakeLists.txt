@@ -217,6 +217,19 @@ endif ()
 if (MSVC)
     set(EXE_TYPE WIN32)
     #    set (SOURCE_FILES ${SOURCE_FILES} ${CMAKE_SOURCE_DIR}/build/cmake/Binocle.rc)
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+    file(GLOB_RECURSE RESOURCES "${CMAKE_SOURCE_DIR}/assets/*")
+    foreach(RES_FILE ${RESOURCES})
+        message("RES_FILE: ${RES_FILE}")
+        file(RELATIVE_PATH RES_PATH "${CMAKE_SOURCE_DIR}/assets" ${RES_FILE})
+        message("RES_PATH: ${RES_PATH}")
+        get_filename_component(RES_FOLDER ${RES_PATH} DIRECTORY)
+        message("RES_FOLDER: ${RES_FOLDER}")
+        add_custom_command(TARGET ${PROJECT_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${RES_FILE} ${CMAKE_CURRENT_BINARY_DIR}/src/assets/${RES_PATH}
+    )
+    endforeach(RES_FILE)
 elseif (APPLE)
     #ICNS
     set(MACOSX_BUNDLE_ICON_FILE ${PROJECT_NAME}.icns)
