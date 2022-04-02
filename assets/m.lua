@@ -49,16 +49,16 @@ function M.ang_to(fx, fy, tx, ty)
     return math.atan2(ty-fy, tx-fx)
 end
 
-function M:dist_sqr(ax, ay, bx, by)
+function M.dist_sqr(ax, ay, bx, by)
     return (ax-bx)*(ax-bx) + (ay-by)*(ay-by)
 end
 
-function M:idist_sqr(ax, ay, bx, by)
+function M.idist_sqr(ax, ay, bx, by)
     return (math.floor(ax)-math.floor(bx))*(math.floor(ax)-math.floor(bx)) + (math.floor(ay)-math.floor(by))*(math.floor(ay)-math.floor(by))
 end
 
-function M:dist(ax, ay, bx, by)
-    return math.sqrt(self:dist_sqr(ax, ay, bx, by))
+function M.dist(ax, ay, bx, by)
+    return math.sqrt(M.dist_sqr(ax, ay, bx, by))
 end
 
 return M

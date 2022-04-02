@@ -1,7 +1,8 @@
 local const = require("const")
 local Process = require("process")
-local map = require("maps/s4m_ur4i-metroidvania-1")
+local map = require("maps.main")
 local layers = require("layers")
+local lume = require("lib.lume")
 
 local Level = Process:extend()
 
@@ -10,6 +11,9 @@ function Level:new()
     self.name = "level"
     self.map = map
     self.coll_map = {}
+    self.hero_spawners = {}
+    self.cat_spawners = {}
+    self.collectors = {}
     self.width = map.width
     self.height = map.height
     self.scale = lkazmath.kmVec2New()
@@ -25,6 +29,37 @@ function Level:new()
                 if value ~= 0 then
                     --print(cx, cy)
                     self:set_collision(cx, cy, true)
+                end
+            end
+        end
+        if layer.name == "spawners" then
+            for i in pairs(layer.objects) do
+                local obj = layer.objects[i]
+                if obj.name == "hero" then
+                    local spawner = {
+                        cx = obj.x / const.GRID,
+                        cy = self.map.width - (obj.y / const.GRID),
+                    }
+                    self.hero_spawners[#self.hero_spawners+1] = spawner
+                end
+                if obj.name == "cat" then
+                    local spawner = {
+                        cx = obj.x / const.GRID,
+                        cy = self.map.width - (obj.y / const.GRID),
+                    }
+                    self.cat_spawners[#self.cat_spawners+1] = spawner
+                end
+            end
+        end
+        if layer.name == "interactive" then
+            for i in pairs(layer.objects) do
+                local obj = layer.objects[i]
+                if obj.name == "collector" then
+                    local collector = {
+                        cx = obj.x / const.GRID,
+                        cy = self.map.width - (obj.y / const.GRID),
+                    }
+                    self.collectors[#self.collectors+1] = collector
                 end
             end
         end
@@ -100,7 +135,7 @@ end
 function Level:render()
     for idx in pairs(self.map.layers) do
         local layer = self.map.layers[idx]
-        if layer.name == "collisions" or layer.name == "background" then
+        if layer.name == "collisions" or layer.name == "objects" then
             for i in pairs(layer.data) do
                 --log.info(tostring(i))
                 local value = layer.data[i] - 1
@@ -142,6 +177,14 @@ end
 
 function Level:get_px_hei()
     return self:get_c_hei() * const.GRID
+end
+
+function Level:get_hero_spawner()
+    return self.hero_spawners[1]
+end
+
+function Level:get_cat_spawner()
+    return lume.randomchoice(self.cat_spawners)
 end
 
 return Level

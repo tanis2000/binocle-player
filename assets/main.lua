@@ -4,11 +4,14 @@ G = {
     cache = nil,
     entities = {}, -- all entities
     mobs = {}, -- all mobs
+    cats = {}, -- all cats
     bullets = {}, -- all bullets
     title = "Binocle Player",
     musics = {},
     sounds = {},
     debug = false,
+    ---@type Level
+    level = nil,
 }
 local assets_dir = sdl.assets_dir()
 log.info(assets_dir .. "\n")
@@ -103,11 +106,11 @@ function on_init()
     local music = audio.load_music(audio_instance, assets_dir .. "music/rolemusic_37_ohmperios.mp3")
     G.musics["main"] = music
     audio.play_music(audio_instance, music)
-    audio.set_music_volume(audio_instance, G.musics["main"], 0.0)
+    audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
 
     local sound = audio.load_sound(audio_instance, assets_dir .. "sfx/jump.wav")
     G.sounds["jump"] = sound
-    audio.set_sound_volume(G.sounds["jump"], 0.0)
+    audio.set_sound_volume(G.sounds["jump"], 1.0)
 end
 
 function main.on_update(dt)

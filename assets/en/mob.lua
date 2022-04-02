@@ -1,31 +1,34 @@
 local Entity = require("entity")
-local LPoint = require("lpoint")
 local layers = require("layers")
 
 local Mob = Entity:extend()
 
 function Mob:new()
     Mob.super.new(self)
-    self.start_pt = LPoint()
-    self.start_pt:set_level_case(0, 0)
-    self.wander_ang = 0
-    self.depth = layers.MOBS
+    self.name = "mob " .. #G.mobs+1
     G.mobs[#G.mobs+1] = self
-    return self
+    self.hei = 32
+    self.wid = 32
+    self.depth = layers.MOBS
+    self:load_image("img/enemy.png", 32, 32)
+    self:add_animation("idle", {
+        1,
+        2
+    }, 8)
+    self:add_animation("run", {
+        3,
+        4
+    }, 14)
 end
 
 function Mob:update(dt)
-    Entity.update(self, dt)
-    local tx = self.start_pt:get_center_x()
-    local ty = self.start_pt:get_center_y()
-    local a = math.atan2(ty - self:get_center_y(), tx - self:get_center_x())
-    local s = 0.1
-    self.dx = self.dx + math.cos(a)*s*dt
-    self.dy = self.dy + math.sin(a)*s*dt
-    s = 0.05
-    self.wander_ang = self.wander_ang + (math.random(3, 6) * 0.1)
-    self.dx = self.dx + math.cos(self.wander_ang)*s*dt
-    self.dy = self.dy + math.sin(self.wander_ang)*s*dt
+    Mob.super.update(self, dt)
+
+    if self.dx ~= 0 then
+        self:play_animation("run")
+    else
+        self:play_animation("idle")
+    end
 end
 
 return Mob
