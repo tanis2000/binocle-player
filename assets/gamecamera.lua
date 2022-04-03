@@ -109,12 +109,12 @@ function GameCamera:center_on_target()
     end
 end
 
-function GameCamera:shake_s(t, pow)
+function GameCamera:shake(t, pow)
     if not pow then
         pow = 1.0
     end
 
-    self.cd:set_s("shaking", t, false)
+    self.cd:set("shaking", t, false)
     self.shake_power = pow
 end
 
@@ -133,6 +133,12 @@ end
 function GameCamera:apply()
     local cam_x = math.floor(self.clamped_focus:get_level_x() - self:get_px_wid() * 0.5)
     local cam_y = math.floor(self.clamped_focus:get_level_y() - self:get_px_hei() * 0.5)
+
+    if self.cd:has("shaking") then
+        cam_x = cam_x + math.cos(self.elapsed_time*1.1)*2.5*self.shake_power * self.cd:get_ratio("shaking")
+        cam_y = cam_y + math.sin(0.3+self.elapsed_time*1.7)*2.5*self.shake_power * self.cd:get_ratio("shaking")
+    end
+
     camera.set_position(cam, cam_x, cam_y)
 end
 

@@ -15,6 +15,7 @@
 #include "binocle_camera_wrap.h"
 #include "binocle_camera.h"
 #include "binocle_viewport_adapter.h"
+#include "binocle_log.h"
 
 #define MAX_LOG_ENTRIES 4096
 #define max_ui_vertices (1 << 16)
@@ -551,6 +552,7 @@ void gui_draw(binocle_window *window, binocle_input *input, float dt) {
 }
 
 void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_assets_dir) {
+  binocle_log_info("Setting up IMGUI offscreen pipeline");
   char vert[4096];
   char frag[4096];
 
@@ -675,6 +677,7 @@ void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_a
       [0] = imgui_render_target,
     }
   };
+  binocle_log_info("Done setting up IMGUI offscreen pipeline");
 }
 
 void gui_imgui_to_offscreen_render(float width, float height) {

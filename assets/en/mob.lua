@@ -34,6 +34,12 @@ function Mob:update(dt)
         self.dx = self.dx + dir * spd * dt
     end
 
+    if self:dist_case(G.game.h) <= 1
+            and G.game.h:is_alive() then
+        G.game.h:hurt(1)
+    end
+
+
     if self.dx ~= 0 then
         self:play_animation("run")
     else
@@ -51,6 +57,7 @@ function Mob:hurt(amount, impact_dir)
     end
     if self.health < 0 then
         self:kill()
+        lume.remove(G.mobs, self)
     end
 end
 

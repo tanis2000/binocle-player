@@ -68,6 +68,18 @@ function Cooldown:get(name)
     end
 end
 
+-- 1 -> 0
+function Cooldown:get_ratio(name)
+    if self:has(name) then
+        local cd = self.cooldowns[name]
+        if cd.remaining <= 0 then
+            return 0
+        end
+        return cd.remaining/cd.total
+    end
+    return 0
+end
+
 function Cooldown.__tostring(self)
     for idx, cd in pairs(self.cooldowns) do
         return string.format("%s\n", cd)

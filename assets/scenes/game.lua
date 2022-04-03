@@ -50,6 +50,11 @@ function Game:new(shd)
 
     self.wave_system = WaveSystem()
     self:add_child(self.wave_system)
+    self.day_cycle:set_on_cycle_switch_fn(function(cycle)
+        if cycle == 2 and not self.wave_system.running then
+            self.wave_system:start_wave()
+        end
+    end)
 end
 
 function Game:pre_update(dt)
@@ -117,9 +122,6 @@ function Game:update(dt)
 
 
     self.wave_system:update_position(self.camera:get_left(), self.camera:get_bottom(), self.camera:get_px_wid(), self.camera:get_px_hei())
-    if self.day_cycle.cycle == 2 and not self.wave_system.running then
-        self.wave_system:start_wave()
-    end
 
     self.debugGui:update(dt)
 end
@@ -175,7 +177,7 @@ function Game:on_destroy()
 end
 
 function Game:spawn_cats(num)
-    for i = 1, num+1 do
+    for i = 1, num do
         local sp = self.level:get_cat_spawner()
         local c = Cat()
         c:set_pos_grid(sp.cx, sp.cy)

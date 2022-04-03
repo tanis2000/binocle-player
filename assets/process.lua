@@ -16,6 +16,7 @@ function Process.new(self, parent)
     self.children = {}
     self.paused = false
     self.cd = Cooldown()
+    self.elapsed_time = 0
 
     processes.unique_id = processes.unique_id + 1
     self.id = processes.unique_id
@@ -46,6 +47,7 @@ function Process:can_run()
 end
 
 function Process:pre_update(dt)
+    self.elapsed_time = self.elapsed_time + dt
     if self:can_run() then
         self.cd:update(dt)
         if self.children ~= nil then
