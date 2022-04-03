@@ -13,7 +13,7 @@ end
 function Intro:init(shd)
     self.name = "intro"
     local assets_dir = sdl.assets_dir()
-    local image_filename = assets_dir .. "img/binocle-logo-full.png"
+    local image_filename = assets_dir .. "data/img/binocle-logo-full.png"
     self.img = image.load(image_filename)
     self.tex = texture.from_image(self.img)
     self.mat = material.new()

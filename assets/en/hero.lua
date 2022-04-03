@@ -48,48 +48,53 @@ function Hero:new()
         12,
         13,
     }, 8)
+    self:add_animation("death", {
+        14,
+        15,
+    }, 8, false)
 end
 
 function Hero:update(dt)
     Hero.super.update(self, dt)
 
     local spd = 2
-    if input.is_key_pressed(input_mgr, key.KEY_LEFT) or input.is_key_pressed(input_mgr, key.KEY_A) then
+    if self:is_alive() and (input.is_key_pressed(input_mgr, key.KEY_LEFT) or input.is_key_pressed(input_mgr, key.KEY_A)) then
         self.dx = self.dx - spd * dt * self.time_mul
         self.dir = -1
-    elseif input.is_key_pressed(input_mgr, key.KEY_RIGHT) or input.is_key_pressed(input_mgr, key.KEY_D) then
+    elseif self:is_alive() and (input.is_key_pressed(input_mgr, key.KEY_RIGHT) or input.is_key_pressed(input_mgr, key.KEY_D)) then
         self.dx = self.dx + spd * dt * self.time_mul
         self.dir = 1
     end
 
-    if input.is_key_pressed(input_mgr, key.KEY_W) then
+    if self:is_alive() and input.is_key_pressed(input_mgr, key.KEY_W) then
         if self:on_ground() then
             self.dy = 0.9
             audio.play_sound(G.sounds["jump"])
-            local fx = Fx("img/jump.png", 6, 0.3)
+            local fx = Fx("data/img/jump.png", 6, 0.3)
             fx:set_pos_pixel(self:get_center_x(), self:get_bottom())
         end
     end
 
-    if input.is_key_pressed(input_mgr, key.KEY_E) then
+    if self:is_alive() and input.is_key_pressed(input_mgr, key.KEY_E) then
         if not self.cd:has("shoot") then
             self:shoot()
         end
     end
 
-    local camera_x = camera.x(cam)
+--[[    local camera_x = camera.x(cam)
     local camera_y = camera.y(cam)
     if input.is_key_pressed(input_mgr, key.KEY_UP) then
         camera_y = camera_y + spd * dt * self.time_mul
     elseif input.is_key_pressed(input_mgr, key.KEY_DOWN) then
         camera_y = camera_y - spd * dt * self.time_mul
     end
-    camera.set_position(cam, camera_x, camera_y)
+    camera.set_position(cam, camera_x, camera_y)]]
 
     self:see_cats()
-    self:collect_cats()
 
-    if self.dy > 0 and not self:on_ground() then
+    if self.health <= 0 then
+        self:play_animation("death")
+    elseif self.dy > 0 and not self:on_ground() then
         self:play_animation("jumpup")
     elseif not self:on_ground() then
         self:play_animation("jumpdown")
@@ -111,6 +116,15 @@ function Hero:post_update(dt)
     Hero.super.post_update(self, dt)
 end
 function Hero.shoot(self)
+    if self.cats > 0 then
+        for _, c in pairs(G.cats) do
+            if c.owner == self then
+                c:launch(self.dir)
+                self.cd:set("shoot", 0.15)
+                return
+            end
+        end
+    end
     local b = Bullet(self)
     self.cd:set("shoot", 0.15)
 end
@@ -121,13 +135,15 @@ function Hero.add_cat(self)
     end
 end
 
-function Hero.collect_cats(self)
-    for _, c in pairs(G.game.level.collectors) do
-        if self:dist_case_free(c.cx, c.cy) <= 1 then
-            self:heal(self.cats * 7)
-            self.cats = 0
-        end
+function Hero:remove_cat()
+    if self.cats > 0 then
+        self.cats = self.cats - 1
     end
+end
+
+function Hero.collect_cat(self)
+    self:heal(self.cats * 7)
+    self.cats = 0
 end
 
 function Hero.heal(self, amount)
@@ -167,6 +183,19 @@ function Hero.see_cats(self)
             end
         end
     end
+end
+
+function Hero:hurt(amount)
+    self.health = self.health - amount
+    if self.health <= 0 then
+        self:play_animation("death")
+        G.game.camera:shake(2, 0.3)
+        self:bump(-self.dir * 0.4, -0.15)
+    end
+end
+
+function Hero:is_alive()
+    return not self.destroyed and self.health > 0
 end
 
 function Hero:__tostring()

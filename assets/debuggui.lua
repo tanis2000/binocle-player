@@ -31,6 +31,26 @@ function DebugGui:draw(dt)
         end
         imgui.EndChild()
     end
+    imgui.End()
+
+    if imgui.Begin("Waves") then
+        imgui.BeginChild("Waves")
+        local ws = G.game.wave_system
+        imgui.TextUnformatted(string.format("Current wave: %d", ws.current_wave_idx))
+        if ws.current_wave then
+            imgui.TextUnformatted(string.format("Spawned: %d", ws.current_wave_num_spawned))
+            imgui.TextUnformatted(string.format("Running: %s", tostring(ws.running)))
+            imgui.TextUnformatted(string.format("Total mobs: %d", ws.current_wave.total_mobs))
+            imgui.TextUnformatted(string.format("Max concurrent: %d", ws.current_wave.max_concurrent))
+        end
+        for i, wave in pairs(ws.waves) do
+            if imgui.TreeNode(string.format("wave %d", i)) then
+                self:wave(wave)
+                imgui.TreePop()
+            end
+        end
+        imgui.EndChild()
+    end
 
     self:gamecamera()
     imgui.End()
@@ -126,6 +146,11 @@ function DebugGui:gamecamera()
 
     end
     imgui.End()
+end
+
+function DebugGui:wave(wave)
+    imgui.TextUnformatted(string.format("Total mobs: %d", wave.total_mobs))
+    imgui.TextUnformatted(string.format("Max concurrent: %d", wave.max_concurrent))
 end
 
 function DebugGui:update(dt)

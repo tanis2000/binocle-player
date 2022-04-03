@@ -22,7 +22,7 @@ function DayCycle:new()
             a = 1
         },
     }
-
+    self.on_cycle_switch_fn = nil
     -- TODO add random one-pixel stars in the background during night
 end
 
@@ -33,6 +33,9 @@ function DayCycle:update(dt)
         self.cycle = self.cycle + 1
         if self.cycle > 2 then
             self.cycle = 1
+        end
+        if self.on_cycle_switch_fn then
+            self.on_cycle_switch_fn(self.cycle)
         end
     end
 end
@@ -62,6 +65,10 @@ function DayCycle:get_time_of_day()
     local h = math.floor(self.time / self.fullday_time * 24)
     local m = math.floor(self.time / self.fullday_time * 24 * 60 % self.fullday_time)
     return h, m
+end
+
+function DayCycle:set_on_cycle_switch_fn(fn)
+    self.on_cycle_switch_fn = fn
 end
 
 return DayCycle
