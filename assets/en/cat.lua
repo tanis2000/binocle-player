@@ -74,6 +74,11 @@ function Cat:update(dt)
         self:drop_from_owner()
     end
 
+    if self:dist_case(G.game.h) <= 3 and not self.cd:has("purr") then
+        audio.play_sound(G.sounds["purr"])
+        self.cd:set("purr", 5)
+    end
+
     if self.dx ~= 0 then
         self:play_animation("idle")
     else

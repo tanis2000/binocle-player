@@ -5,8 +5,12 @@ local layers = require("layers")
 local lume = require("lib.lume")
 local SayMark = require("en.saymark")
 local Ship = require("en.ship")
+local Collector = require("en.collector")
 
 local Level = Process:extend()
+
+Level.PlatformEndLeft = 1
+Level.PlatformEndRight = 2
 
 function Level:new()
     Level.super.new(self)
@@ -17,6 +21,7 @@ function Level:new()
     self.cat_spawners = {}
     self.mob_spawners = {}
     self.collectors = {}
+    self.marks_map = {}
     self.width = map.width
     self.height = map.height
     self.scale = lkazmath.kmVec2New()
@@ -25,6 +30,7 @@ function Level:new()
     for idx in pairs(map.layers) do
         local layer = map.layers[idx]
         if layer.name == "collisions" then
+            -- Setup collisions
             for i in pairs(layer.data) do
                 local value = layer.data[i]
                 local cy = layer.height - 1 - math.floor((i-1) / layer.width)
@@ -32,6 +38,20 @@ function Level:new()
                 if value ~= 0 then
                     --print(cx, cy)
                     self:set_collision(cx, cy, true)
+                end
+            end
+
+            -- Setup marks
+            for cy = 0, self.map.height do
+                for cx = 0, self.map.width do
+                    if not self:has_collision(cx, cy) and self:has_collision(cx, cy-1) then
+                        if self:has_collision(cx+1, cy) or not self:has_collision(cx+1, cy-1) then
+                            self:set_mark(cx, cy, Level.PlatformEndRight)
+                        end
+                        if self:has_collision(cx-1, cy) or not self:has_collision(cx-1, cy-1) then
+                            self:set_mark(cx, cy, Level.PlatformEndLeft)
+                        end
+                    end
                 end
             end
         end
@@ -58,6 +78,11 @@ function Level:new()
                         cy = self.map.width - (obj.y / const.GRID),
                     }
                     self.mob_spawners[#self.mob_spawners+1] = spawner
+                end
+                if obj.name == "collector" then
+                    local cx = obj.x / const.GRID
+                    local cy = self.map.width - (obj.y / const.GRID)
+                    Collector(cx, cy)
                 end
             end
         end
@@ -153,10 +178,35 @@ function Level:has_wall_collision(cx, cy)
     return self:has_collision(cx, cy)
 end
 
+function Level:set_mark(x, y, v)
+    print("setting mark " .. tostring(v) .. " at " .. tostring(x) .. "," .. tostring(y))
+    if self:is_valid(x, y) then
+        if v then
+            self.marks_map[self:coord_id(x, y)] = v
+        else
+            self.marks_map[self:coord_id(x, y)] = nil
+        end
+    end
+end
+
+function Level:has_mark(x, y, mark)
+    --print("looking for mark " .. tostring(mark) .. " at " .. tostring(x) .. tostring(y))
+    if not self:is_valid(x, y) then
+        return false
+    else
+        local v = self.marks_map[self:coord_id(x, y)]
+        --print("found mark " .. tostring(v))
+        if v ~= nil  and v == mark then
+            return true
+        end
+    end
+    return false
+end
+
 function Level:render()
     for idx in pairs(self.map.layers) do
         local layer = self.map.layers[idx]
-        if layer.name == "collisions" or layer.name == "objects" then
+        if layer.name == "collisions" or layer.name == "objects" or layer.name == "fg" then
             for i in pairs(layer.data) do
                 --log.info(tostring(i))
                 local value = layer.data[i] - 1

@@ -143,10 +143,10 @@ end
 function Game:get_on_screen_entities()
     local entities = {}
 
-    local l = self.camera:get_left() - const.GRID
-    local b = self.camera:get_bottom() - const.GRID
-    local r = self.camera:get_right() + const.GRID
-    local t = self.camera:get_top() + const.GRID
+    local l = self.camera:get_left() - const.GRID * 4
+    local b = self.camera:get_bottom() - const.GRID * 4
+    local r = self.camera:get_right() + const.GRID * 4
+    local t = self.camera:get_top() + const.GRID * 4
 
     for _, en in pairs(G.entities) do
         if en:get_left() > l and en:get_right() < r and en:get_bottom() > b and en:get_top() < t then
