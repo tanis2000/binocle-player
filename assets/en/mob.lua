@@ -1,7 +1,7 @@
 local Entity = require("entity")
 local layers = require("layers")
 local lume = require("lib.lume")
-local Level = require("Level")
+local Level = require("level")
 
 local Mob = Entity:extend()
 
