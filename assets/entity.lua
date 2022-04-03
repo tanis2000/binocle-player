@@ -3,6 +3,7 @@ local const = require("const")
 local Object = require("lib.classic")
 local Cooldown = require("cooldown")
 local M = require("m")
+local util = require("util")
 
 ---@class Entity
 local Entity = Object:extend()
@@ -147,6 +148,8 @@ function Entity.on_pre_step_y(self)
     if self.has_collisions and self.yr < 0.0 and G.game.level:has_wall_collision(self.cx, self.cy - 1) then
         self.dy = 0
         self.yr = 0
+        self.bdx = self.bdx * 0.5
+        self.bdy = 0
         self:on_land()
     end
 
@@ -378,6 +381,18 @@ function Entity.dist_case_free(self, tcx, tcy, txr, tyr)
     end
 
     return M.dist(self.cx + self.xr, self.cy + self.yr, tcx + txr, tcy + tyr)
+end
+
+function Entity.can_see_through(cx, cy)
+    return not G.game.level:has_wall_collision(cx, cy) or self.cx == cx and self.cy == cy
+end
+
+function Entity:sight_check(en, tcx, tcy)
+    if en then
+        return util.line(self.cx, self.cy, en.cx, en.cy, Entity.can_see_through)
+    else
+        return util.line(self.cx, self.cy, tcx, tcy, Entity.can_see_through)
+    end
 end
 
 return Entity

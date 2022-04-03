@@ -1,6 +1,7 @@
 local Process = require("process")
 local Mob = require("en.mob")
 local Cat = require("en.cat")
+local Fx = require("en.fx")
 local lume = require("lib.lume")
 
 local WaveSystem = Process:extend()
@@ -20,7 +21,6 @@ function WaveSystem:new()
             total_mobs = 10,
             max_concurrent = 6,
         },
---[[
         {
             total_mobs = 20,
             max_concurrent = 8,
@@ -37,7 +37,6 @@ function WaveSystem:new()
             total_mobs = 80,
             max_concurrent = 30,
         },
-]]
     }
 
     self.announce_font = ttfont.from_file(sdl.assets_dir() .. "font/default.ttf", 32, shader.defaultShader());
@@ -135,9 +134,11 @@ function WaveSystem:update_position(x, y, w, h)
 end
 
 function WaveSystem:spawn_mob(cx, cy)
+    local fx = Fx("data/img/mobspawn.png", 8, 0.7)
+    fx:set_pos_grid(cx, cy)
     local mob = Mob()
     mob:set_pos_grid(cx, cy)
-    mob:set_target(G.game.h)
+    --mob:set_target(G.game.h)
 end
 
 function WaveSystem:clear_cats()

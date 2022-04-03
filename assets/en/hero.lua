@@ -121,17 +121,20 @@ function Hero.shoot(self)
             if c.owner == self then
                 c:launch(self.dir)
                 self.cd:set("shoot", 0.15)
+                audio.play_sound(G.sounds["meow"])
                 return
             end
         end
     end
     local b = Bullet(self)
     self.cd:set("shoot", 0.15)
+    audio.play_sound(G.sounds["shoot"])
 end
 
 function Hero.add_cat(self)
     if self.cats < self.max_cats then
         self.cats = self.cats + 1
+        audio.play_sound(G.sounds["pickup"])
     end
 end
 
@@ -144,6 +147,8 @@ end
 function Hero.collect_cat(self)
     self:heal(self.cats * 7)
     self.cats = 0
+    audio.play_sound(G.sounds["powerup"])
+    self:say("Wow! I've got 7 lives back with this!")
 end
 
 function Hero.heal(self, amount)
@@ -186,16 +191,28 @@ function Hero.see_cats(self)
 end
 
 function Hero:hurt(amount)
+    if self.cd:has("hurt") then
+        return
+    end
+
     self.health = self.health - amount
     if self.health <= 0 then
         self:play_animation("death")
         G.game.camera:shake(2, 0.3)
         self:bump(-self.dir * 0.4, -0.15)
+    else
+        audio.play_sound(G.sounds["hurt"])
+        self.cd:set("hurt", 0.2)
     end
 end
 
 function Hero:is_alive()
     return not self.destroyed and self.health > 0
+end
+
+function Hero:on_land()
+    local fx = Fx("data/img/land.png", 6, 0.3)
+    fx:set_pos_pixel(self:get_center_x(), self:get_bottom())
 end
 
 function Hero:__tostring()

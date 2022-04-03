@@ -103,14 +103,18 @@ function on_init()
     audio.init(audio_instance)
     io.write("audio_instance: " .. tostring(audio_instance) .. "\n")
 
-    local music = audio.load_music(audio_instance, assets_dir .. "music/rolemusic_37_ohmperios.mp3")
+    local music = audio.load_music(audio_instance, assets_dir .. "music/theme.mp3")
     G.musics["main"] = music
     audio.play_music(audio_instance, music)
     audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
 
-    local sound = audio.load_sound(audio_instance, assets_dir .. "sfx/jump.wav")
-    G.sounds["jump"] = sound
-    audio.set_sound_volume(G.sounds["jump"], 1.0)
+    load_sfx("jump", "sfx/jump.wav")
+    load_sfx("hurt", "sfx/hurt.wav")
+    load_sfx("shoot", "sfx/shoot.wav")
+    load_sfx("purr", "sfx/purr.wav")
+    load_sfx("meow", "sfx/meow.mp3")
+    load_sfx("pickup", "sfx/pickup.wav")
+    load_sfx("powerup", "sfx/powerup.wav")
 end
 
 function main.on_update(dt)
@@ -188,6 +192,12 @@ function on_destroy()
     if G.game ~= nil then
         G.game:on_destroy()
     end
+end
+
+function load_sfx(name, filename)
+    local sound = audio.load_sound(audio_instance, assets_dir .. filename)
+    G.sounds[name] = sound
+    audio.set_sound_volume(G.sounds[name], 1.0)
 end
 
 function get_window()
