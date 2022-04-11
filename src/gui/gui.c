@@ -176,19 +176,21 @@ void gui_init_imgui(float width, float height) {
   shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT2;
   shd_desc.vs.uniform_blocks[0].uniforms[1].name = "projmtx";
   shd_desc.vs.uniform_blocks[0].uniforms[1].type = SG_UNIFORMTYPE_MAT4;
-#if defined(SOKOL_GLES2)
+#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
   shd_desc.vs.source =
-    "#version 120\n"
-    //      "uniform vec2 disp_size;\n"
+    "#version 300 es\n"
+    "precision mediump float;\n"
+    "precision mediump int;\n"
+    "uniform vec2 disp_size;\n"
     "uniform mat4 projmtx;\n"
-    "attribute vec2 position;\n"
-    "attribute vec2 texcoord0;\n"
-    "attribute vec4 color0;\n"
-    "varying vec2 uv;\n"
-    "varying vec4 color;\n"
+    "in vec2 position;\n"
+    "in vec2 texcoord0;\n"
+    "in vec4 color0;\n"
+    "out vec2 uv;\n"
+    "out vec4 color;\n"
     "void main() {\n"
-    //      "    gl_Position = vec4(((position/disp_size)-0.5)*vec2(2.0,-2.0), 0.5, 1.0);\n"
-    "    gl_Position = projmtx * vec4(position.xy,0,1);\n"
+    "    gl_Position = vec4(((position/disp_size)-0.5)*vec2(2.0,-2.0), 0.5, 1.0);\n"
+//    "    gl_Position = projmtx * vec4(position.xy,0,1);\n"
     "    uv = texcoord0;\n"
     "    color = color0;\n"
     "}\n";
@@ -212,14 +214,17 @@ void gui_init_imgui(float width, float height) {
   shd_desc.fs.images[0].name = "tex";
   shd_desc.fs.images[0].image_type = SG_IMAGETYPE_2D;
   shd_desc.fs.images[0].sampler_type = SG_SAMPLERTYPE_FLOAT;
-#if defined(SOKOL_GLES2)
+#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
   shd_desc.fs.source =
-    "#version 120\n"
+    "#version 300 es\n"
+    "precision mediump float;\n"
+    "precision mediump int;\n"
     "uniform sampler2D tex;\n"
-    "varying vec2 uv;\n"
-    "varying vec4 color;\n"
+    "in vec2 uv;\n"
+    "in vec4 color;\n"
+    "out vec4 frag_color;\n"
     "void main() {\n"
-    "    gl_FragColor = texture2D(tex, uv) * color;\n"
+    "    frag_color = texture(tex, uv) * color;\n"
     "}\n";
 #else
   shd_desc.fs.source =
@@ -232,7 +237,9 @@ void gui_init_imgui(float width, float height) {
     "    frag_color = texture(tex, uv) * color;\n"
     "}\n";
 #endif
+  binocle_log_info("Compiling GUI shader for init");
   sg_shader shd = sg_make_shader(&shd_desc);
+  binocle_log_info("Done compiling GUI shader for init");
 
   // pipeline object for imgui rendering
   sg_pipeline_desc pip_desc = {0};
@@ -250,7 +257,9 @@ void gui_init_imgui(float width, float height) {
   pip_desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
   pip_desc.depth.pixel_format = SG_PIXELFORMAT_NONE;
   pip_desc.colors[0].write_mask = SG_COLORMASK_RGBA;
+  binocle_log_info("Creating GUI pipeline");
   imgui_pip = sg_make_pipeline(&pip_desc);
+  binocle_log_info("Done creating GUI pipeline");
 
   // initial clear color
 //  imgui_pass_action.colors[0].action = BINOCLE_ACTION_CLEAR;
@@ -571,7 +580,7 @@ void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_a
 
 #ifdef BINOCLE_GL
   // Quad shader
-#if defined(SOKOL_GLES2)
+#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
   sprintf(vert, "%sshaders/gles/%s", binocle_assets_dir, "quad_vert.glsl");
   sprintf(frag, "%sshaders/gles/%s", binocle_assets_dir, "quad_frag.glsl");
 #else
@@ -611,7 +620,9 @@ void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_a
       },
     },
   };
+  binocle_log_info("Compiling offscreen GUI shader");
   imgui_to_offscreen_shader = sg_make_shader(&screen_shader_desc);
+  binocle_log_info("Done compiling offscreen GUI shader");
 
   imgui_to_offscreen_action.colors[0].action = SG_ACTION_DONTCARE;
   imgui_to_offscreen_action.depth.action = SG_ACTION_DONTCARE;
@@ -732,21 +743,17 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
   shd_desc.vs.uniform_blocks[0].size = sizeof(screen_vs_params_t);
   shd_desc.vs.uniform_blocks[0].uniforms[0].name = "transform";
   shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_MAT4;
-#if defined(SOKOL_GLES2)
+#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
   shd_desc.vs.source =
-    "#version 120\n"
-    //      "uniform vec2 disp_size;\n"
-    "uniform mat4 projmtx;\n"
-    "attribute vec2 position;\n"
-    "attribute vec2 texcoord0;\n"
-    "attribute vec4 color0;\n"
-    "varying vec2 uv;\n"
-    "varying vec4 color;\n"
-    "void main() {\n"
-    //      "    gl_Position = vec4(((position/disp_size)-0.5)*vec2(2.0,-2.0), 0.5, 1.0);\n"
-    "    gl_Position = projmtx * vec4(position.xy,0,1);\n"
-    "    uv = texcoord0;\n"
-    "    color = color0;\n"
+    "#version 300 es\n"
+    "precision mediump float;\n"
+    "precision mediump int;\n"
+    "in vec3 position;\n"
+    "uniform mat4 transform;\n"
+    "out vec2 uvCoord;\n"
+    "void main(void) {\n"
+    "gl_Position = transform * vec4( position, 1.0 );\n"
+    "uvCoord = (position.xy + vec2(1,1))/2.0;\n"
     "}\n";
 #else
   shd_desc.vs.source =
@@ -769,14 +776,18 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
   shd_desc.fs.uniform_blocks[0].uniforms[1].type = SG_UNIFORMTYPE_FLOAT2;
   shd_desc.fs.uniform_blocks[0].uniforms[2].name = "viewport";
   shd_desc.fs.uniform_blocks[0].uniforms[2].type = SG_UNIFORMTYPE_FLOAT2;
-#if defined(SOKOL_GLES2)
+#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
   shd_desc.fs.source =
-    "#version 120\n"
-    "uniform sampler2D tex;\n"
-    "varying vec2 uv;\n"
-    "varying vec4 color;\n"
+    "#version 300 es\n"
+    "precision mediump float;\n"
+    "precision mediump int;\n"
+    "uniform sampler2D tex0;\n"
+    "in vec2 uvCoord;\n"
+    "out vec4 fragColor;\n"
     "void main() {\n"
-    "    gl_FragColor = texture2D(tex, uv) * color;\n"
+    "    vec4 texcolor = texture(tex0, uvCoord);\n"
+    "    fragColor = texcolor;\n"
+    "    //gl_FragColor = texture2D(tex, uv) * color;\n"
     "}\n";
 #else
   shd_desc.fs.source =
@@ -793,7 +804,9 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
 "fragColor = texcolor;\n"
 "}\n";
 #endif
+  binocle_log_info("Compiling GUI shader for screen pipeline");
   sg_shader shd = sg_make_shader(&shd_desc);
+  binocle_log_info("Done compiling GUI shader for screen pipeline");
 
   // Clear screen action for the actual screen
   sg_color clear_color = binocle_color_green();
@@ -810,6 +823,7 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
   };
   gui_screen_pass_action = default_action;
 
+  binocle_log_info("Creating GUI pipeline");
   // Pipeline state object for the screen (default) pass
   gui_screen_pip = sg_make_pipeline(&(sg_pipeline_desc){
     .layout = {
@@ -850,6 +864,7 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
 #endif
     }
   });
+  binocle_log_info("Done creating GUI pipeline");
 
 //  float vertices[] = {
 //    /* pos                  color                       uvs */
