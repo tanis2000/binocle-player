@@ -1,13 +1,14 @@
-#ifdef GL_ES
+#version 300 es
 precision mediump float;
-#endif
-attribute vec3 vertexPosition;
-attribute vec2 vertexTCoord;
-attribute vec4 vertexColor;
+precision mediump int;
+
+in vec3 vertexPosition;
+in vec2 vertexTCoord;
+in vec4 vertexColor;
 //attribute vec3 vertexNormal;
 
-varying vec2 tcoord;
-varying vec4 color;
+out vec2 tcoord;
+out vec4 color;
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;

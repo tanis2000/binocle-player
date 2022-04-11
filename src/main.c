@@ -391,7 +391,7 @@ int main(int argc, char *argv[])
   binocle_gd_setup_flat_pipeline(gd);
 
   gui_init_imgui(window->width, window->height);
-  //gui_setup_imgui_to_offscreen_pipeline(gd, binocle_assets_dir);
+//  gui_setup_imgui_to_offscreen_pipeline(gd, binocle_assets_dir);
   gui_setup_screen_pipeline(screen_shader);
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop, 0, 1);

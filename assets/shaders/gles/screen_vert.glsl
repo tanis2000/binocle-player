@@ -1,7 +1,7 @@
-#ifdef GL_ES
+#version 300 es
 precision mediump float;
-#endif
-attribute vec3 position;
+precision mediump int;
+in vec3 position;
 uniform mat4 transform;
 
 void main() {
