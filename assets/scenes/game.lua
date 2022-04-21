@@ -112,16 +112,12 @@ function Game:update(dt)
     --    b:update(dt)
     --end
 
-    self.gui:update_position(self.camera:get_left(), self.camera:get_top())
     self.gui.max_cats = self.h.max_cats
     self.gui.carried_cats = self.h.cats
     self.gui.health = self.h.health
     self.gui.max_health = self.h.max_health
     self.gui.hour, self.gui.minute = self.day_cycle:get_time_of_day()
     gd.set_offscreen_clear_color(gd_instance, self.day_cycle:get_bg_color())
-
-
-    self.wave_system:update_position(self.camera:get_left(), self.camera:get_bottom(), self.camera:get_px_wid(), self.camera:get_px_hei())
 
     self.debugGui:update(dt)
 end

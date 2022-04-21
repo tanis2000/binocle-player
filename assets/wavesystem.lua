@@ -3,6 +3,7 @@ local Mob = require("en.mob")
 local Cat = require("en.cat")
 local Fx = require("en.fx")
 local lume = require("lib.lume")
+local const = require("const")
 
 local WaveSystem = Process:extend()
 
@@ -10,8 +11,8 @@ function WaveSystem:new()
     WaveSystem.super.new(self)
     self.x = 0
     self.y = 0
-    self.w = 0
-    self.h = 0
+    self.w = const.DESIGN_WIDTH
+    self.h = const.DESIGN_HEIGHT
     self.current_wave = nil
     self.current_wave_idx = 0
     self.current_wave_num_spawned = 0
@@ -40,6 +41,7 @@ function WaveSystem:new()
     }
 
     self.announce_font = ttfont.from_file(sdl.assets_dir() .. "font/default.ttf", 32, shader.defaultShader());
+    self.camera = camera.new(adapter)
 end
 
 function WaveSystem:reset()
@@ -111,19 +113,19 @@ end
 function WaveSystem:announce()
     local s = string.format("Wave %d", self.current_wave_idx)
     local width = ttfont.get_string_width(self.announce_font, s)
-    ttfont.draw_string(self.announce_font, s, gd_instance, self.x + (self.w - width)/2, self.y + (self.h - 32)/2, viewport, color.black, cam);
+    ttfont.draw_string(self.announce_font, s, gd_instance, self.x + (self.w - width)/2, self.y + (self.h - 32)/2, viewport, color.black, self.camera);
 end
 
 function WaveSystem:announce_done()
     local s = "Wave completed"
     local width = ttfont.get_string_width(self.announce_font, s)
-    ttfont.draw_string(self.announce_font, s, gd_instance, self.x + (self.w - width)/2, self.y + (self.h - 32)/2, viewport, color.black, cam);
+    ttfont.draw_string(self.announce_font, s, gd_instance, self.x + (self.w - width)/2, self.y + (self.h - 32)/2, viewport, color.black, self.camera);
 end
 
 function WaveSystem:announce_game_completed()
     local s = "You beat the game. Well done!"
     local width = ttfont.get_string_width(G.game.default_font, s)
-    ttfont.draw_string(G.game.default_font, s, gd_instance, self.x + (self.w - width)/2, self.y + (self.h - 32)/2, viewport, color.white, cam);
+    ttfont.draw_string(G.game.default_font, s, gd_instance, self.x + (self.w - width)/2, self.y + (self.h - 32)/2, viewport, color.white, self.camera);
 end
 
 function WaveSystem:update_position(x, y, w, h)

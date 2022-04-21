@@ -1,5 +1,6 @@
 local Process = require("process")
 local Game = require("scenes.game")
+local const = require("const")
 local Intro = Process:extend()
 
 function Intro:new()
@@ -38,15 +39,15 @@ end
 function Intro:update(dt)
     -- By default we scale our logo by 1/3
     --local scale = lkazmath.kmVec2New();
-    --scale.x = DESIGN_WIDTH / self.TEX_WIDTH
-    --scale.y = DESIGN_HEIGHT / self.TEX_WIDTH
+    --scale.x = const.DESIGN_WIDTH / self.TEX_WIDTH
+    --scale.y = const.DESIGN_HEIGHT / self.TEX_WIDTH
 
-    local scale_x = DESIGN_WIDTH / self.TEX_WIDTH
-    local scale_y = DESIGN_HEIGHT / self.TEX_WIDTH
+    local scale_x = const.DESIGN_WIDTH / self.TEX_WIDTH
+    local scale_y = const.DESIGN_HEIGHT / self.TEX_WIDTH
 
     -- Center the logo in the render target
-    local x = (DESIGN_WIDTH - (self.TEX_WIDTH * scale_x)) / 2.0
-    local y = (DESIGN_HEIGHT - (self.TEX_HEIGHT * scale_y)) / 2.0
+    local x = (const.DESIGN_WIDTH - (self.TEX_WIDTH * scale_x)) / 2.0
+    local y = (const.DESIGN_HEIGHT - (self.TEX_HEIGHT * scale_y)) / 2.0
 
     --io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
     sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale_x, scale_y, cam)
@@ -63,7 +64,7 @@ function Intro:update(dt)
 
     local s = "Press SPACE to START"
     local width = ttfont.get_string_width(self.default_font, s)
-    ttfont.draw_string(self.default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam);
+    ttfont.draw_string(self.default_font, s, gd_instance, (const.DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam);
 
 end
 
