@@ -261,9 +261,17 @@ void main_loop() {
 int main(int argc, char *argv[])
 {
   binocle_app_desc_t app_desc = {0};
+  if (argc > 1) {
+    char *path = argv[1];
+    app_desc.forced_asset_origin_path = path;
+    if (!binocle_sdl_directory_exists(path)) {
+      binocle_log_error("Directory %s does not exist. Quitting.", path);
+      return -1;
+    }
+  }
   app = binocle_app_new();
   binocle_app_init(&app, &app_desc);
-  binocle_assets_dir = binocle_sdl_assets_dir();
+  binocle_assets_dir = "/assets/";
 
   lua_mutex = SDL_CreateMutex();
 
@@ -290,11 +298,11 @@ int main(int argc, char *argv[])
 
   char *shader_vs_src;
   size_t shader_vs_src_size;
-  binocle_sdl_load_text_file(vert, &shader_vs_src, &shader_vs_src_size);
+  binocle_fs_load_text_file(vert, &shader_vs_src, &shader_vs_src_size);
 
   char *shader_fs_src;
   size_t shader_fs_src_size;
-  binocle_sdl_load_text_file(frag, &shader_fs_src, &shader_fs_src_size);
+  binocle_fs_load_text_file(frag, &shader_fs_src, &shader_fs_src_size);
 #endif
 
   sg_shader_desc default_shader_desc = {
@@ -334,11 +342,11 @@ int main(int argc, char *argv[])
 
   char *screen_shader_vs_src;
   size_t screen_shader_vs_src_size;
-  binocle_sdl_load_text_file(vert, &screen_shader_vs_src, &screen_shader_vs_src_size);
+  binocle_fs_load_text_file(vert, &screen_shader_vs_src, &screen_shader_vs_src_size);
 
   char *screen_shader_fs_src;
   size_t screen_shader_fs_src_size;
-  binocle_sdl_load_text_file(frag, &screen_shader_fs_src, &screen_shader_fs_src_size);
+  binocle_fs_load_text_file(frag, &screen_shader_fs_src, &screen_shader_fs_src_size);
 #endif
 
   sg_shader_desc screen_shader_desc = {
