@@ -7,6 +7,7 @@
 #include <binocle_gd.h>
 #include "gui.h"
 #include "binocle_sdl.h"
+#include "binocle_fs.h"
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "lua.h"
@@ -589,11 +590,11 @@ void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_a
 #endif
   char *screen_shader_vs_src;
   size_t screen_shader_vs_src_size;
-  binocle_sdl_load_text_file(vert, &screen_shader_vs_src, &screen_shader_vs_src_size);
+  binocle_fs_load_text_file(vert, &screen_shader_vs_src, &screen_shader_vs_src_size);
 
   char *screen_shader_fs_src;
   size_t screen_shader_fs_src_size;
-  binocle_sdl_load_text_file(frag, &screen_shader_fs_src, &screen_shader_fs_src_size);
+  binocle_fs_load_text_file(frag, &screen_shader_fs_src, &screen_shader_fs_src_size);
 #endif
 
   sg_shader_desc screen_shader_desc = {
