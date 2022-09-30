@@ -1,5 +1,7 @@
+---@meta
+
 ---@class color
-local m = {}
+color = {}
 
 ---@class Color
 local Color = {}
@@ -9,6 +11,6 @@ local Color = {}
 ---@param b number blue 0..1
 ---@param a number alpha 0..1
 ---@return color Color
-function m.new(r, g, b, a) end
+function color.new(r, g, b, a) end
 
-return m
+return color

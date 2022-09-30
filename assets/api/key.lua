@@ -1,9 +1,9 @@
+---@meta
+
 ---@class key
-local m = {}
+key = {}
 
-m.KEY_UNKNOWN = 0
-
-return m
+key.KEY_UNKNOWN = 0
 
 --KEY_UNKNOWN,
 --KEY_A,
@@ -248,4 +248,4 @@ return m
 --KEY_APP2,
 --KEY_MAX,
 
-return m
+return key

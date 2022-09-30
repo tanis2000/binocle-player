@@ -1,6 +1,8 @@
 ---@class gd
 local m = {}
 
+---@meta
+
 ---@class GraphicsDevice
 local GraphicsDevice = {}
 

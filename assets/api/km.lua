@@ -1,5 +1,7 @@
+---@meta
+
 ---@class lkazmath
-local m = {}
+lkazmath = {}
 
 ---@class kmAABB2
 local kmAABB2 = {}

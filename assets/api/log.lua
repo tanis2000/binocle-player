@@ -1,19 +1,21 @@
+---@meta
+
 ---@class log
-local m = {}
+log = {}
 
 ---@class Log
 local Log = {}
 
 ---@param message string the message to log at DEBUG level
-function m.debug(message) end
+function log.debug(message) end
 
 ---@param message string the message to log at INFO level
-function m.info(message) end
+function log.info(message) end
 
 ---@param message string the message to log at WARNING level
-function m.warning(message) end
+function log.warning(message) end
 
 ---@param message string the message to log at ERROR level
-function m.error(message) end
+function log.error(message) end
 
-return m
+return log

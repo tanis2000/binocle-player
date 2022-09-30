@@ -1,7 +1,9 @@
+---@meta
+
 ---@class shader
-local m = {}
+shader = {}
 
 ---@class Shader
 local Shader = {}
 
-return m
+return shader
