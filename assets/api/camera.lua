@@ -21,4 +21,8 @@ function m.y(camera) end
 ---@param y number vertical position
 function m.set_position(camera, x, y) end
 
+---@param camera Camera an instance of Camera
+---@return number, number the horizontal position and the vertical position
+function m.get_position(camera) end
+
 return m
