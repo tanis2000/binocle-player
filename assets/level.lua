@@ -1,6 +1,6 @@
 local const = require("const")
 local Process = require("process")
-local map = require("maps.main")
+local map = require("maps.ld51-main")
 local layers = require("layers")
 local lume = require("lib.lume")
 local SayMark = require("en.saymark")
@@ -255,11 +255,19 @@ function Level:get_hero_spawner()
 end
 
 function Level:get_cat_spawner()
-    return lume.randomchoice(self.cat_spawners)
+    if #self.cat_spawners > 0 then
+        return lume.randomchoice(self.cat_spawners)
+    else
+        return nil
+    end
 end
 
 function Level:get_mob_spawner()
-    return lume.randomchoice(self.mob_spawners)
+    if #self.mob_spawners > 0 then
+        return lume.randomchoice(self.mob_spawners)
+    else
+        return nil
+    end
 end
 
 return Level

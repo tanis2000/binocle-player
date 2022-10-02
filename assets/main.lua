@@ -1,17 +1,38 @@
 main = {}
+
 ---@type table
+---Global state
 G = {
     cache = nil,
     entities = {}, -- all entities
     mobs = {}, -- all mobs
     cats = {}, -- all cats
     bullets = {}, -- all bullets
-    title = "Binocle Player",
+    title = "LD51 - Find me a better name!",
     musics = {},
     sounds = {},
     debug = false,
     ---@type Level
     level = nil,
+
+    player = {
+        score = 0,
+        energy = 2,
+        starting_energy = 2,
+        max_energy = 8,
+        elapsed_time = 0,
+        max_cards = 4,
+        num_initial_cards = 4,
+        max_buildings = 8,
+        high_score = 0,
+        show_tutorial = true,
+    },
+    go = {
+        cards = {}, -- all the cards
+        buildings = {}, -- all the buildings
+    },
+    game = nil,
+    modals = {}
 }
 local assets_dir = sdl.assets_dir()
 log.info(assets_dir .. "\n")
@@ -103,18 +124,20 @@ function on_init()
     audio.init(audio_instance)
     io.write("audio_instance: " .. tostring(audio_instance) .. "\n")
 
-    local music = audio.load_music(audio_instance, assets_dir .. "music/theme.mp3")
+    local music = audio.load_music(audio_instance, assets_dir .. "data/music/theme.mp3")
     G.musics["main"] = music
     audio.play_music(audio_instance, music)
     audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
 
-    load_sfx("jump", "sfx/jump.wav")
-    load_sfx("hurt", "sfx/hurt.wav")
-    load_sfx("shoot", "sfx/shoot.wav")
-    load_sfx("purr", "sfx/purr.wav")
-    load_sfx("meow", "sfx/meow.mp3")
-    load_sfx("pickup", "sfx/pickup.wav")
-    load_sfx("powerup", "sfx/powerup.wav")
+    load_sfx("jump", "data/sfx/jump.wav")
+    load_sfx("hurt", "data/sfx/hurt.wav")
+    load_sfx("shoot", "data/sfx/shoot.wav")
+    load_sfx("purr", "data/sfx/purr.wav")
+    load_sfx("meow", "data/sfx/meow.mp3")
+    load_sfx("pickup", "data/sfx/pickup.wav")
+    load_sfx("powerup", "data/sfx/powerup.wav")
+    load_sfx("countdown", "data/sfx/countdown.wav")
+    load_sfx("countdown-final", "data/sfx/countdown-final.wav")
 end
 
 function main.on_update(dt)

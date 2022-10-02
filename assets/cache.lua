@@ -1,4 +1,4 @@
-Cache = require("lib.classic"):extend()
+local Cache = require("lib.classic"):extend()
 Cache.map = {}
 
 function Cache.load(filename)

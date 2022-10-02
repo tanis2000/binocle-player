@@ -4,17 +4,19 @@ local Mob = require("en.mob")
 local Process = require("process")
 local DebugGui = require("debuggui")
 local GameCamera = require("gamecamera")
-local Cat = require("en.cat")
+local Card = require("en.card")
+local Building = require("en.building")
 local Gui = require("gui")
 local const = require("const")
 local lume = require("lib.lume")
 local DayCycle = require("daycycle")
-local WaveSystem = require("wavesystem")
+local TimeSystem = require("sys.timesystem")
 
 local Game = Process:extend()
 
 function Game:new(shd)
     Game.super.new(self)
+    G.game = self
     self.name = "game"
     self.shader = shd
     local assets_dir = sdl.assets_dir()
@@ -25,19 +27,21 @@ function Game:new(shd)
     self:add_child(l)
 
     local hs = self.level:get_hero_spawner()
-    self.h:set_pos_grid(hs.cx, hs.cy)
+    if hs ~= nil then
+        self.h:set_pos_grid(hs.cx, hs.cy)
+    end
 
     gd.set_offscreen_clear_color(gd_instance, 73/256, 77/256, 126/256, 1)
     gd.set_offscreen_clear_color(gd_instance, 242/256, 211/256, 171/256, 1)
 
     self.debugGui = DebugGui()
 
-    self.default_font = ttfont.from_file(assets_dir .. "font/default.ttf", 8, shader.defaultShader());
+    self.default_font = ttfont.from_file(assets_dir .. "data/font/default.ttf", 8, shader.defaultShader());
 
     self.camera = GameCamera()
     self:add_child(self.camera)
-    self.camera:track_entity(self.h)
-    self.camera:center_on_target()
+    --self.camera:track_entity(self.h)
+    --self.camera:center_on_target()
 
     self:spawn_cats(3)
 
@@ -48,13 +52,12 @@ function Game:new(shd)
     self.day_cycle = DayCycle()
     self:add_child(self.day_cycle)
 
-    self.wave_system = WaveSystem()
-    self:add_child(self.wave_system)
-    self.day_cycle:set_on_cycle_switch_fn(function(cycle)
-        if cycle == 2 and not self.wave_system.running then
-            self.wave_system:start_wave()
-        end
-    end)
+    self.time_system = TimeSystem()
+    self:add_child(self.time_system)
+    self.time_system:set_on_turn_end(self.on_turn_end)
+
+    self:add_initial_cards()
+    self:add_initial_buildings()
 end
 
 function Game:pre_update(dt)
@@ -77,6 +80,14 @@ function Game:update(dt)
 
     if self.cd:has("test") then
         --log.info("cd: " .. tostring(self.cd:get("test")))
+    end
+
+    if input.is_key_pressed(input_mgr, key.KEY_2) then
+        self:pause()
+    end
+
+    if input.is_key_pressed(input_mgr, key.KEY_3) then
+        self:resume()
     end
 
     if input.is_key_pressed(input_mgr, key.KEY_L) then
@@ -119,9 +130,6 @@ function Game:update(dt)
     self.gui.max_health = self.h.max_health
     self.gui.hour, self.gui.minute = self.day_cycle:get_time_of_day()
     gd.set_offscreen_clear_color(gd_instance, self.day_cycle:get_bg_color())
-
-
-    self.wave_system:update_position(self.camera:get_left(), self.camera:get_bottom(), self.camera:get_px_wid(), self.camera:get_px_hei())
 
     self.debugGui:update(dt)
 end
@@ -179,9 +187,46 @@ end
 function Game:spawn_cats(num)
     for i = 1, num do
         local sp = self.level:get_cat_spawner()
-        local c = Cat()
-        c:set_pos_grid(sp.cx, sp.cy)
+        if sp ~= nil then
+            local c = Cat()
+            c:set_pos_grid(sp.cx, sp.cy)
+        end
     end
+end
+
+function Game:add_initial_cards()
+    for i = 1, G.player.num_initial_cards do
+        local card = Card.random_card()
+        card:set_pos_grid((i)*4, 1)
+    end
+end
+
+function Game:add_initial_buildings()
+    local house = Building()
+    house:set_pos_grid(6, 10)
+end
+
+function Game:add_building(building_type, health)
+    local b = Building()
+    b.building_type = building_type
+    b.health = health
+    b:set_pos_grid(5 + #G.go.buildings, 10)
+end
+
+function Game:on_turn_end()
+    local cards_to_draw = G.player.max_cards - #G.go.cards
+    if cards_to_draw == 0 then
+        return
+    end
+    for i = 1, cards_to_draw do
+        Card.random_card()
+    end
+
+    for i = 1, #G.go.cards do
+        local card = G.go.cards[i]
+        card:set_pos_grid((i)*4, 1)
+    end
+
 end
 
 return Game

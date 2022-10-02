@@ -26,13 +26,21 @@ function Gui:post_update(dt)
 end
 
 function Gui:render()
-    local s = string.format("Health: %d/%d   Cats: %d/%d   Time:%d:%d", self.health, self.max_health, self.carried_cats, self.max_cats, self.hour, self.minute)
+    local h, m, se = self:seconds_to_clock(G.player.elapsed_time)
+    local s = string.format("Energy: %d   Time: %d:%d:%d", G.player.energy, h, m, se)
     ttfont.draw_string(G.game.default_font, s, gd_instance, self.x + 10, self.y - 10, viewport, color.white, cam);
 end
 
 function Gui:update_position(x, y)
     self.x = x
     self.y = y
+end
+
+function Gui:seconds_to_clock(seconds)
+    local hours = math.floor(seconds/3600)
+    local minutes = math.floor(seconds/60 - hours * 60)
+    local secs = math.floor(seconds - hours * 3600 - minutes * 60)
+    return hours, minutes, secs
 end
 
 return Gui
