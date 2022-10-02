@@ -8,7 +8,7 @@ G = {
     mobs = {}, -- all mobs
     cats = {}, -- all cats
     bullets = {}, -- all bullets
-    title = "LD51 - Find me a better name!",
+    title = "LD51 - Unlucky Town v0.1.0",
     musics = {},
     sounds = {},
     debug = false,
@@ -19,17 +19,20 @@ G = {
         score = 0,
         energy = 2,
         starting_energy = 2,
-        max_energy = 8,
+        max_energy = 4,
         elapsed_time = 0,
         max_cards = 4,
         num_initial_cards = 4,
         max_buildings = 8,
+        max_building_level = 3,
         high_score = 0,
         show_tutorial = true,
+        last_disaster_text = "",
     },
     go = {
         cards = {}, -- all the cards
         buildings = {}, -- all the buildings
+        disasters = {}, -- all the disasters
     },
     game = nil,
     modals = {}
@@ -73,6 +76,7 @@ color.azure = color.new(192.0 / 255.0, 1.0, 1.0, 1.0)
 color.white = color.new(1.0, 1.0, 1.0, 1.0)
 color.black = color.new(0, 0, 0, 1.0)
 color.trans_green = color.new(0, 1, 0, 0.5)
+color.red = color.new(1.0, 0, 0, 1.0)
 
 local quit_requests = 0
 ---@class Intro
@@ -87,6 +91,7 @@ function on_init()
     window.set_minimum_size(win, DESIGN_WIDTH, DESIGN_HEIGHT)
 
     input_mgr = input.new()
+    io.write("input_mgr: " .. tostring(input_mgr) .."\n")
 
     adapter = viewport_adapter.new(win, "scaling", "pixel_perfect",
         DESIGN_WIDTH, DESIGN_HEIGHT, DESIGN_WIDTH, DESIGN_HEIGHT);
@@ -112,6 +117,7 @@ function on_init()
 
     sb = sprite_batch.new()
     sprite_batch.set_gd(sb, gd_instance)
+    io.write("sb: " .. tostring(sb) .. "\n")
 
     -- Create a viewport that corresponds to the size of our render target
     center = lkazmath.kmVec2New();
@@ -128,22 +134,29 @@ function on_init()
     G.musics["main"] = music
     audio.play_music(audio_instance, music)
     audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
-
-    load_sfx("jump", "data/sfx/jump.wav")
-    load_sfx("hurt", "data/sfx/hurt.wav")
-    load_sfx("shoot", "data/sfx/shoot.wav")
-    load_sfx("purr", "data/sfx/purr.wav")
-    load_sfx("meow", "data/sfx/meow.mp3")
-    load_sfx("pickup", "data/sfx/pickup.wav")
-    load_sfx("powerup", "data/sfx/powerup.wav")
-    load_sfx("countdown", "data/sfx/countdown.wav")
-    load_sfx("countdown-final", "data/sfx/countdown-final.wav")
 end
 
 function main.on_update(dt)
     --io.write("dt: " .. tostring(dt) .. "\n")
     sprite_batch.begin(sb, cam, shader.defaultShader())
     if not scene then
+        --load_sfx("hurt", "data/sfx/hurt.wav")
+        --load_sfx("purr", "data/sfx/purr.wav")
+        --load_sfx("meow", "data/sfx/meow.mp3")
+        --load_sfx("pickup", "data/sfx/pickup.wav")
+        --load_sfx("powerup", "data/sfx/powerup.wav")
+
+        load_sfx("jump", "data/sfx/jump.wav")
+        load_sfx("shoot", "data/sfx/shoot.wav")
+        load_sfx("countdown", "data/sfx/countdown.wav")
+        load_sfx("countdown-final", "data/sfx/countdown-final.wav")
+        load_sfx("earthquake", "data/sfx/earthquake.wav")
+        load_sfx("tornado", "data/sfx/tornado.wav")
+        load_sfx("famine", "data/sfx/famine.wav")
+        load_sfx("crisis", "data/sfx/crisis.wav")
+        load_sfx("strike", "data/sfx/strike.wav")
+
+
         intro = Intro()
         intro:init(shader.defaultShader())
 
@@ -214,6 +227,9 @@ end
 function on_destroy()
     if G.game ~= nil then
         G.game:on_destroy()
+    end
+    if scene ~= nil then
+        scene:on_destroy()
     end
 end
 

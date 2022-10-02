@@ -6,6 +6,7 @@ local DebugGui = require("debuggui")
 local GameCamera = require("gamecamera")
 local Card = require("en.card")
 local Building = require("en.building")
+local Disaster = require("en.disaster")
 local Gui = require("gui")
 local const = require("const")
 local lume = require("lib.lume")
@@ -21,6 +22,7 @@ function Game:new(shd)
     self.shader = shd
     local assets_dir = sdl.assets_dir()
     self.h = Hero()
+    self.h:set_pos_grid(2, 7)
 
     local l = require("level")
     self.level = l:new()
@@ -52,9 +54,11 @@ function Game:new(shd)
     self.day_cycle = DayCycle()
     self:add_child(self.day_cycle)
 
+    self:reset()
+
     self.time_system = TimeSystem()
     self:add_child(self.time_system)
-    self.time_system:set_on_turn_end(self.on_turn_end)
+    self.time_system:set_on_turn_end(self.on_turn_end, self)
 
     self:add_initial_cards()
     self:add_initial_buildings()
@@ -88,6 +92,12 @@ function Game:update(dt)
 
     if input.is_key_pressed(input_mgr, key.KEY_3) then
         self:resume()
+    end
+
+    if input.is_key_pressed(input_mgr, key.KEY_4) then
+        for _, b in pairs(G.go.buildings) do
+            b:hurt(3)
+        end
     end
 
     if input.is_key_pressed(input_mgr, key.KEY_L) then
@@ -131,7 +141,9 @@ function Game:update(dt)
     self.gui.hour, self.gui.minute = self.day_cycle:get_time_of_day()
     gd.set_offscreen_clear_color(gd_instance, self.day_cycle:get_bg_color())
 
+
     self.debugGui:update(dt)
+
 end
 
 function Game:post_update(dt)
@@ -146,6 +158,16 @@ function Game:post_update(dt)
     end
 
     self:garbage_collect()
+
+    if self:is_game_over() then
+        self:update_high_score()
+        local game_over = self.game_over_type()
+        game_over:init(self.shader)
+        scene = game_over
+        G.game = nil
+        self:on_destroy()
+        return
+    end
 end
 
 function Game:get_on_screen_entities()
@@ -206,14 +228,49 @@ function Game:add_initial_buildings()
     house:set_pos_grid(6, 10)
 end
 
-function Game:add_building(building_type, health)
+function Game:add_building(building_type, level)
     local b = Building()
     b.building_type = building_type
-    b.health = health
+    b.level = level
+    b.health = level
     b:set_pos_grid(5 + #G.go.buildings, 10)
 end
 
+function Game:reposition_buildings()
+    for i, b in pairs(G.go.buildings) do
+        b:set_pos_grid(5 + i, 10)
+    end
+end
+
+function Game:upgrade_random_building(levels)
+    -- find buildings with less than the max level, if any
+    local available = {}
+    for _, b in pairs(G.go.buildings) do
+        if b.level < G.player.max_building_level then
+            available[#available+1] = b
+        end
+    end
+    local b
+    if #available > 0 then
+        b = lume.randomchoice(available)
+    else
+        b = lume.randomchoice(G.go.buildings)
+    end
+    b.level = b.level + levels
+    if b.level > G.player.max_building_level then
+        b.level = G.player.max_building_level
+    end
+    b.health = b.level
+    print("upgrading building " .. tostring(b) .. " to level " .. tostring(b.level))
+end
+
 function Game:on_turn_end()
+    self:draw_new_cards()
+    self:apply_disaster()
+    self:refill_energy()
+end
+
+function Game:draw_new_cards()
     local cards_to_draw = G.player.max_cards - #G.go.cards
     if cards_to_draw == 0 then
         return
@@ -226,7 +283,46 @@ function Game:on_turn_end()
         local card = G.go.cards[i]
         card:set_pos_grid((i)*4, 1)
     end
+end
 
+function Game:apply_disaster()
+    local d = Disaster.random_disaster()
+    d:apply()
+    G.player.last_disaster_text = d.s
+end
+
+function Game:refill_energy()
+    G.player.energy = G.player.starting_energy
+end
+
+function Game:is_game_over()
+    return #G.go.buildings == 0 and G.player.elapsed_time > 0
+end
+
+function Game:update_high_score()
+    if G.player.elapsed_time > G.player.high_score then
+        G.player.high_score = G.player.elapsed_time
+    end
+end
+
+function Game:reset()
+    G.player.elapsed_time = 0
+    G.player.energy = G.player.starting_energy
+    for i = #G.go.buildings, 1, -1 do
+        local b = G.go.buildings[i]
+        b:kill()
+        lume.remove(G.go.buildings, b)
+    end
+    for i = #G.go.cards, 1, -1 do
+        local c = G.go.cards[i]
+        c:kill()
+        lume.remove(G.go.cards, c)
+    end
+    for i = #G.go.disasters, 1, -1 do
+        local d = G.go.disasters[i]
+        d:kill()
+        lume.remove(G.go.disasters, c)
+    end
 end
 
 return Game

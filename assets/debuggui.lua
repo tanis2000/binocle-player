@@ -34,7 +34,6 @@ function DebugGui:draw(dt)
     imgui.End()
 
     self:gamecamera()
-    imgui.End()
     imgui.Render()
 end
 

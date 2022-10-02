@@ -1,5 +1,6 @@
 local Process = require("process")
 local Game = require("scenes.game")
+local GameOver = require("scenes.gameover")
 local Intro = Process:extend()
 
 function Intro:new()
@@ -53,17 +54,22 @@ function Intro:update(dt)
 
     --io.write("input: " .. tostring(dump(input)) .. "\n")
     --io.write("input_mgr: " .. tostring(dump(input_mgr)) .. "\n")
-    if input.is_key_pressed(input_mgr, key.KEY_SPACE) then
+    if input.is_key_pressed(input_mgr, key.KEY_RETURN) or input.is_mouse_down(input_mgr, mouse.MOUSE_LEFT) then
         local game = Game(self.shader)
+        game.game_over_type = GameOver
         scene = game
         G.game = game
         self:on_destroy()
         return
     end
 
-    local s = "Press SPACE to START"
+    local s = "Press ENTER or LEFT MOUSE CLICK to RESTART"
     local width = ttfont.get_string_width(self.default_font, s)
     ttfont.draw_string(self.default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam);
+
+    s = "Unlucky Town - A game by Valerio Santinelli"
+    width = ttfont.get_string_width(self.default_font, s)
+    ttfont.draw_string(self.default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 170, viewport, color.black, cam);
 
 end
 

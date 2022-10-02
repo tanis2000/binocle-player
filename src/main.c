@@ -76,6 +76,39 @@ SDL_mutex *lua_mutex;
 sg_shader default_shader;
 sg_shader screen_shader;
 
+void lua_stack_dump (lua_State *L) {
+  int i;
+  int top = lua_gettop(L);
+  for (i = 1; i <= top; i++) {  /* repeat for each level */
+    int t = lua_type(L, i);
+    switch (t) {
+
+      case LUA_TSTRING:  /* strings */
+        printf("`%s'", lua_tostring(L, i));
+        break;
+
+      case LUA_TBOOLEAN:  /* booleans */
+        printf(lua_toboolean(L, i) ? "true" : "false");
+        break;
+
+      case LUA_TNUMBER:  /* numbers */
+        printf("%g", lua_tonumber(L, i));
+        break;
+
+      case LUA_TUSERDATA:  /* userdata */
+        printf("%#010x", lua_touserdata(L, i));
+        break;
+
+      default:  /* other values */
+        printf("%s", lua_typename(L, t));
+        break;
+
+    }
+    printf("  ");  /* put a separator */
+  }
+  printf("\n");  /* end the listing */
+}
+
 int l_default_shader(lua_State *L) {
   sg_shader *a = lua_newuserdata(L, sizeof(default_shader));
   SDL_memcpy(a, &default_shader, sizeof(default_shader));
@@ -145,13 +178,16 @@ void lua_bridge_gd() {
 }
 
 void lua_bridge_sprite_batch() {
+  lua_stack_dump(lua.L);
   lua_getglobal(lua.L, "get_sprite_batch_instance");
   if (lua_pcall(lua.L, 0, 1, 0) != 0) {
-    binocle_log_error("can't get the sprite_batch_instance from Lua");
+    binocle_log_error("can't get the sprite_batch_instance from Lua: %s", lua_tostring(lua.L, -1));
   }
+  lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
     binocle_log_error("returned value is not userdata");
   }
+  lua_stack_dump(lua.L);
   l_binocle_sprite_batch_t *sprite_batch_instance = luaL_checkudata(lua.L, 0, "binocle_sprite_batch");
   sprite_batch = sprite_batch_instance->sprite_batch;
 }

@@ -25,6 +25,7 @@ function Building:new()
     self.depth = layers.BUILDINGS
     self.gravity = 0
     self.health = 3
+    self.level = 3
     self.building_type = self.BuildingType.House
     self:load_image("data/img/buildings.png", 16, 16)
     self:add_animation("house1", { 1, }, 8)
@@ -42,13 +43,29 @@ end
 function Building:draw()
     Building.super.draw(self)
     if self.visible then
-        local text = tostring(self.health)
-        ttfont.draw_string(G.game.default_font, text, gd_instance, self:get_left() + 2, self:get_top() - 10, viewport, color.black, cam);
+        local text = "H:"..tostring(self.health)
+        ttfont.draw_string(G.game.default_font, text, gd_instance, self:get_left() + 2, self:get_top() + 5, viewport, color.white, cam);
     end
 end
 
 function Building:update(dt)
     Building.super.update(self, dt)
+    if self.building_type == Building.BuildingType.House then
+        self:play_animation("house" .. self.level)
+    elseif self.building_type == Building.BuildingType.Commercial then
+        self:play_animation("comm" .. self.level)
+    elseif self.building_type == Building.BuildingType.Factory then
+        self:play_animation("fact" .. self.level)
+    end
+end
+
+function Building:hurt(amount)
+    self.health = self.health - amount
+    if self.health <= 0 then
+        self:kill()
+        lume.remove(G.go.buildings, self)
+        G.game:reposition_buildings()
+    end
 end
 
 return Building

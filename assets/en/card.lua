@@ -2,6 +2,7 @@ local Entity = require("entity")
 local layers = require("layers")
 local lume = require("lib.lume")
 local Building = require("en.building")
+local FloatingText = require("en.floatingtext")
 
 local Card = Entity:extend()
 
@@ -10,6 +11,7 @@ local CardType = {
     AddCommercial = 1,
     AddEnergy = 2,
     AddFactory = 3,
+    Upgrade = 4,
 }
 
 local CardArchetypes = {
@@ -36,6 +38,12 @@ local CardArchetypes = {
         granted_energy = 0,
         required_energy = 0,
         text = "add energy"
+    },
+    {
+        card_type = CardType.Upgrade,
+        granted_energy = 0,
+        required_energy = 1,
+        text = "upgrade"
     },
 }
 
@@ -83,8 +91,14 @@ end
 
 function Card:apply()
     if self.required_energy > G.player.energy then
-        --TODO say you do not have enough energy
-        print("not enough energy")
+        FloatingText("Not enough energy")
+        return
+    end
+
+    if #G.go.buildings == G.player.max_buildings
+            and self.card_type ~= CardType.AddEnergy
+            and self.card_type ~= CardType.Upgrade then
+        FloatingText("Too many buildings. Cannot build new ones.")
         return
     end
 
@@ -96,6 +110,16 @@ function Card:apply()
         end
     elseif self.card_type == CardType.AddHouse then
         G.game:add_building(Building.BuildingType.House, 1)
+        G.player.energy = G.player.energy - self.required_energy
+    elseif self.card_type == CardType.AddCommercial then
+        G.game:add_building(Building.BuildingType.Commercial, 1)
+        G.player.energy = G.player.energy - self.required_energy
+    elseif self.card_type == CardType.AddFactory then
+        G.game:add_building(Building.BuildingType.Factory, 1)
+        G.player.energy = G.player.energy - self.required_energy
+    elseif self.card_type == CardType.Upgrade then
+        G.game:upgrade_random_building(1)
+        G.player.energy = G.player.energy - self.required_energy
     end
 
     self:kill()
@@ -110,8 +134,8 @@ function Card.random_card()
     card.required_energy = at.required_energy
     card.text = at.text
     if card.card_type == CardType.AddEnergy then
-        card.energy = math.floor(lume.random(1, 2))
-        card.text = card.text .. "(" .. tostring(card.energy) .. ")"
+        card.granted_energy = math.floor(lume.random(1, 2))
+        card.text = card.text .. "(" .. tostring(card.granted_energy) .. ")"
     end
     return card
 end

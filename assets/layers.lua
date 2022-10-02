@@ -5,8 +5,8 @@ local layers = {
     BULLETS = 4,
     BUILDINGS = 5,
     CARDS = 6,
-    FX = 50,
-    TEXT = 60,
+    FX = 7,
+    TEXT = 8,
 }
 
 return layers
