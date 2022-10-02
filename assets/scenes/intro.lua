@@ -63,7 +63,7 @@ function Intro:update(dt)
         return
     end
 
-    local s = "Press ENTER or LEFT MOUSE CLICK to RESTART"
+    local s = "Press ENTER or LEFT MOUSE CLICK to START"
     local width = ttfont.get_string_width(self.default_font, s)
     ttfont.draw_string(self.default_font, s, gd_instance, (DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam);
 
