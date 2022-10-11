@@ -60,7 +60,10 @@ end
 
 function GameOver:on_destroy()
     print("gameover:on_destroy()")
-    ttfont.destroy(self.default_font)
+    if self.default_font ~= nil then
+        ttfont.destroy(self.default_font)
+        self.default_font = nil
+    end
 end
 
 function GameOver:seconds_to_clock(seconds)

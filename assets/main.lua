@@ -4,6 +4,7 @@ main = {}
 ---Global state
 G = {
     cache = nil,
+    default_shader = nil,
     entities = {}, -- all entities
     mobs = {}, -- all mobs
     cats = {}, -- all cats
@@ -138,7 +139,10 @@ end
 
 function main.on_update(dt)
     --io.write("dt: " .. tostring(dt) .. "\n")
-    sprite_batch.begin(sb, cam, shader.defaultShader())
+    if not scene then
+        G.default_shader = shader.defaultShader()
+    end
+    sprite_batch.begin(sb, cam, G.default_shader)
     if not scene then
         --load_sfx("hurt", "data/sfx/hurt.wav")
         --load_sfx("purr", "data/sfx/purr.wav")
@@ -222,6 +226,7 @@ function main.on_update(dt)
     end
 
     sprite_batch.finish(sb, cam)
+    --collectgarbage()
 end
 
 function on_destroy()
