@@ -33,7 +33,7 @@ function Intro:init(shd)
 
     gd.set_offscreen_clear_color(gd_instance, 1, 1, 1, 1)
 
-    self.default_font = ttfont.from_file(assets_dir .. "data/font/default.ttf", 8, shader.defaultShader());
+    self.default_font = ttfont.from_file(assets_dir .. "data/font/default.ttf", 8, G.default_shader);
 end
 
 function Intro:update(dt)

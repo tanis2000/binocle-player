@@ -39,7 +39,7 @@ function WaveSystem:new()
         },
     }
 
-    self.announce_font = ttfont.from_file(sdl.assets_dir() .. "data/font/default.ttf", 32, shader.defaultShader());
+    self.announce_font = ttfont.from_file(sdl.assets_dir() .. "data/font/default.ttf", 32, G.default_shader);
 end
 
 function WaveSystem:reset()

@@ -76,7 +76,7 @@ function Entity:load_image(filename, width, height)
     self.material = material.new()
 
     material.set_texture(self.material, self.texture)
-    material.set_shader(self.material, shader.defaultShader())
+    material.set_shader(self.material, G.default_shader)
     self.sprite = sprite.from_material(self.material)
     self.frames = {}
     local original_image_width, original_image_height = image.get_info(self.image)
