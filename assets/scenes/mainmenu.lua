@@ -1,59 +1,25 @@
 local Process = require("process")
 local Game = require("scenes.game")
 local GameOver = require("scenes.gameover")
-local Intro = Process:extend()
+local MainMenu = Process:extend()
 
-function Intro:new()
-    Intro.super.new(self)
-    self.TEX_WIDTH = 1682
-    self.TEX_HEIGHT = 479
+function MainMenu:new()
+    MainMenu.super.new(self)
     self.default_font = nil
 end
 
 
-function Intro:init(shd)
-    self.name = "intro"
-    local assets_dir = sdl.assets_dir()
-    local image_filename = assets_dir .. "data/img/binocle-logo-full.png"
-    self.img = image.load(image_filename)
-    self.tex = texture.from_image(self.img)
-    self.mat = material.new()
-
-    io.write("intro.mat: " .. tostring(self.mat) .."\n")
-    io.write("material: " .. tostring(material) .."\n")
-    io.write("shd: " .. tostring(shd) .."\n")
-    material.set_texture(self.mat, self.tex)
-    material.set_shader(self.mat, shd)
-    self.logo = sprite.from_material(self.mat)
+function MainMenu:init(shd)
+    self.name = "mainmenu"
     self.shader = shd
-
-    self.azure_color = color.new(191.0 / 255.0, 1.0, 1.0, 1.0)
-    self.white_color = color.new(1.0, 1.0, 1.0, 1.0)
-    self.black_color = color.new(0, 0, 0, 1.0)
 
     gd.set_offscreen_clear_color(gd_instance, 1, 1, 1, 1)
 
+    local assets_dir = sdl.assets_dir()
     self.default_font = ttfont.from_file(assets_dir .. "data/font/default.ttf", 8, shader.defaultShader());
 end
 
-function Intro:update(dt)
-    -- By default we scale our logo by 1/3
-    --local scale = lkazmath.kmVec2New();
-    --scale.x = DESIGN_WIDTH / self.TEX_WIDTH
-    --scale.y = DESIGN_HEIGHT / self.TEX_WIDTH
-
-    local scale_x = DESIGN_WIDTH / self.TEX_WIDTH
-    local scale_y = DESIGN_HEIGHT / self.TEX_WIDTH
-
-    -- Center the logo in the render target
-    local x = (DESIGN_WIDTH - (self.TEX_WIDTH * scale_x)) / 2.0
-    local y = (DESIGN_HEIGHT - (self.TEX_HEIGHT * scale_y)) / 2.0
-
-    --io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
-    sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale_x, scale_y, cam)
-
-    --io.write("input: " .. tostring(dump(input)) .. "\n")
-    --io.write("input_mgr: " .. tostring(dump(input_mgr)) .. "\n")
+function MainMenu:update(dt)
     if input.is_key_pressed(input_mgr, key.KEY_RETURN) or input.is_mouse_down(input_mgr, mouse.MOUSE_LEFT) then
         local game = Game(self.shader)
         game.game_over_type = GameOver
@@ -73,12 +39,12 @@ function Intro:update(dt)
 
 end
 
-function Intro:on_destroy()
-    print("intro:on_destroy()")
+function MainMenu:on_destroy()
+    print("mainmenu:on_destroy()")
     if self.default_font ~= nil then
         ttfont.destroy(self.default_font)
         self.default_font = nil
     end
 end
 
-return Intro
+return MainMenu

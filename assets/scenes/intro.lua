@@ -1,6 +1,5 @@
 local Process = require("process")
-local Game = require("scenes.game")
-local GameOver = require("scenes.gameover")
+local MainMenu = require("scenes.mainmenu")
 local Intro = Process:extend()
 
 function Intro:new()
@@ -9,7 +8,6 @@ function Intro:new()
     self.TEX_HEIGHT = 479
     self.default_font = nil
 end
-
 
 function Intro:init(shd)
     self.name = "intro"
@@ -55,10 +53,9 @@ function Intro:update(dt)
     --io.write("input: " .. tostring(dump(input)) .. "\n")
     --io.write("input_mgr: " .. tostring(dump(input_mgr)) .. "\n")
     if input.is_key_pressed(input_mgr, key.KEY_RETURN) or input.is_mouse_down(input_mgr, mouse.MOUSE_LEFT) then
-        local game = Game(self.shader)
-        game.game_over_type = GameOver
-        scene = game
-        G.game = game
+        local menu = MainMenu()
+        menu:init(self.shader)
+        scene = menu
         self:on_destroy()
         return
     end
