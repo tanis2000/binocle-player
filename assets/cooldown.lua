@@ -3,12 +3,13 @@ local Object = require("lib.classic")
 ---@class CooldownInstance
 local CooldownInstance = Object:extend()
 
-function CooldownInstance.new(self, name, seconds, func)
+function CooldownInstance.new(self, name, seconds, func, ...)
     CooldownInstance.super.new(self)
     self.name = name
     self.total = seconds
     self.remaining = seconds
     self.func = func
+    self.args = ...
 end
 
 function CooldownInstance.__tostring(self)
@@ -23,8 +24,9 @@ function Cooldown.new(self)
     self.cooldowns = {}
 end
 
-function Cooldown:set(name, seconds, func)
-    local cd = CooldownInstance(name, seconds, func)
+function Cooldown:set(name, seconds, func, ...)
+    local cd = CooldownInstance(name, seconds, func, ...)
+    -- print(tostring(cd))
     self.cooldowns[name] = cd
 end
 
@@ -35,10 +37,12 @@ function Cooldown:update(dt)
         --log.info("this cd: "..tostring(self.cooldowns[idx]))
         self.cooldowns[idx].remaining = self.cooldowns[idx].remaining - dt
         if self.cooldowns[idx].remaining <= 0 then
-            if self.cooldowns[idx].func then
-                self.cooldowns[idx].func()
-            end
+            local func = self.cooldowns[idx].func
+            local args = self.cooldowns[idx].args
             self.unset(self, self.cooldowns[idx].name)
+            if func then
+                func(args)
+            end
         end
         count = count + 1
     end
@@ -68,7 +72,7 @@ function Cooldown:get(name)
     end
 end
 
--- 1 -> 0
+---@return number The ratio of the remaining cooldown from 1 -> 0
 function Cooldown:get_ratio(name)
     if self:has(name) then
         local cd = self.cooldowns[name]

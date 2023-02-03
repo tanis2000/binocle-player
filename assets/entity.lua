@@ -66,6 +66,10 @@ function Entity.new(self)
     G.entities[#G.entities+1] = self
 end
 
+---Load an image
+---@param filename string the path to the image to load
+---@param width number the width of a single frame
+---@param height number the height of a single frame
 function Entity:load_image(filename, width, height)
     self.image = G.cache.load(filename)
     self.texture = texture.from_image(self.image)
@@ -78,7 +82,8 @@ function Entity:load_image(filename, width, height)
     local original_image_width, original_image_height = image.get_info(self.image)
     for y = 0, original_image_height / height - 1 do
         for x = 0, original_image_width / width - 1 do
-            local frame = subtexture.subtexture_with_texture(self.texture, x * width, y * height, width, width)
+            print(self.name .. " image x "..tostring(x) .. " y " .. tostring(y) .. " w " .. tostring(width) .. " h " .. tostring(height))
+            local frame = subtexture.subtexture_with_texture(self.texture, x * width, y * height, width, height)
             sprite.set_subtexture(self.sprite, frame)
             table.insert(self.frames, frame)
         end
@@ -277,6 +282,10 @@ function Entity.get_attach_y(self)
     return (self.cy + self.yr) * const.GRID
 end
 
+function Entity.is_inside(self, px, py)
+    return (px >= self:get_left() and px <= self:get_right() and py >= self:get_bottom() and py <= self:get_top())
+end
+
 function Entity.add_animation(self, idx, frames, period, loop)
     self.animations[idx] = {
         frames = lume.clone(frames),
@@ -393,6 +402,16 @@ function Entity:sight_check(en, tcx, tcy)
     else
         return util.line(self.cx, self.cy, tcx, tcy, Entity.can_see_through)
     end
+end
+
+function Entity:screen_position_to_world(sx, sy)
+    local px, py = viewport_adapter.get_screen_to_virtual_viewport(adapter, sx, sy)
+    px = px / const.SCALE
+    py = py / const.SCALE
+    px = px + camera.x(cam)
+    py = py + camera.y(cam)
+    --print(tostring(px) .. ", " .. tostring(py))
+    return px, py
 end
 
 return Entity

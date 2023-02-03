@@ -1,7 +1,11 @@
 main = {}
+
 ---@type table
+---Global state
 G = {
     cache = nil,
+    default_shader = nil,
+    game = nil,
     entities = {}, -- all entities
     mobs = {}, -- all mobs
     cats = {}, -- all cats
@@ -66,6 +70,7 @@ function on_init()
     window.set_minimum_size(win, DESIGN_WIDTH, DESIGN_HEIGHT)
 
     input_mgr = input.new()
+    io.write("input_mgr: " .. tostring(input_mgr) .."\n")
 
     adapter = viewport_adapter.new(win, "scaling", "pixel_perfect",
         DESIGN_WIDTH, DESIGN_HEIGHT, DESIGN_WIDTH, DESIGN_HEIGHT);
@@ -91,6 +96,7 @@ function on_init()
 
     sb = sprite_batch.new()
     sprite_batch.set_gd(sb, gd_instance)
+    io.write("sb: " .. tostring(sb) .. "\n")
 
     -- Create a viewport that corresponds to the size of our render target
     center = lkazmath.kmVec2New();
@@ -103,26 +109,29 @@ function on_init()
     audio.init(audio_instance)
     io.write("audio_instance: " .. tostring(audio_instance) .. "\n")
 
-    local music = audio.load_music(audio_instance, assets_dir .. "music/theme.mp3")
+    local music = audio.load_music(audio_instance, assets_dir .. "data/music/theme.mp3")
     G.musics["main"] = music
     audio.play_music(audio_instance, music)
-    audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
-
-    load_sfx("jump", "sfx/jump.wav")
-    load_sfx("hurt", "sfx/hurt.wav")
-    load_sfx("shoot", "sfx/shoot.wav")
-    load_sfx("purr", "sfx/purr.wav")
-    load_sfx("meow", "sfx/meow.mp3")
-    load_sfx("pickup", "sfx/pickup.wav")
-    load_sfx("powerup", "sfx/powerup.wav")
+    audio.set_music_volume(audio_instance, G.musics["main"], 0)
 end
 
 function main.on_update(dt)
     --io.write("dt: " .. tostring(dt) .. "\n")
-    sprite_batch.begin(sb, cam, shader.defaultShader())
     if not scene then
+        G.default_shader = shader.defaultShader()
+    end
+    sprite_batch.begin(sb, cam, G.default_shader)
+    if not scene then
+        load_sfx("jump", "data/sfx/jump.wav")
+        load_sfx("hurt", "data/sfx/hurt.wav")
+        load_sfx("shoot", "data/sfx/shoot.wav")
+        load_sfx("purr", "data/sfx/purr.wav")
+        load_sfx("meow", "data/sfx/meow.mp3")
+        load_sfx("pickup", "data/sfx/pickup.wav")
+        load_sfx("powerup", "data/sfx/powerup.wav")
+
         intro = Intro()
-        intro:init(shader.defaultShader())
+        intro:init(G.default_shader)
 
         scene = intro
         --return
@@ -186,11 +195,15 @@ function main.on_update(dt)
     end
 
     sprite_batch.finish(sb, cam)
+    --collectgarbage()
 end
 
 function on_destroy()
     if G.game ~= nil then
         G.game:on_destroy()
+    end
+    if scene ~= nil then
+        scene:on_destroy()
     end
 end
 

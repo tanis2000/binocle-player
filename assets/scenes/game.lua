@@ -15,6 +15,7 @@ local Game = Process:extend()
 
 function Game:new(shd)
     Game.super.new(self)
+    G.game = self
     self.name = "game"
     self.shader = shd
     local assets_dir = sdl.assets_dir()
@@ -25,14 +26,16 @@ function Game:new(shd)
     self:add_child(l)
 
     local hs = self.level:get_hero_spawner()
-    self.h:set_pos_grid(hs.cx, hs.cy)
+    if hs ~= nil then
+        self.h:set_pos_grid(hs.cx, hs.cy)
+    end
 
     gd.set_offscreen_clear_color(gd_instance, 73/256, 77/256, 126/256, 1)
     gd.set_offscreen_clear_color(gd_instance, 242/256, 211/256, 171/256, 1)
 
     self.debugGui = DebugGui()
 
-    self.default_font = ttfont.from_file(assets_dir .. "font/default.ttf", 8, shader.defaultShader());
+    self.default_font = ttfont.from_file(assets_dir .. "data/font/default.ttf", 8, G.default_shader);
 
     self.camera = GameCamera()
     self:add_child(self.camera)
@@ -73,6 +76,14 @@ function Game:update(dt)
     -- input management
     if input.is_key_pressed(input_mgr, key.KEY_SPACE) then
         self.cd:set("test", 5, nil)
+    end
+
+    if input.is_key_pressed(input_mgr, key.KEY_2) then
+        self:pause()
+    end
+
+    if input.is_key_pressed(input_mgr, key.KEY_3) then
+        self:resume()
     end
 
     if self.cd:has("test") then
@@ -173,14 +184,19 @@ function Game:garbage_collect()
 end
 
 function Game:on_destroy()
-    ttfont.destroy(self.default_font)
+    if self.default_font ~= nil then
+        ttfont.destroy(self.default_font)
+        self.default_font = nil
+    end
 end
 
 function Game:spawn_cats(num)
     for i = 1, num do
         local sp = self.level:get_cat_spawner()
-        local c = Cat()
-        c:set_pos_grid(sp.cx, sp.cy)
+        if sp ~= nil then
+            local c = Cat()
+            c:set_pos_grid(sp.cx, sp.cy)
+        end
     end
 end
 

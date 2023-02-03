@@ -17,6 +17,7 @@ function Process.new(self, parent)
     self.paused = false
     self.cd = Cooldown()
     self.elapsed_time = 0
+    self.destroyed = false
 
     processes.unique_id = processes.unique_id + 1
     self.id = processes.unique_id
@@ -43,12 +44,20 @@ function Process:remove_child(child)
 end
 
 function Process:can_run()
-    return not self.paused
+    return not self.paused and not self.destroyed
+end
+
+function Process:pause()
+    self.paused = true
+end
+
+function Process:resume()
+    self.paused = false
 end
 
 function Process:pre_update(dt)
     self.elapsed_time = self.elapsed_time + dt
-    if self:can_run() then
+    if self:can_run() and not self.destroyed then
         self.cd:update(dt)
         if self.children ~= nil then
             for idx, child in pairs(self.children) do
@@ -59,7 +68,7 @@ function Process:pre_update(dt)
 end
 
 function Process:update(dt)
-    if self:can_run() then
+    if self:can_run() and not self.destroyed then
         if self.children ~= nil then
             for idx, child in pairs(self.children) do
                 child:update(dt)
@@ -69,13 +78,17 @@ function Process:update(dt)
 end
 
 function Process:post_update(dt)
-    if self:can_run() then
+    if self:can_run() and not self.destroyed then
         if self.children ~= nil then
             for idx, child in pairs(self.children) do
                 child:post_update(dt)
             end
         end
     end
+end
+
+function Process:destroy()
+    self.destroyed = true
 end
 
 function Process.__tostring(self)

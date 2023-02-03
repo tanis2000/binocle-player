@@ -35,4 +35,11 @@ function Gui:update_position(x, y)
     self.y = y
 end
 
+function Gui:seconds_to_clock(seconds)
+    local hours = math.floor(seconds/3600)
+    local minutes = math.floor(seconds/60 - hours * 60)
+    local secs = math.floor(seconds - hours * 3600 - minutes * 60)
+    return hours, minutes, secs
+end
+
 return Gui

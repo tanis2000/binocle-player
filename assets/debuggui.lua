@@ -59,8 +59,10 @@ end
 
 function DebugGui:entity(en)
     imgui.TextUnformatted("Name: " .. en.name)
+    imgui.TextUnformatted(string.format("W,H: %.2f,%.2f", en.wid, en.hei))
     imgui.TextUnformatted(string.format("Pixel position: %.2f,%.2f", en.sprite_x, en.sprite_y))
     imgui.TextUnformatted(string.format("Center: %.2f,%.2f", en:get_center_x(), en:get_center_y()))
+    imgui.TextUnformatted(string.format("Left: %.2f, Right: %.2f, Top: %.2f, Bottom: %.2f", en:get_left(), en:get_right(), en:get_top(), en:get_bottom()))
     local cx = en.cx
     local res = false
     res, cx = imgui.DragFloat("cx", cx, 1, 0, 0, "%.2f", 1)

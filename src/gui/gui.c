@@ -243,21 +243,42 @@ void gui_init_imgui(float width, float height) {
   binocle_log_info("Done compiling GUI shader for init");
 
   // pipeline object for imgui rendering
-  sg_pipeline_desc pip_desc = {0};
-  pip_desc.layout.buffers[0].stride = sizeof(ImDrawVert);
-  pip_desc.layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT2;
-  pip_desc.layout.attrs[0].offset = offsetof(ImDrawVert, pos);
-  pip_desc.layout.attrs[1].format = SG_VERTEXFORMAT_FLOAT2;
-  pip_desc.layout.attrs[1].offset = offsetof(ImDrawVert, uv);
-  pip_desc.layout.attrs[2].format = SG_VERTEXFORMAT_UBYTE4N;
-  pip_desc.layout.attrs[2].offset = offsetof(ImDrawVert, col);
-  pip_desc.shader = shd;
-  pip_desc.index_type = SG_INDEXTYPE_UINT16;
-  pip_desc.colors[0].blend.enabled = true;
-  pip_desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
-  pip_desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-  pip_desc.depth.pixel_format = SG_PIXELFORMAT_NONE;
-  pip_desc.colors[0].write_mask = SG_COLORMASK_RGBA;
+  sg_pipeline_desc pip_desc = {
+    .layout = {
+      .buffers[0] = {
+        .stride = sizeof(ImDrawVert)
+      },
+      .attrs = {
+        [0] = {
+          .format = SG_VERTEXFORMAT_FLOAT2,
+          .offset = offsetof(ImDrawVert, pos)
+        },
+        [1] = {
+          .format = SG_VERTEXFORMAT_FLOAT2,
+          .offset = offsetof(ImDrawVert, uv)
+        },
+        [2] = {
+          .format = SG_VERTEXFORMAT_UBYTE4N,
+          .offset = offsetof(ImDrawVert, col)
+        }
+      }
+    },
+    .shader = shd,
+    .index_type = SG_INDEXTYPE_UINT16,
+    .colors[0] = {
+      .blend = {
+        .enabled = true,
+        .src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA,
+        .dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+        .src_factor_alpha = SG_BLENDFACTOR_ONE,
+        .dst_factor_alpha = SG_BLENDFACTOR_ONE
+      },
+      .write_mask = SG_COLORMASK_RGBA
+    },
+    .depth = {
+      .pixel_format = SG_PIXELFORMAT_NONE
+    }
+  };
   binocle_log_info("Creating GUI pipeline");
   imgui_pip = sg_make_pipeline(&pip_desc);
   binocle_log_info("Done creating GUI pipeline");
