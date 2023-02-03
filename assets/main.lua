@@ -1,9 +1,14 @@
+local const = require("const")
+local entity = require("entity")
+local Intro = require("scenes/intro")
+local cache  = require("cache")
+
 main = {}
 
 ---@type table
 ---Global state
 G = {
-    cache = nil,
+    cache = cache,
     default_shader = nil,
     game = nil,
     entities = {}, -- all entities
@@ -19,39 +24,10 @@ G = {
 }
 local assets_dir = sdl.assets_dir()
 log.info(assets_dir .. "\n")
-package.path = package.path .. ";" .. assets_dir .."?.lua" .. ";?/init.lua"
 
--- Imports
--- ffi can only be used with luajit (hence on desktop only, no wasm or mobile)
---local ffi = require("ffi")
-local const = require("const")
-local entity = require("entity")
-local Intro = require("scenes/intro")
-G.cache = require("cache")
-
--- FFI definitions (try to avoid as much as possible)
---ffi.cdef[[
---
---typedef struct kmVec2 {
---    float x;
---    float y;
---} kmVec2;
---
---typedef struct kmAABB2 {
---    kmVec2 min; /** The max corner of the box */
---    kmVec2 max; /** The min corner of the box */
---} kmAABB2;
---
---]]
-
--- Constants
-GL_RGBA8 = 0x8058
-DESIGN_WIDTH = const.DESIGN_WIDTH
-DESIGN_HEIGHT = const.DESIGN_HEIGHT
-
--- Globals
 log.info("Begin of main.lua\n");
 
+-- Global constants
 color.azure = color.new(192.0 / 255.0, 1.0, 1.0, 1.0)
 color.white = color.new(1.0, 1.0, 1.0, 1.0)
 color.black = color.new(0, 0, 0, 1.0)
@@ -59,21 +35,22 @@ color.trans_green = color.new(0, 1, 0, 0.5)
 
 local quit_requests = 0
 ---@class Intro
-local intro = nil
+local intro
 
 function on_init()
-    win = window.new(DESIGN_WIDTH * const.SCALE, DESIGN_HEIGHT * const.SCALE, G.title)
+    ---@type Window
+    win = window.new(const.DESIGN_WIDTH * const.SCALE, const.DESIGN_HEIGHT * const.SCALE, G.title)
     io.write("win: " .. tostring(win) .."\n")
-    bg_color = color.black
+    local bg_color = color.black
     io.write("bg_color: " .. tostring(bg_color) .."\n")
     window.set_background_color(win, bg_color)
-    window.set_minimum_size(win, DESIGN_WIDTH, DESIGN_HEIGHT)
+    window.set_minimum_size(win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT)
 
     input_mgr = input.new()
     io.write("input_mgr: " .. tostring(input_mgr) .."\n")
 
     adapter = viewport_adapter.new(win, "scaling", "pixel_perfect",
-        DESIGN_WIDTH, DESIGN_HEIGHT, DESIGN_WIDTH, DESIGN_HEIGHT);
+        const.DESIGN_WIDTH, const.DESIGN_HEIGHT, const.DESIGN_WIDTH, const.DESIGN_HEIGHT);
     io.write("adapter: " .. tostring(adapter) .."\n")
 
     cam = camera.new(adapter)
@@ -91,19 +68,16 @@ function on_init()
     gd.init(gd_instance, win)
     io.write("gd_instance: " .. tostring(gd_instance) .. "\n")
 
-    --render_target = gd.create_render_target(DESIGN_WIDTH, DESIGN_HEIGHT, true, GL_RGBA8)
-    --io.write("render_target: " .. tostring(render_target) .. "\n")
-
     sb = sprite_batch.new()
     sprite_batch.set_gd(sb, gd_instance)
     io.write("sb: " .. tostring(sb) .. "\n")
 
     -- Create a viewport that corresponds to the size of our render target
     center = lkazmath.kmVec2New();
-    center.x = DESIGN_WIDTH / 2;
-    center.y = DESIGN_HEIGHT / 2;
+    center.x = const.DESIGN_WIDTH / 2;
+    center.y = const.DESIGN_HEIGHT / 2;
     viewport = lkazmath.kmAABB2New();
-    lkazmath.kmAABB2Initialize(viewport, center, DESIGN_WIDTH, DESIGN_HEIGHT, 0)
+    lkazmath.kmAABB2Initialize(viewport, center, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, 0)
 
     audio_instance = audio.new()
     audio.init(audio_instance)
@@ -112,7 +86,7 @@ function on_init()
     local music = audio.load_music(audio_instance, assets_dir .. "data/music/theme.mp3")
     G.musics["main"] = music
     audio.play_music(audio_instance, music)
-    audio.set_music_volume(audio_instance, G.musics["main"], 0)
+    audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
 end
 
 function main.on_update(dt)
@@ -140,17 +114,6 @@ function main.on_update(dt)
 
     scene:pre_update(dt)
 
-    -- set the render target we want to render to
-    --gd.set_render_target(render_target)
-
-    -- clear it
-    --window.clear(win)
-
-
-    -- A simple identity matrix
-    --identity_matrix = lkazmath.kmMat4New()
-    --lkazmath.kmMat4Identity(identity_matrix)
-
     if input.is_key_down(input_mgr, key.KEY_1) then
         G.debug = not G.debug
         print(G.debug)
@@ -165,24 +128,6 @@ function main.on_update(dt)
     end
 
     scene:update(dt)
-
-    -- Gets the viewport calculated by the adapter
-    --vp = viewport_adapter.get_viewport(adapter)
-    --io.write("vp: " .. tostring(vp) .. "\n")
-    --vp_x = viewport_adapter.get_viewport_min_x(adapter)
-    --vp_y = viewport_adapter.get_viewport_min_y(adapter)
-    --io.write("vp_x: " .. tostring(vp_x) .. "\n")
-    --io.write("vp_y: " .. tostring(vp_y) .. "\n")
-    -- Reset the render target to the screen
-    --gd.set_render_target(nil);
-    --gd.clear(color.black)
-    --gd.apply_viewport(vp);
-    --gd.apply_shader(gd_instance, screen_shader);
-    --gd.set_uniform_float2(screen_shader, "resolution", DESIGN_WIDTH, DESIGN_HEIGHT);
-    --gd.set_uniform_mat4(screen_shader, "transform", identity_matrix);
-    --gd.set_uniform_float2(screen_shader, "scale", viewport_adapter.get_inverse_multiplier(adapter), viewport_adapter.get_inverse_multiplier(adapter));
-    --gd.set_uniform_float2(screen_shader, "viewport", vp_x, vp_y);
-    --gd.draw_quad_to_screen(screen_shader, render_target);
 
     scene:post_update(dt)
     for idx, music in pairs(G.musics) do
