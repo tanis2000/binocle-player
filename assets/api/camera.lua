@@ -7,7 +7,7 @@ camera = {}
 local Camera = {}
 
 ---@param adapter ViewportAdapter
----@return camera Camera
+---@return Camera camera the Camera instance
 function camera.new(adapter) end
 
 ---@param camera Camera an instance of Camera
