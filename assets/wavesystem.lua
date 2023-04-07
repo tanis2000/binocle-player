@@ -3,6 +3,7 @@ local Mob = require("en.mob")
 local Cat = require("en.cat")
 local Fx = require("en.fx")
 local lume = require("lib.lume")
+local layers = require("layers")
 
 local WaveSystem = Process:extend()
 
@@ -111,7 +112,7 @@ end
 function WaveSystem:announce()
     local s = string.format("Wave %d", self.current_wave_idx)
     local width = ttfont.get_string_width(self.announce_font, s)
-    ttfont.draw_string(self.announce_font, s, gd_instance, self.x + (self.w - width)/2, self.y + (self.h - 32)/2, viewport, color.black, cam);
+    ttfont.draw_string(self.announce_font, s, gd_instance, self.x + (self.w - width)/2, self.y + (self.h - 32)/2, viewport, color.black, cam, layers.TEXT);
 end
 
 function WaveSystem:announce_done()

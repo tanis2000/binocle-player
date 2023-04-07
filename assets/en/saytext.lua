@@ -27,7 +27,7 @@ function SayText:draw()
     local x = self.owner:get_center_x() - width / 2
     local y = self.owner:get_top() + 8 * 2
     self:set_pos_pixel(x, y)
-    ttfont.draw_string(G.game.default_font, self.s, gd_instance, x, y, viewport, color.white, cam);
+    ttfont.draw_string(G.game.default_font, self.s, gd_instance, x, y, viewport, color.white, cam, layers.TEXT);
 end
 
 return SayText

@@ -1,4 +1,5 @@
 local Process = require("process")
+local layers = require("layers")
 
 ---@class Gui
 ---@type Gui
@@ -27,7 +28,7 @@ end
 
 function Gui:render()
     local s = string.format("Health: %d/%d   Cats: %d/%d   Time:%d:%d", self.health, self.max_health, self.carried_cats, self.max_cats, self.hour, self.minute)
-    ttfont.draw_string(G.game.default_font, s, gd_instance, self.x + 10, self.y - 10, viewport, color.white, cam);
+    ttfont.draw_string(G.game.default_font, s, gd_instance, self.x + 10, self.y - 10, viewport, color.white, cam, layers.TEXT);
 end
 
 function Gui:update_position(x, y)

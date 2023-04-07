@@ -4,6 +4,7 @@ local Object = require("lib.classic")
 local Cooldown = require("cooldown")
 local M = require("m")
 local util = require("util")
+local layers = require("layers")
 
 ---@class Entity
 local Entity = Object:extend()
@@ -238,14 +239,14 @@ end
 function Entity:draw_debug()
     if G.debug then
         local s = string.format("(%.0f,%.0f) (%.0f, %.0f)", self.cx, self.cy, self:get_center_x(), self:get_center_y())
-        ttfont.draw_string(G.game.default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam);
+        ttfont.draw_string(G.game.default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam, layers.TEXT);
         gd.draw_rect(gd_instance, self:get_center_x(), self:get_center_y(), self.wid, self.hei, color.trans_green, viewport, cam)
     end
 end
 
 function Entity:draw()
     if self.visible and self.sprite then
-        sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam)
+        sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam, layers.MOBS)
         --sprite.draw_batch(sb, self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam, 0)
     end
 end

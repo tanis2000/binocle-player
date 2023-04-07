@@ -20,7 +20,8 @@ function ttfont.from_file(filename, size, shader) end
 ---@param viewport kmAABB2 the viewport
 ---@param color Color the color to use
 ---@param camera Camera the camera to apply
-function ttfont.draw_string(font, text, gd, x, y, viewport, color, camera) end
+---@param depth number the depth of the sprite
+function ttfont.draw_string(font, text, gd, x, y, viewport, color, camera, depth) end
 
 ---@param font TTFont the font instance
 ---@param text string the text to measure
