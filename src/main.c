@@ -99,6 +99,10 @@ void lua_stack_dump (lua_State *L) {
         printf("%#010x", lua_touserdata(L, i));
         break;
 
+      case LUA_TTABLE:
+        printf("table %s", lua_tostring(L, -2));
+        break;
+
       default:  /* other values */
         printf("%s", lua_typename(L, t));
         break;
@@ -154,6 +158,7 @@ void lua_bridge_camera() {
 }
 
 void lua_bridge_input() {
+  lua_stack_dump(lua.L);
   lua_getglobal(lua.L, "get_input_mgr");
   if (lua_pcall(lua.L, 0, 1, 0) != 0) {
     binocle_log_error("can't get the input_mgr from Lua");
@@ -166,10 +171,13 @@ void lua_bridge_input() {
 }
 
 void lua_bridge_gd() {
+  lua_stack_dump(lua.L);
   lua_getglobal(lua.L, "get_gd_instance");
   if (lua_pcall(lua.L, 0, 1, 0) != 0) {
     binocle_log_error("can't get the gd_instance from Lua");
   }
+  int num = lua_gettop(lua.L);
+  binocle_log_info("num: %d", num);
   if (!lua_isuserdata(lua.L, 0)) {
     binocle_log_error("returned value is not userdata");
   }
@@ -208,6 +216,7 @@ int lua_on_init() {
   SDL_LockMutex(lua_mutex);
   lua_getglobal(lua.L, "on_init");
   int result = lua_pcall(lua.L, 0, 0, 0);
+  binocle_log_info("on_init returned\n");
   if (result) {
     binocle_log_error("Failed to run function on_init: %s\n", lua_tostring(lua.L, -1));
     SDL_UnlockMutex(lua_mutex);

@@ -10,11 +10,20 @@ Binocle Player aims at providing a pre-compiled version of Binocle that can be u
 
 ## Packaging your game
 
+### Windows/macOS
+
 ```shell
 cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DBINOCLE_DATA_DIR=<path to your game assets>
 ```
 
-## ld50 branch disclaimer
+### Browser
 
-This branch contains the source for both the player and the game itself (all the Lua files in the assets folder).
-Please feel free to do whatever you want with them. Oh and if you like this project, contributions are welcome! (You probably know that there are a lot of bugs in there)
+```shell
+emcmake cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DASSETS_DIR=<full path to your game assets ending with a slash>
+```
+
+As an example
+
+```shell
+emcmake cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DASSETS_DIR=/Users/tanis/Documents/binocle-player-games/simple/
+```

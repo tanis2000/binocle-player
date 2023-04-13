@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="binocle-player simple" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$PROJECT_DIR$/../binocle-player-games/simple" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="binocle-player" TARGET_NAME="binocle-player" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="binocle-player" RUN_TARGET_NAME="binocle-player">
+  <configuration default="false" name="binocle-player simple" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$PROJECT_DIR$/../binocle-player-games/simple" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="binocle-player" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="Project" RUN_TARGET_NAME="binocle-player">
     <envs>
       <env name="CG_CONTEXT_SHOW_BACKTRACE" value="1" />
     </envs>
