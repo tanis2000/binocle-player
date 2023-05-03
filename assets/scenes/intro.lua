@@ -7,6 +7,8 @@ function Intro:new()
     Intro.super.new(self)
     self.TEX_WIDTH = 1682
     self.TEX_HEIGHT = 479
+    self.TANIS_TEX_WIDTH = 512
+    self.TANIS_TEX_HEIGHT = 250
     self.default_font = nil
 end
 
@@ -34,6 +36,17 @@ function Intro:init(shd)
     gd.set_offscreen_clear_color(gd_instance, 1, 1, 1, 1)
 
     self.default_font = ttfont.from_file(assets_dir .. "data/font/default.ttf", 8, G.default_shader);
+
+    local tanis_filename = assets_dir .. "data/img/tanis.png"
+    self.tanis_img = image.load(tanis_filename)
+    self.tanis_tex = texture.from_image(self.tanis_img)
+    self.tanis_mat = material.new()
+    material.set_texture(self.tanis_mat, self.tanis_tex)
+    material.set_shader(self.tanis_mat, shd)
+    material.set_pipeline(self.tanis_mat, G.colorize_shader) -- NOTE: this overrides the shader, too
+    material.set_uniform_float4(self.tanis_mat, "FS", "customColor", 1.0, 0, 0, 1.0)
+    self.tanis = sprite.from_material(self.tanis_mat)
+
 end
 
 function Intro:update(dt)
@@ -51,6 +64,16 @@ function Intro:update(dt)
 
     --io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
     sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale_x, scale_y, cam, 0)
+
+    scale_x = const.DESIGN_WIDTH / self.TANIS_TEX_WIDTH * 0.25
+    scale_y = const.DESIGN_HEIGHT / self.TANIS_TEX_WIDTH * 0.25
+
+    -- Center the tanis logo in the render target
+    x = (const.DESIGN_WIDTH - (self.TANIS_TEX_WIDTH * scale_x)) / 2.0
+    y = (const.DESIGN_HEIGHT - (self.TANIS_TEX_HEIGHT * scale_y)) / 2.0
+
+
+    sprite.draw(self.tanis, gd_instance, x, y - 40, viewport, 0, scale_x, scale_y, cam, 0)
 
     --io.write("input: " .. tostring(dump(input)) .. "\n")
     --io.write("input_mgr: " .. tostring(dump(input_mgr)) .. "\n")

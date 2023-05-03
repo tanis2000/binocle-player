@@ -21,6 +21,8 @@ G = {
     debug = false,
     ---@type Level
     level = nil,
+    colorize_shader = nil,
+    grass_shader = nil,
 }
 local assets_dir = sdl.assets_dir()
 log.info(assets_dir .. "\n")
@@ -67,6 +69,26 @@ function on_init()
     gd_instance = gd.new()
     gd.init(gd_instance, win)
     io.write("gd_instance: " .. tostring(gd_instance) .. "\n")
+
+    -- BEGIN experimental code to setup a shader, pipeline and renderer
+    local vs = fs.load_text_file("/assets/shaders/gl33/default_vert.glsl");
+    local frag = fs.load_text_file("/assets/shaders/gl33/colorize_frag.glsl");
+    local shader = gd.create_shader_desc(vs, frag)
+    gd.add_uniform_to_shader_desc(shader, "FS", 0, "customColor", "vec4")
+    gd.create_shader(shader)
+    gd.create_pipeline(shader)
+    G.colorize_shader = shader
+
+    vs = fs.load_text_file("/assets/shaders/gl33/default_vert.glsl");
+    frag = fs.load_text_file("/assets/shaders/gl33/grass_frag.glsl");
+    local grass_shader = gd.create_shader_desc(vs, frag)
+    gd.add_uniform_to_shader_desc(grass_shader, "FS", 0, "time", "float")
+    gd.add_uniform_to_shader_desc(grass_shader, "FS", 1, "verticalOffset", "float")
+    gd.add_uniform_to_shader_desc(grass_shader, "FS", 2, "horizontalOffset", "float")
+    gd.create_shader(grass_shader)
+    gd.create_pipeline(grass_shader)
+    G.grass_shader = grass_shader
+    -- END experimental code to setup a shader, pipeline and renderer
 
     sb = sprite_batch.new()
     sprite_batch.set_gd(sb, gd_instance)

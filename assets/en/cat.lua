@@ -13,7 +13,12 @@ function Cat:new()
     self.depth = layers.MOBS
     self.owner = nil
     self.caged = false
+    self.time = 0
     self:load_image("data/img/cat.png", 32, 32)
+    material.set_pipeline(self.material, G.grass_shader) -- NOTE: this overrides the shader, too
+    material.set_uniform_float(self.material, "FS", "time", self.time)
+    material.set_uniform_float(self.material, "FS", "verticalOffset", 0)
+    material.set_uniform_float(self.material, "FS", "horizontalOffset", 0)
     self:add_animation("idle", {
         1,
     }, 8)
@@ -24,6 +29,9 @@ end
 
 function Cat:update(dt)
     Cat.super.update(self, dt)
+
+    self.time = self.time + dt;
+    material.set_uniform_float(self.material, "FS", "time", self.time)
 
     if self:dist_case(G.game.h) <= 1
             and G.game.h:is_alive()
