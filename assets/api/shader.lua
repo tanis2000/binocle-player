@@ -6,7 +6,7 @@ shader = {}
 ---@class Shader
 local Shader = {}
 
----@return Shader shader the default shader
+---@return Shader shader the default shader that writes to the offscreen texture
 function shader.defaultShader() end
 
 ---@return Shader shader the screen shader
