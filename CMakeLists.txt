@@ -98,6 +98,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/stb_image
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/physfs
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sokol
+    ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/curl/include
     ${CMAKE_SOURCE_DIR}/binocle-c/src/binocle/core
     ${CMAKE_SOURCE_DIR}/src/gui
 )
@@ -173,7 +174,14 @@ else ()
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${EXE_TYPE} ${SOURCE_FILES} ${BINOCLE_ICON} ${RESOURCES})
 endif ()
 
-target_link_libraries(${PROJECT_NAME} ${BINOCLE_LINK_LIBRARIES})
+if (NOT EMSCRIPTEN AND NOT ANDROID AND NOT IOS)
+    find_package(OpenSSL REQUIRED)
+    message("openssl: ${OPENSSL_LIBRARIES}")
+    target_link_libraries(${PROJECT_NAME} ${BINOCLE_LINK_LIBRARIES} ${OPENSSL_LIBRARIES})
+else ()
+    target_link_libraries(${PROJECT_NAME} ${BINOCLE_LINK_LIBRARIES})
+endif ()
+
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 99)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
@@ -279,6 +287,13 @@ if (ANDROID)
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy ${ANDROID_NDK}/sources/cxx-stl/llvm-libc++/libs/${ANDROID_ABI}/libc++_shared.so ${CMAKE_CURRENT_BINARY_DIR}/../../android-project/app/libs/${ANDROID_ABI}/libc++_shared.so)
     #file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/../android-project/libs/${ANDROID_ABI}/lib${PROJECT_NAME}.so ${CMAKE_CURRENT_BINARY_DIR}/../android-project/libs/${ANDROID_ABI}/libmain.so)
+endif ()
+
+if (APPLE OR MSVC)
+    add_custom_command ( TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${OPENSSL_LIBRARIES} $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            )
 endif ()
 
 add_subdirectory(binocle-c/src)

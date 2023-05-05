@@ -6,6 +6,7 @@
 #include <stdio.h>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/fetch.h>
 #endif
 #include "binocle_sdl.h"
 #include "binocle_window.h"
@@ -31,6 +32,7 @@
 #include "binocle_audio_wrap.h"
 #include "gui.h"
 #include "imgui_lua_bindings.h"
+#include "curl/curl.h"
 
 #define DESIGN_WIDTH 320
 #define DESIGN_HEIGHT 240
@@ -251,6 +253,60 @@ int lua_on_destroy() {
   }
   SDL_UnlockMutex(lua_mutex);
   return 0;
+}
+
+#if defined(__EMSCRIPTEN__)
+void download_success(emscripten_fetch_t *fetch) {
+  printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
+  // The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
+  emscripten_fetch_close(fetch); // Free data associated with the fetch.
+}
+
+void download_error(emscripten_fetch_t *fetch) {
+  printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
+  emscripten_fetch_close(fetch); // Also free data on failure.
+}
+#endif
+
+void test_curl() {
+#if defined(__EMSCRIPTEN__)
+  emscripten_fetch_attr_t attr;
+  emscripten_fetch_attr_init(&attr);
+  strcpy(attr.requestMethod, "GET");
+  attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;// | EMSCRIPTEN_FETCH_SYNCHRONOUS;
+  attr.onsuccess = download_success;
+  attr.onerror = download_error;
+  emscripten_fetch_t *fetch = emscripten_fetch(&attr, "https://podium.altralogica.it/l/ld53-temp/top/0"); // Blocks here until the operation is complete.
+//  if (fetch->status == 200) {
+//    printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
+//    // The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
+//  } else {
+//    printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
+//  }
+//  emscripten_fetch_close(fetch);
+#else
+  CURL *curl;
+  CURLcode res;
+
+  curl_global_init(CURL_GLOBAL_ALL);
+  curl = curl_easy_init();
+  if(curl) {
+    curl_easy_setopt(curl, CURLOPT_URL, "https://podium.altralogica.it");
+    /* example.com is redirected, so we tell libcurl to follow redirection */
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+
+    /* Perform the request, res will get the return code */
+    res = curl_easy_perform(curl);
+    /* Check for errors */
+    if(res != CURLE_OK)
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+
+    /* always cleanup */
+    curl_easy_cleanup(curl);
+  }
+#endif
 }
 
 void main_loop() {

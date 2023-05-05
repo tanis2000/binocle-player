@@ -47,6 +47,13 @@ function Intro:init(shd)
     material.set_uniform_float4(self.tanis_mat, "FS", "customColor", 1.0, 0, 0, 1.0)
     self.tanis = sprite.from_material(self.tanis_mat)
 
+    local body = http.put("https://podium.altralogica.it/l/binocle-example/members/tanis/score", "{\"score\":2}")
+    local res = http.decode(body)
+    log.info(res)
+
+    body = http.get("https://podium.altralogica.it/l/binocle-example/top/0")
+    res = http.decode(body)
+    log.info(res)
 end
 
 function Intro:update(dt)

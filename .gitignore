@@ -64,6 +64,7 @@ fabric.properties
 
 # Binocle
 build/
+build-web/
 sys_config.h
 
 # Project specific

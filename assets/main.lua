@@ -71,16 +71,16 @@ function on_init()
     io.write("gd_instance: " .. tostring(gd_instance) .. "\n")
 
     -- BEGIN experimental code to setup a shader, pipeline and renderer
-    local vs = fs.load_text_file("/assets/shaders/gl33/default_vert.glsl");
-    local frag = fs.load_text_file("/assets/shaders/gl33/colorize_frag.glsl");
+    local vs = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/default_vert.glsl");
+    local frag = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/colorize_frag.glsl");
     local shader = gd.create_shader_desc(vs, frag)
     gd.add_uniform_to_shader_desc(shader, "FS", 0, "customColor", "vec4")
     gd.create_shader(shader)
     gd.create_pipeline(shader)
     G.colorize_shader = shader
 
-    vs = fs.load_text_file("/assets/shaders/gl33/default_vert.glsl");
-    frag = fs.load_text_file("/assets/shaders/gl33/grass_frag.glsl");
+    vs = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/default_vert.glsl");
+    frag = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/grass_frag.glsl");
     local grass_shader = gd.create_shader_desc(vs, frag)
     gd.add_uniform_to_shader_desc(grass_shader, "FS", 0, "time", "float")
     gd.add_uniform_to_shader_desc(grass_shader, "FS", 1, "verticalOffset", "float")
