@@ -300,7 +300,7 @@ void test_curl() {
     res = curl_easy_perform(curl);
     /* Check for errors */
     if(res != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+      binocle_log_error("curl_easy_perform() failed: %s\n",
               curl_easy_strerror(res));
 
     /* always cleanup */
