@@ -56,8 +56,6 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          scoop install 7zip
-          scoop install openssl
           choco install doxygen.install graphviz
 
       - name: Configure CMake
