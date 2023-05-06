@@ -98,7 +98,7 @@ void lua_stack_dump (lua_State *L) {
         break;
 
       case LUA_TUSERDATA:  /* userdata */
-        printf("%#010x", lua_touserdata(L, i));
+        printf("%#010llx", (uint64_t)lua_touserdata(L, i));
         break;
 
       case LUA_TTABLE:
