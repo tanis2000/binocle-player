@@ -175,6 +175,7 @@ else ()
 endif ()
 
 if (NOT EMSCRIPTEN AND NOT ANDROID AND NOT IOS)
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
     find_package(OpenSSL REQUIRED)
     message("openssl: ${OPENSSL_LIBRARIES}")
     if (MSVC)
@@ -188,9 +189,14 @@ endif ()
 
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 99)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
+if (APPLE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
+else()
+    #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+endif()
+if (APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
 
 if (APPLE)
     set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_PRODUCT_NAME "${PROJECT_NAME}")
@@ -293,7 +299,7 @@ if (ANDROID)
     #file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/../android-project/libs/${ANDROID_ABI}/lib${PROJECT_NAME}.so ${CMAKE_CURRENT_BINARY_DIR}/../android-project/libs/${ANDROID_ABI}/libmain.so)
 endif ()
 
-if (APPLE OR MSVC)
+if (APPLE)
     add_custom_command ( TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${OPENSSL_LIBRARIES} $<TARGET_FILE_DIR:${PROJECT_NAME}>
