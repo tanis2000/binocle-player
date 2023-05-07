@@ -65,13 +65,13 @@ jobs:
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
         run: |
           openssl version
-          Remove-Item -Path $Env:ProgramFiles\OpenSSL -Recurse -Force
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUse
           irm get.scoop.sh -outfile 'install.ps1'
           .\install.ps1 -RunAsAdmin
           $Env:Path
           scoop install openssl
           $Env:Path
+          Remove-Item -Path $Env:ProgramFiles\OpenSSL -Recurse -Force
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
