@@ -54,7 +54,15 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.0.2
 
+      - name: Cache dependencies
+        id: cache-dependencies
+        uses: actions/cache@v3
+        with:
+          path: ./$
+          key: ${{ runner.os }}-{{ hashFiles('**/.github/workflows/windows.yml') }}
+
       - name: Install system dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
         run: |
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUse
           irm get.scoop.sh -outfile 'install.ps1'
