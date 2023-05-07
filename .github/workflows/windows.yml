@@ -66,7 +66,7 @@ jobs:
         run: |
           choco list --local-only
           openssl version
-          wmic
+          wmic product get name
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUse
           irm get.scoop.sh -outfile 'install.ps1'
           .\install.ps1 -RunAsAdmin
