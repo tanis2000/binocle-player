@@ -59,8 +59,8 @@ jobs:
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUse
           irm get.scoop.sh -outfile 'install.ps1'
           .\install.ps1 -RunAsAdmin
-          scoop install openssl
           choco uninstall openssl
+          scoop install openssl
           choco install doxygen.install graphviz
 
       - name: Configure CMake
