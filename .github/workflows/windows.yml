@@ -64,7 +64,7 @@ jobs:
       - name: Install system dependencies
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
         run: |
-          winget list
+          choco list
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUse
           irm get.scoop.sh -outfile 'install.ps1'
           .\install.ps1 -RunAsAdmin
