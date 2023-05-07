@@ -56,10 +56,11 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          choco uninstall openssl
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUse
-          irm get.scoop.sh | iex
+          irm get.scoop.sh -outfile 'install.ps1'
+          .\install.ps1 -RunAsAdmin
           scoop install openssl
+          choco uninstall openssl
           choco install doxygen.install graphviz
 
       - name: Configure CMake
