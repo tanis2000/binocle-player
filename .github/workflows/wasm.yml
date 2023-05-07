@@ -7,7 +7,7 @@ on:
       - 'binocle-c/**'
       - 'assets/**'
       - '.github/workflows/wasm.yml'
-      - 'CMakeList.txt'
+      - 'CMakeLists.txt'
       - 'CMakeOptions.txt'
   pull_request:
     paths:
@@ -15,7 +15,7 @@ on:
       - 'binocle-c/**'
       - 'assets/**'
       - '.github/workflows/wasm.yml'
-      - 'CMakeList.txt'
+      - 'CMakeLists.txt'
       - 'CMakeOptions.txt'
   release:
     types: [published]
