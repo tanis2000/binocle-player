@@ -56,6 +56,10 @@ jobs:
 
       - name: Install system dependencies
         run: |
+          choco uninstall openssl
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUse
+          irm get.scoop.sh | iex
+          scoop install openssl
           choco install doxygen.install graphviz
 
       - name: Configure CMake
