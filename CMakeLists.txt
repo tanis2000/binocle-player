@@ -175,14 +175,16 @@ else ()
 endif ()
 
 if (NOT EMSCRIPTEN AND NOT ANDROID AND NOT IOS)
-    find_package(OpenSSL REQUIRED)
     set(OPENSSL_USE_STATIC_LIBS TRUE)
+    set(OPENSSL_MSVC_STATIC_RT TRUE)
+    find_package(OpenSSL REQUIRED)
     message("openssl: ${OPENSSL_LIBRARIES}")
     if (MSVC)
         target_link_libraries(${PROJECT_NAME} ${BINOCLE_LINK_LIBRARIES} ${OPENSSL_LIBRARIES} wldap32 crypt32 Ws2_32)
         message(STATUS "Target link libraries: ${BINOCLE_LINK_LIBRARIES} ${OPENSSL_LIBRARIES} wldap32 crypt32 Ws2_32")
     else()
         target_link_libraries(${PROJECT_NAME} ${BINOCLE_LINK_LIBRARIES} ${OPENSSL_LIBRARIES})
+        message(STATUS "Target link libraries: ${BINOCLE_LINK_LIBRARIES} ${OPENSSL_LIBRARIES}")
     endif()
 else ()
     target_link_libraries(${PROJECT_NAME} ${BINOCLE_LINK_LIBRARIES})
@@ -300,11 +302,11 @@ if (ANDROID)
     #file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/../android-project/libs/${ANDROID_ABI}/lib${PROJECT_NAME}.so ${CMAKE_CURRENT_BINARY_DIR}/../android-project/libs/${ANDROID_ABI}/libmain.so)
 endif ()
 
-if (APPLE)
-    add_custom_command ( TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${OPENSSL_LIBRARIES} $<TARGET_FILE_DIR:${PROJECT_NAME}>
-            )
-endif ()
+#if (APPLE)
+#    add_custom_command ( TARGET ${PROJECT_NAME} POST_BUILD
+#            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#            ${OPENSSL_LIBRARIES} $<TARGET_FILE_DIR:${PROJECT_NAME}>
+#            )
+#endif ()
 
 add_subdirectory(binocle-c/src)
