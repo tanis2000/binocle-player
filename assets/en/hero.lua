@@ -75,7 +75,7 @@ function Hero:update(dt)
         end
     end
 
-    if self:is_alive() and (input.is_key_pressed(input_mgr, key.KEY_E) or input.is_key_pressed(input_mgr, key.KEY_SPACE)) then
+    if self:is_alive() and (input.is_key_pressed(input_mgr, key.KEY_E) or input.is_key_pressed(input_mgr, key.KEY_RETURN) or input.is_key_pressed(input_mgr, key.KEY_SPACE) or input.is_mouse_down(input_mgr, mouse.MOUSE_LEFT) or input.is_mouse_down(input_mgr, mouse.MOUSE_RIGHT)) then
         if not self.cd:has("shoot") then
             self:shoot()
         end
