@@ -156,6 +156,7 @@ function main.on_update(dt)
         audio.update_music_stream(audio_instance, music)
     end
 
+    local viewport = viewport_adapter.get_viewport(adapter)
     gd.render_screen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, viewport, cam)
     if G.debug then
         imgui.RenderToScreen(gd_instance, win, viewport, cam)
