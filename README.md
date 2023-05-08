@@ -27,3 +27,7 @@ As an example
 ```shell
 emcmake cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DASSETS_DIR=/Users/tanis/Documents/binocle-player-games/simple/
 ```
+
+## HTTP support
+
+HTTP support is disabled by default. If you want to enable the HTTP module, you have to add `-DBINOCLE_HTTP=1` to cmake's command line.
