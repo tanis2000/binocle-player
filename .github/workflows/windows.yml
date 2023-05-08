@@ -54,15 +54,15 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Cache dependencies
-        id: cache-dependencies
-        uses: actions/cache@v3
-        with:
-          path: ./
-          key: ${{ runner.os }}-${{ hashFiles('**/.github/workflows/windows.yml') }}
+#      - name: Cache dependencies
+#        id: cache-dependencies
+#        uses: actions/cache@v3
+#        with:
+#          path: ./
+#          key: ${{ runner.os }}-${{ hashFiles('**/.github/workflows/windows.yml') }}
 
       - name: Install system dependencies
-        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+#        if: steps.cache-dependencies.outputs.cache-hit != 'true'
         # Install scoop and OpenSSL 3.x and remove the system-bundled version of OpenSSL (1.1.1 usually)
         run: |
           $Env:OPENSSL_ROOT_DIR=$Env:HOMEDRIVE + $Env:HOMEPATH + '/scoop/apps/openssl/current'
