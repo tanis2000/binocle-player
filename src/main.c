@@ -136,25 +136,33 @@ void lua_inject_shaders() {
 }
 
 void lua_bridge_window() {
+  lua_stack_dump(lua.L);
   lua_getglobal(lua.L, "get_window");
   if (lua_pcall(lua.L, 0, 1, 0) != 0) {
     binocle_log_error("can't get the window from Lua");
   }
+  lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
     binocle_log_error("returned value is not userdata");
   }
+  lua_stack_dump(lua.L);
+  lua_pop(lua.L, 1);
   l_binocle_window_t *win = luaL_checkudata(lua.L, 0, "binocle_window");
   window = win->window;
 }
 
 void lua_bridge_camera() {
+  lua_stack_dump(lua.L);
   lua_getglobal(lua.L, "get_camera");
   if (lua_pcall(lua.L, 0, 1, 0) != 0) {
     binocle_log_error("can't get the camera from Lua");
   }
+  lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
     binocle_log_error("returned value is not userdata");
   }
+  lua_stack_dump(lua.L);
+  lua_pop(lua.L, 1);
   l_binocle_camera_t *cam = luaL_checkudata(lua.L, 0, "binocle_camera");
   camera = cam->camera;
 }
@@ -165,9 +173,12 @@ void lua_bridge_input() {
   if (lua_pcall(lua.L, 0, 1, 0) != 0) {
     binocle_log_error("can't get the input_mgr from Lua");
   }
+  lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
     binocle_log_error("returned value is not userdata");
   }
+  lua_stack_dump(lua.L);
+  lua_pop(lua.L, 1);
   l_binocle_input_t *input_mgr = luaL_checkudata(lua.L, 0, "binocle_input");
   input = input_mgr->input;
 }
@@ -180,9 +191,12 @@ void lua_bridge_gd() {
   }
   int num = lua_gettop(lua.L);
   binocle_log_info("num: %d", num);
+  lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
     binocle_log_error("returned value is not userdata");
   }
+  lua_stack_dump(lua.L);
+  lua_pop(lua.L, 1);
   l_binocle_gd_t *gd_instance = luaL_checkudata(lua.L, 0, "binocle_gd");
   gd = gd_instance->gd;
 }
@@ -198,19 +212,24 @@ void lua_bridge_sprite_batch() {
     binocle_log_error("returned value is not userdata");
   }
   lua_stack_dump(lua.L);
+  lua_pop(lua.L, 1);
   l_binocle_sprite_batch_t *sprite_batch_instance = luaL_checkudata(lua.L, 0, "binocle_sprite_batch");
   sprite_batch = sprite_batch_instance->sprite_batch;
 }
 
 void lua_bridge_audio() {
+  lua_stack_dump(lua.L);
   lua_getglobal(lua.L, "get_audio_instance");
   if (lua_pcall(lua.L, 0, 1, 0) != 0) {
     binocle_log_error("can't get the audio_instance from Lua");
   }
+  lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, -1)) {
     binocle_log_error("returned value is not userdata");
   }
-  l_binocle_audio_t *audio_instance = luaL_checkudata(lua.L, -1, "binocle_audio");
+  lua_stack_dump(lua.L);
+  lua_pop(lua.L, 1);
+  l_binocle_audio_t *audio_instance = luaL_checkudata(lua.L, 0, "binocle_audio");
   audio = audio_instance->audio;
 }
 
