@@ -28,6 +28,12 @@ include(CMakeToolsHelpers OPTIONAL)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG")
 
+include(binocle-c/CMakeOptions.txt)
+
+if(BINOCLE_LUAJIT)
+    add_definitions(-DBINOCLE_LUAJIT)
+endif ()
+
 include(BinocleUtils)
 
 SET(VERSION_MAJOR "0")

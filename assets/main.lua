@@ -8,6 +8,10 @@ main = {}
 ---@type table
 ---Global state
 G = {
+    profiling = {
+        enabled = false,
+        profiler = 'lua-profiler', -- can be 'profiler' or 'lua-profiler'
+    },
     cache = cache,
     default_shader = nil,
     game = nil,
@@ -24,6 +28,29 @@ G = {
     colorize_shader = nil,
     grass_shader = nil,
 }
+
+log.info("Checking is LUAJIT is available")
+if jit ~= nil then
+    log.info("LUAJIT is available")
+    log.info("LUAJIT version " .. jit.version)
+    log.info("LUAJIT engine status is " .. tostring(jit.status()))
+
+    if G.profiling.enabled then
+        if G.profiling.profiler == 'lua-profiler' then
+            prof = require("lib.lua-profiler")
+            local overrides = {
+                fW = 99, -- Change the file column to 100 characters (from 20)
+                fnW = 99, -- Change the function column to 120 characters (from 28)
+            }
+            prof.configuration(overrides)
+            prof.start()
+        else
+            prof = require("lib.profiler")
+            prof.start("f10sp")
+        end
+    end
+end
+
 local assets_dir = sdl.assets_dir()
 log.info(assets_dir .. "\n")
 
@@ -172,6 +199,16 @@ function on_destroy()
     end
     if scene ~= nil then
         scene:on_destroy()
+    end
+    if jit ~= nil then
+        if G.profiling.enabled then
+            if G.profiling.profiler == 'lua-profiler' then
+                prof.stop()
+                prof.report('profiler.log')
+            else
+                prof.stop()
+            end
+        end
     end
 end
 
