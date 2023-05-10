@@ -29,7 +29,7 @@ function Entity.new(self)
     self.wid = const.GRID
     self.radius = const.GRID * 0.5
 
-    self.depth = 0
+    self.depth = layers.MOBS
 
     -- Defines X alignment of entity at its attach point (0 to 1.0)
     self.pivot_x = 0.5
@@ -246,8 +246,8 @@ end
 
 function Entity:draw()
     if self.visible and self.sprite then
-        sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam, layers.MOBS)
-        --sprite.draw_batch(sb, self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam, 0)
+        --sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam, self.depth)
+        sprite.draw_batch(sb, self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam, self.depth)
     end
 end
 

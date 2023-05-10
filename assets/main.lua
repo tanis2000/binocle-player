@@ -143,7 +143,7 @@ function main.on_update(dt)
     if not scene then
         G.default_shader = shader.defaultShader()
     end
-    sprite_batch.begin(sb, cam, G.default_shader)
+    sprite_batch.begin(sb, cam, G.default_shader, viewport, "BINOCLE_SPRITE_SORT_MODE_FRONT_TO_BACK")
     if not scene then
         load_sfx("jump", "data/sfx/jump.wav")
         load_sfx("hurt", "data/sfx/hurt.wav")
@@ -183,13 +183,13 @@ function main.on_update(dt)
         audio.update_music_stream(audio_instance, music)
     end
 
-    local viewport = viewport_adapter.get_viewport(adapter)
-    gd.render_screen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, viewport, cam)
+    local screenViewport = viewport_adapter.get_viewport(adapter)
+    gd.render_screen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
     if G.debug then
-        imgui.RenderToScreen(gd_instance, win, viewport, cam)
+        imgui.RenderToScreen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
     end
 
-    sprite_batch.finish(sb, cam)
+    sprite_batch.finish(sb, cam, viewport)
     --collectgarbage()
 end
 
