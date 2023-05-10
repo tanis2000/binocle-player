@@ -1,47 +1,34 @@
 ---@meta
 
----@class sprite
-sprite = {}
+---@class sprite_batch
+sprite_batch = {}
 
----@class Sprite
-local Sprite = {}
+---@class SpriteBatch
+local SpriteBatch = {}
 
----@param sprite Sprite the sprite instance
----@param gd GraphicsDevice the gd instance
+---@return SpriteBatch the SpriteBatch instance
+function sprite_batch.new() end
+
+---@param batch SpriteBatch the SpriteBatch instance
+---@param gd GraphicsDevice the GraphicsDevice instance
+function sprite_batch.set_gd(batch, gd) end
+
+---@param batch SpriteBatch the SpriteBatch instance
+---@param camera Camera the Camera instance
+---@param shader Shader the Shader instance
+---@param viewport kmAABB2 the viewport to use when drawing. It might be different than the one used by the ViewAdapter attached to the camera
+function sprite_batch.begin(batch, camera, shader, viewport) end
+
+---@param batch SpriteBatch the SpriteBatch instance
+---@param camera Camera the Camera instance
+---@param viewport kmAABB2 the viewport to use when drawing. It might be different than the one used by the ViewAdapter attached to the camera
+function sprite_batch.finish(batch, camera, viewport) end
+
+---@param batch SpriteBatch the SpriteBatch instance
+---@param texture Texture the Texture instance
 ---@param x number the horizontal position
 ---@param y number the vertical position
----@param viewport kmAABB2 the viewport
----@param rotation number the rotation angle
----@param scaleX number the horizontal scale
----@param scaleY number the vertical scale
----@param camera Camera the camera to apply
----@param depth number the depth of the sprite
-function sprite.draw(sprite, gd, x, y, viewport, rotation, scaleX, scaleY, camera, depth) end
+---@param depth number the depth
+function sprite_batch.draw(batch, texture, x, y, depth) end
 
----@param batch SpriteBatch the sprite batch instance
----@param sprite Sprite the sprite instance
----@param gd GraphicsDevice the gd instance
----@param x number the horizontal position
----@param y number the vertical position
----@param viewport kmAABB2 the viewport
----@param rotation number the rotation angle
----@param scaleX number the horizontal scale
----@param scaleY number the vertical scale
----@param camera Camera the camera to apply
----@param depth number the depth of the sprite
-function sprite.draw_batch(batch, sprite, gd, x, y, viewport, rotation, scaleX, scaleY, camera, depth) end
-
----@param material Material the material to create the sprite from
----@return Sprite sprite a sprite instance
-function sprite.from_material(material) end
-
----@param sprite Sprite the sprite instance
----@param subtexture SubTexture the instance of the subtexture representing the rect of the texture to use for the sprite
-function sprite.set_subtexture(sprite, subtexture) end
-
----@param sprite Sprite the sprite instance
----@param x number the horizontal position of the origin
----@param y number the vertical position of the origin
-function sprite.set_origin(sprite, x, y) end
-
-return sprite
+return sprite_batch

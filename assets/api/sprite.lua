@@ -18,6 +18,19 @@ local Sprite = {}
 ---@param depth number the depth of the sprite
 function sprite.draw(sprite, gd, x, y, viewport, rotation, scaleX, scaleY, camera, depth) end
 
+---@param batch SpriteBatch the sprite batch instance
+---@param sprite Sprite the sprite instance
+---@param gd GraphicsDevice the gd instance
+---@param x number the horizontal position
+---@param y number the vertical position
+---@param viewport kmAABB2 the viewport
+---@param rotation number the rotation angle
+---@param scaleX number the horizontal scale
+---@param scaleY number the vertical scale
+---@param camera Camera the camera to apply
+---@param depth number the depth of the sprite
+function sprite.draw_batch(batch, sprite, gd, x, y, viewport, rotation, scaleX, scaleY, camera, depth) end
+
 ---@param material Material the material to create the sprite from
 ---@return Sprite sprite a sprite instance
 function sprite.from_material(material) end
