@@ -102,6 +102,29 @@ void set_clipboard_text(void *caller, const char * text) {
   SDL_SetClipboardText(text);
 }
 
+void gui_recreate_imgui_render_target(int width, int height) {
+  if (sg_query_image_state(imgui_render_target) == SG_RESOURCESTATE_VALID) {
+    sg_destroy_image(imgui_render_target);
+  }
+  sg_image_desc rt_desc = {
+    .render_target = true,
+    .width = width,
+    .height = height,
+    .min_filter = SG_FILTER_LINEAR,
+    .mag_filter = SG_FILTER_LINEAR,
+#ifdef BINOCLE_GL
+    .pixel_format = SG_PIXELFORMAT_RGBA8,
+#else
+    .pixel_format = BINOCLE_PIXELFORMAT_BGRA8,
+#endif
+    .sample_count = 1,
+  };
+  imgui_render_target = sg_make_image(&rt_desc);
+  imgui_pass = sg_make_pass(&(sg_pass_desc){
+    .color_attachments[0].image = imgui_render_target,
+  });
+}
+
 void gui_init_imgui(float width, float height) {
   ImVec2Zero = ImVec2_ImVec2Float(0, 0);
   shared_font_atlas = ImFontAtlas_ImFontAtlas();
@@ -290,23 +313,7 @@ void gui_init_imgui(float width, float height) {
   imgui_pass_action.colors[0].value = (sg_color){ 0.0f, 0.0f, 0.0f, 0.0f };
 
   // Create the render target image
-  sg_image_desc rt_desc = {
-    .render_target = true,
-    .width = width,
-    .height = height,
-    .min_filter = SG_FILTER_LINEAR,
-    .mag_filter = SG_FILTER_LINEAR,
-#ifdef BINOCLE_GL
-    .pixel_format = SG_PIXELFORMAT_RGBA8,
-#else
-    .pixel_format = BINOCLE_PIXELFORMAT_BGRA8,
-#endif
-    .sample_count = 1,
-  };
-  imgui_render_target = sg_make_image(&rt_desc);
-  imgui_pass = sg_make_pass(&(sg_pass_desc){
-    .color_attachments[0].image = imgui_render_target,
-  });
+  gui_recreate_imgui_render_target((int)width, (int)height);
 }
 
 void draw_imgui(ImDrawData* draw_data) {
@@ -997,8 +1004,10 @@ int l_gui_wrap_render_frame(lua_State *L) {
 int l_gui_wrap_render_to_screen(lua_State *L) {
   l_binocle_gd_t *gd = luaL_checkudata(L, 1, "binocle_gd");
   l_binocle_window_t *window = luaL_checkudata(L, 2, "binocle_window");
-  kmAABB2 **vp = lua_touserdata(L, 3);
-  l_binocle_camera_t *camera = luaL_checkudata(L, 4, "binocle_camera");
-  gui_render_to_screen(gd->gd, window->window, window->window->width, window->window->height, **vp, camera->camera->viewport_adapter->scale_matrix, 1);
+  float design_width = (float)luaL_checknumber(L, 3);
+  float design_height = (float)luaL_checknumber(L, 4);
+  kmAABB2 **vp = lua_touserdata(L, 5);
+  l_binocle_camera_t *camera = luaL_checkudata(L, 6, "binocle_camera");
+  gui_render_to_screen(gd->gd, window->window, design_width, design_height, **vp, camera->camera->viewport_adapter->scale_matrix, camera->camera->viewport_adapter->inverse_multiplier);
   return 0;
 }
