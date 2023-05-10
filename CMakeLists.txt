@@ -111,8 +111,11 @@ include_directories(
 
 if (APPLE)
     # we're using lua instead of luajit on macos to be able to test with valgrind
-    #include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/luajit/src)
-    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/lua/src)
+    if (BINOCLE_JIT)
+        include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/luajit/src)
+    else ()
+        include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/lua/src)
+    endif ()
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include)
     if (IOS)
         include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/default)
@@ -130,7 +133,7 @@ endif ()
 
 if (WIN32)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include)
-    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/luajit/src)
+    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/lua/src)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/windows)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/glew/include)
 endif ()
