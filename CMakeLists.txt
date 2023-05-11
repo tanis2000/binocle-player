@@ -285,6 +285,7 @@ if (MSVC)
         add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${RES_FILE} ${CMAKE_CURRENT_BINARY_DIR}/src/assets/${RES_PATH}
+                COMMENT "Copying to target directory ${RES_FILE} ${CMAKE_CURRENT_BINARY_DIR}/src/assets/${RES_PATH}"
     )
     endforeach(RES_FILE)
 elseif (APPLE)
