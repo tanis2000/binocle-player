@@ -145,7 +145,8 @@ endif ()
 
 file(GLOB SOURCE_FILES
 ${CMAKE_SOURCE_DIR}/src/*.c
-${CMAKE_SOURCE_DIR}/src/*.cpp
+${CMAKE_SOURCE_DIR}/src/cimgui.cpp
+${CMAKE_SOURCE_DIR}/src/imgui_lua_bindings.cpp
 ${CMAKE_SOURCE_DIR}/src/*.h
 ${CMAKE_SOURCE_DIR}/src/**/*.c
 ${CMAKE_SOURCE_DIR}/src/**/*.cpp

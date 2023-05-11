@@ -161,7 +161,7 @@ void gui_recreate_imgui_render_target(gui_t *gui, int width, int height) {
 }
 
 void gui_init_imgui(gui_t *gui, float width, float height) {
-  ImVec2Zero = ImVec2_ImVec2Float(0, 0);
+  ImVec2Zero = ImVec2_ImVec2_Float(0, 0);
   shared_font_atlas = ImFontAtlas_ImFontAtlas();
   gui->ctx = igCreateContext(shared_font_atlas);
   igSetCurrentContext(gui->ctx);
@@ -497,15 +497,15 @@ void gui_draw_console_window(bool *show) {
   igSeparator();
 
   const float footer_height_to_reserve = style->ItemSpacing.y + igGetFrameHeightWithSpacing(); // 1 separator, 1 input text
-  igBeginChild("ScrollingRegion", (ImVec2){0, -footer_height_to_reserve}, false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
-  if (igBeginPopupContextWindow("ScrollingRegionPopup", 0, false)) {
-    if (igSelectable("Clear", false, ImGuiSelectableFlags_None, (ImVec2){100, 50})) {
+  igBeginChild_Str("ScrollingRegion", (ImVec2){0, -footer_height_to_reserve}, false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
+  if (igBeginPopupContextWindow("ScrollingRegionPopup", 0)) {
+    if (igSelectable_Bool("Clear", false, ImGuiSelectableFlags_None, (ImVec2){100, 50})) {
       gui_clear_log();
     }
     igEndPopup();
   }
 
-  igPushStyleVarVec2(ImGuiStyleVar_ItemSpacing, (ImVec2){4, 1});
+  igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing, (ImVec2){4, 1});
   if (copy_to_clipboard) {
     igLogToClipboard(0);
   }
@@ -514,7 +514,7 @@ void gui_draw_console_window(bool *show) {
     const gui_console_item_t* item = &gui_state.console.items[i];
     bool pop_color = false;
     if (item->type == 1) {
-      igPushStyleColor(ImGuiCol_Text, (ImVec4){1.0f, 0.4f, 0.4f, 1.0f});
+      igPushStyleColor_Vec4(ImGuiCol_Text, (ImVec4){1.0f, 0.4f, 0.4f, 1.0f});
       pop_color = true;
     }
     igTextUnformatted(item->text, NULL);
@@ -565,10 +565,10 @@ void gui_draw(binocle_window *window, binocle_input *input, float dt) {
   int display_w, display_h;
   SDL_GetWindowSize(window->window, &w, &h);
   SDL_GL_GetDrawableSize(window->window, &display_w, &display_h);
-  io->DisplaySize.x = ImVec2_ImVec2Float((float)w, (float)h)->x;
-  io->DisplaySize.y = ImVec2_ImVec2Float((float)w, (float)h)->y;
-  io->DisplayFramebufferScale.x = ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->x;
-  io->DisplayFramebufferScale.y = ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->y;
+  io->DisplaySize.x = ImVec2_ImVec2_Float((float)w, (float)h)->x;
+  io->DisplaySize.y = ImVec2_ImVec2_Float((float)w, (float)h)->y;
+  io->DisplayFramebufferScale.x = ImVec2_ImVec2_Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->x;
+  io->DisplayFramebufferScale.y = ImVec2_ImVec2_Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->y;
   io->DeltaTime = dt;
 
   igNewFrame();
@@ -581,24 +581,24 @@ void gui_draw(binocle_window *window, binocle_input *input, float dt) {
   // Main menu
   if (igBeginMainMenuBar()) {
     if (igBeginMenu("File", true)) {
-      if (igMenuItemBool("New", "CTRL+N", false, true)) {
+      if (igMenuItem_Bool("New", "CTRL+N", false, true)) {
       }
-      if (igMenuItemBool("Open...", "CTRL+O", false, true)) {
+      if (igMenuItem_Bool("Open...", "CTRL+O", false, true)) {
       }
-      if (igMenuItemBool("Save as...", "CTRL+A", false, true)) {
+      if (igMenuItem_Bool("Save as...", "CTRL+A", false, true)) {
       }
-      if (igMenuItemBool("Save", "CTRL+S", false, false)) {
+      if (igMenuItem_Bool("Save", "CTRL+S", false, false)) {
       }
-      if (igMenuItemBool("Properties...", "CTRL+P", false, true)) {
+      if (igMenuItem_Bool("Properties...", "CTRL+P", false, true)) {
       }
-      if (igMenuItemBool("Quit", "ALT+F4", false, true)) {
+      if (igMenuItem_Bool("Quit", "ALT+F4", false, true)) {
         input->quit_requested = true;
       }
       igEndMenu();
     }
 
     if (igBeginMenu("View", true)) {
-      if (igMenuItemBool("Console", "CTRL+C", show_console_window, true)) {
+      if (igMenuItem_Bool("Console", "CTRL+C", show_console_window, true)) {
         show_console_window = !show_console_window;
       }
       igEndMenu();
