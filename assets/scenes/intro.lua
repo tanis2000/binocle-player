@@ -1,6 +1,7 @@
 local Process = require("process")
 local Game = require("scenes.game")
 local const = require("const")
+local bit = require("lib.bitop")
 local Intro = Process:extend()
 
 function Intro:new()
@@ -54,6 +55,23 @@ function Intro:init(shd)
     body = http.get("https://podium.altralogica.it/l/binocle-example/top/0")
     res = http.decode(body)
     log.info(res)
+
+    imgui.SetContext("game")
+    --print(dump(imgui))
+    local colBg = imgui.ColorConvertFloat4ToU32(1, 1, 1, 1)
+    local colText = imgui.ColorConvertFloat4ToU32(0, 0, 0, 1)
+    local colTextDisabled = imgui.ColorConvertFloat4ToU32(0.3, 0.3, 0.3, 1)
+    local colFg = imgui.ColorConvertFloat4ToU32(198 / 255, 159 / 255, 165 / 255, 1)
+    local colFgActive = imgui.ColorConvertFloat4ToU32(198 / 255 * 0.8, 159 / 255 * 0.8, 165 / 255 * 0.8, 1)
+    imgui.PushStyleColor(imgui.constant.Col.Text, colText)
+    imgui.PushStyleColor(imgui.constant.Col.TextDisabled, colTextDisabled)
+    imgui.PushStyleColor(imgui.constant.Col.WindowBg, colBg)
+    imgui.PushStyleColor(imgui.constant.Col.TitleBg, colBg)
+    imgui.PushStyleColor(imgui.constant.Col.TitleBgActive, colBg)
+    imgui.PushStyleColor(imgui.constant.Col.Button, colFg)
+    imgui.PushStyleColor(imgui.constant.Col.ButtonHovered, colBg)
+    imgui.PushStyleColor(imgui.constant.Col.ButtonActive, colFgActive)
+
 end
 
 function Intro:update(dt)
@@ -82,13 +100,28 @@ function Intro:update(dt)
 
     sprite.draw(self.tanis, gd_instance, x, y - 40, viewport, 0, scale_x, scale_y, cam, 0)
 
-    --io.write("input: " .. tostring(dump(input)) .. "\n")
-    --io.write("input_mgr: " .. tostring(dump(input_mgr)) .. "\n")
-    if input.is_key_pressed(input_mgr, key.KEY_RETURN) or input.is_mouse_down(input_mgr, mouse.MOUSE_LEFT) then
-        local game = Game(self.shader)
-        scene = game
-        self:on_destroy()
-        return
+    imgui.SetContext("game")
+    imgui.NewFrame(win, dt)
+    print(dump(imgui.constant.WindowFlags))
+    imgui.SetNextWindowPos(0, 0)
+    if imgui.Begin("Intro GUI", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize)) then
+        imgui.TextUnformatted("Memory:   " .. string.format("%.2fmb", collectgarbage("count")/1024))
+        imgui.TextUnformatted("Mobs:     " .. #G.mobs)
+        imgui.TextUnformatted("Bullets:  " .. #G.mobs)
+        imgui.TextUnformatted("Entities: " .. #G.entities)
+        imgui.Button("Start")
+    end
+    imgui.End()
+    imgui.Render()
+
+
+    if not imgui.GetWantCaptureMouse() then
+        if input.is_key_pressed(input_mgr, key.KEY_RETURN) or input.is_mouse_down(input_mgr, mouse.MOUSE_LEFT) then
+            local game = Game(self.shader)
+            scene = game
+            self:on_destroy()
+            return
+        end
     end
 
     local s = "Press ENTER or LEFT MOUSE CLICK to START"

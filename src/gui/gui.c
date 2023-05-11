@@ -17,6 +17,7 @@
 #include "binocle_camera.h"
 #include "binocle_viewport_adapter.h"
 #include "binocle_log.h"
+#include "binocle_array.h"
 
 #define MAX_LOG_ENTRIES 4096
 #define max_ui_vertices (1 << 16)
@@ -82,7 +83,13 @@ typedef struct gui_state_t {
   } console;
 } gui_state_t;
 
+typedef struct gui_resources_t {
+  gui_t *guis_array;
+  gui_t *current_context_gui;
+} gui_resources_t;
+
 gui_state_t gui_state;
+gui_resources_t gui_resources;
 
 static void strtrim(char *str) {
   char *str_end = str + strlen(str);
@@ -102,7 +109,35 @@ void set_clipboard_text(void *caller, const char * text) {
   SDL_SetClipboardText(text);
 }
 
-void gui_recreate_imgui_render_target(int width, int height) {
+void gui_resources_setup() {
+  gui_resources = (gui_resources_t){ 0 };
+  binocle_array_set_capacity(gui_resources.guis_array, 0);
+}
+
+gui_t *gui_resources_create_gui(const char *name) {
+  gui_t gui = {0};
+  gui.name = SDL_strdup(name);
+  gui_t *res = binocle_array_push(gui_resources.guis_array, gui);
+  return res;
+}
+
+gui_t *gui_resources_get_gui(const char *name) {
+  for (int i = 0 ; i < binocle_array_size(gui_resources.guis_array) ; i++) {
+    gui_t *gui = &gui_resources.guis_array[i];
+    if (SDL_strcmp(gui->name, name) == 0) {
+      return gui;
+    }
+  }
+  return NULL;
+}
+
+void gui_set_context(gui_t *gui) {
+  igSetCurrentContext(gui->ctx);
+  gui_resources.current_context_gui = gui;
+}
+
+void gui_recreate_imgui_render_target(gui_t *gui, int width, int height) {
+  gui_set_context(gui);
   if (sg_query_image_state(imgui_render_target) == SG_RESOURCESTATE_VALID) {
     sg_destroy_image(imgui_render_target);
   }
@@ -125,10 +160,11 @@ void gui_recreate_imgui_render_target(int width, int height) {
   });
 }
 
-void gui_init_imgui(float width, float height) {
+void gui_init_imgui(gui_t *gui, float width, float height) {
   ImVec2Zero = ImVec2_ImVec2Float(0, 0);
   shared_font_atlas = ImFontAtlas_ImFontAtlas();
-  igCreateContext(shared_font_atlas);
+  gui->ctx = igCreateContext(shared_font_atlas);
+  igSetCurrentContext(gui->ctx);
   ImGuiIO *io = igGetIO(); (void)io;
   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
 
@@ -313,7 +349,7 @@ void gui_init_imgui(float width, float height) {
   imgui_pass_action.colors[0].value = (sg_color){ 0.0f, 0.0f, 0.0f, 0.0f };
 
   // Create the render target image
-  gui_recreate_imgui_render_target((int)width, (int)height);
+  gui_recreate_imgui_render_target(gui, (int)width, (int)height);
 }
 
 void draw_imgui(ImDrawData* draw_data) {
@@ -735,7 +771,8 @@ void gui_imgui_to_offscreen_render(float width, float height) {
   sg_end_pass();
 }
 
-void gui_pass_input_to_imgui(binocle_input *input) {
+void gui_pass_input_to_imgui(gui_t *gui, binocle_input *input) {
+  gui_set_context(gui);
   ImGuiIO *io = igGetIO();
   io->MouseDown[0] = input->currentMouseButtons[MOUSE_LEFT];
   io->MouseDown[1] = input->currentMouseButtons[MOUSE_RIGHT];
@@ -983,7 +1020,7 @@ void gui_wrap_new_frame(binocle_window *window, float dt) {
 
 int l_gui_wrap_new_frame(lua_State *L) {
   l_binocle_window_t *window = luaL_checkudata(L, 1, "binocle_window");
-  float dt = lua_tonumber(L, 2);
+  float dt = (float)lua_tonumber(L, 2);
   gui_wrap_new_frame(window->window, dt);
   return 0;
 }
@@ -1010,4 +1047,22 @@ int l_gui_wrap_render_to_screen(lua_State *L) {
   l_binocle_camera_t *camera = luaL_checkudata(L, 6, "binocle_camera");
   gui_render_to_screen(gd->gd, window->window, design_width, design_height, **vp, camera->camera->viewport_adapter->scale_matrix, camera->camera->viewport_adapter->inverse_multiplier);
   return 0;
+}
+
+int l_gui_wrap_set_context(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  gui_t *gui = gui_resources_get_gui(name);
+  if (gui != NULL) {
+    gui_set_context(gui);
+    lua_pushboolean(L, true);
+  } else {
+    lua_pushboolean(L, false);
+  }
+  return 1;
+}
+
+int l_gui_wrap_get_want_capture_mouse(lua_State *L) {
+  ImGuiIO *io = igGetIO();
+  lua_pushboolean(L, io->WantCaptureMouse);
+  return 1;
 }

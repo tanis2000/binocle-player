@@ -7,6 +7,7 @@ local SayMark = require("en.saymark")
 local Ship = require("en.ship")
 local Collector = require("en.collector")
 
+---@class Level
 local Level = Process:extend()
 
 Level.PlatformEndLeft = 1
