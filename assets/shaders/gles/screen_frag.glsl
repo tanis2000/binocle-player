@@ -20,7 +20,7 @@ vec2 uv_iq( vec2 uv, vec2 texture_size ) {
 
 void main() {
 
-    vec2 uv = (gl_FragCoord.xy - viewport.xy) / resolution.xy * scale;
+    vec2 uv = (gl_FragCoord.xy - floor(viewport.xy)) / resolution.xy * scale;
     vec2 pixelPerfectUV = uv_iq(uv, resolution.xy);
     fragColor = texture( tex0, pixelPerfectUV );
 
