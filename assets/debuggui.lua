@@ -55,7 +55,7 @@ function DebugGui:draw(dt)
 
     self:gamecamera()
     imgui.End()
-    imgui.Render()
+    imgui.Render("debug")
 end
 
 function DebugGui:entity(en)

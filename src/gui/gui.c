@@ -36,8 +36,8 @@ ImFontAtlas *shared_font_atlas;
 sg_pass_action imgui_pass_action;
 sg_pipeline imgui_pip;
 sg_bindings imgui_bind;
-sg_image imgui_render_target;
-sg_pass imgui_pass;
+
+
 
 sg_pass imgui_to_offscreen_pass;
 sg_pipeline imgui_to_offscreen_pip;
@@ -83,6 +83,13 @@ typedef struct gui_state_t {
   } console;
 } gui_state_t;
 
+typedef struct gui_t {
+  struct ImGuiContext *ctx;
+  const char *name;
+  sg_image imgui_render_target;
+  sg_pass imgui_pass;
+} gui_t;
+
 typedef struct gui_resources_t {
   gui_t *guis_array;
   gui_t *current_context_gui;
@@ -114,11 +121,23 @@ void gui_resources_setup() {
   binocle_array_set_capacity(gui_resources.guis_array, 0);
 }
 
-gui_t *gui_resources_create_gui(const char *name) {
+gui_handle_t gui_resources_create_gui(const char *name) {
+  gui_handle_t handle = {.id=-1};
   gui_t gui = {0};
   gui.name = SDL_strdup(name);
   gui_t *res = binocle_array_push(gui_resources.guis_array, gui);
-  return res;
+  for (int i = 0 ; i < binocle_array_size(gui_resources.guis_array) ; i++) {
+    gui_t *g = &gui_resources.guis_array[i];
+    if (g == res) {
+      handle.id = i;
+      return handle;
+    }
+  }
+  return handle;
+}
+
+gui_t *gui_resources_get_gui_with_handle(gui_handle_t handle) {
+  return &gui_resources.guis_array[handle.id];
 }
 
 gui_t *gui_resources_get_gui(const char *name) {
@@ -136,10 +155,11 @@ void gui_set_context(gui_t *gui) {
   gui_resources.current_context_gui = gui;
 }
 
-void gui_recreate_imgui_render_target(gui_t *gui, int width, int height) {
+void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
   gui_set_context(gui);
-  if (sg_query_image_state(imgui_render_target) == SG_RESOURCESTATE_VALID) {
-    sg_destroy_image(imgui_render_target);
+  if (sg_query_image_state(gui->imgui_render_target) == SG_RESOURCESTATE_VALID) {
+    sg_destroy_image(gui->imgui_render_target);
   }
   sg_image_desc rt_desc = {
     .render_target = true,
@@ -154,13 +174,14 @@ void gui_recreate_imgui_render_target(gui_t *gui, int width, int height) {
 #endif
     .sample_count = 1,
   };
-  imgui_render_target = sg_make_image(&rt_desc);
-  imgui_pass = sg_make_pass(&(sg_pass_desc){
-    .color_attachments[0].image = imgui_render_target,
+  gui->imgui_render_target = sg_make_image(&rt_desc);
+  gui->imgui_pass = sg_make_pass(&(sg_pass_desc){
+    .color_attachments[0].image = gui->imgui_render_target,
   });
 }
 
-void gui_init_imgui(gui_t *gui, float width, float height) {
+void gui_init_imgui(gui_handle_t handle, float width, float height) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
   ImVec2Zero = ImVec2_ImVec2_Float(0, 0);
   shared_font_atlas = ImFontAtlas_ImFontAtlas();
   gui->ctx = igCreateContext(shared_font_atlas);
@@ -223,6 +244,8 @@ void gui_init_imgui(gui_t *gui, float width, float height) {
   img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
   img_desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
   img_desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
+  img_desc.min_filter = SG_FILTER_LINEAR;
+  img_desc.mag_filter = SG_FILTER_NEAREST;
   img_desc.data.subimage[0][0] = (sg_range){font_pixels, (size_t)(font_width * font_height * 4)};
   imgui_bind.fs_images[0] = sg_make_image(&img_desc);
 
@@ -349,7 +372,7 @@ void gui_init_imgui(gui_t *gui, float width, float height) {
   imgui_pass_action.colors[0].value = (sg_color){ 0.0f, 0.0f, 0.0f, 0.0f };
 
   // Create the render target image
-  gui_recreate_imgui_render_target(gui, (int)width, (int)height);
+  gui_recreate_imgui_render_target(handle, (int)width, (int)height);
 }
 
 void draw_imgui(ImDrawData* draw_data) {
@@ -555,7 +578,7 @@ void gui_draw_console_window(bool *show) {
 
 }
 
-void gui_draw(binocle_window *window, binocle_input *input, float dt) {
+/*void gui_draw(binocle_window *window, binocle_input *input, float dt) {
   // Start the Dear ImGui frame
   //ImGui_ImplOpenGL3_NewFrame();
   //ImGui_ImplSDL2_NewFrame(window);
@@ -623,9 +646,9 @@ void gui_draw(binocle_window *window, binocle_input *input, float dt) {
 //  glClear(GL_COLOR_BUFFER_BIT);
 //
 //  ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-}
+}*/
 
-void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_assets_dir) {
+/*void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_assets_dir) {
   binocle_log_info("Setting up IMGUI offscreen pipeline");
   char vert[4096];
   char frag[4096];
@@ -754,7 +777,7 @@ void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_a
     }
   };
   binocle_log_info("Done setting up IMGUI offscreen pipeline");
-}
+}*/
 
 void gui_imgui_to_offscreen_render(float width, float height) {
   imgui_to_offscreen_shader_fs_params_t uniforms = {
@@ -771,7 +794,8 @@ void gui_imgui_to_offscreen_render(float width, float height) {
   sg_end_pass();
 }
 
-void gui_pass_input_to_imgui(gui_t *gui, binocle_input *input) {
+void gui_pass_input_to_imgui(gui_handle_t handle, binocle_input *input) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
   gui_set_context(gui);
   ImGuiIO *io = igGetIO();
   io->MouseDown[0] = input->currentMouseButtons[MOUSE_LEFT];
@@ -800,8 +824,10 @@ void gui_pass_input_to_imgui(gui_t *gui, binocle_input *input) {
   ImGuiIO_AddInputCharactersUTF8(io, input->text);
 }
 
-void gui_setup_screen_pipeline(sg_shader display_shader) {
+void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader) {
   // Render to screen pipeline
+
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
 
   // shader object for imgui rendering
   sg_shader_desc shd_desc = {0};
@@ -966,11 +992,12 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
     },
     .index_buffer = gui_screen_ibuf,
     .fs_images = {
-      [0] = imgui_render_target,
+      [0] = gui->imgui_render_target,
     }
   };
 }
-void gui_render_to_screen(binocle_gd *gd, struct binocle_window *window, float design_width, float design_height, kmAABB2 viewport, kmMat4 matrix, float scale) {
+
+void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *window, float design_width, float design_height, kmAABB2 viewport, kmMat4 matrix, float scale) {
   // Render the offscreen to the display
 
 
@@ -988,7 +1015,7 @@ void gui_render_to_screen(binocle_gd *gd, struct binocle_window *window, float d
   screen_fs_params.viewport[0] = viewport.min.x;
   screen_fs_params.viewport[1] = viewport.min.y;
 
-  gui_screen_bind.fs_images[0] = imgui_render_target;
+  gui_screen_bind.fs_images[0] = gui->imgui_render_target;
 
   sg_begin_default_pass(&gui_screen_pass_action, window->width, window->height);
   sg_apply_pipeline(gui_screen_pip);
@@ -1001,16 +1028,13 @@ void gui_render_to_screen(binocle_gd *gd, struct binocle_window *window, float d
   sg_commit();
 }
 
-void gui_wrap_new_frame(binocle_window *window, float dt) {
+void gui_wrap_new_frame(binocle_window *window, float dt, int w, int h, int display_w, int display_h) {
   ImGuiIO *io = igGetIO();
-  int w, h;
-  int display_w, display_h;
-  SDL_GetWindowSize(window->window, &w, &h);
-  SDL_GL_GetDrawableSize(window->window, &display_w, &display_h);
+
   io->DisplaySize.x = (float)w; //ImVec2_ImVec2Float((float)w, (float)h)->x;
   io->DisplaySize.y = (float)h; //ImVec2_ImVec2Float((float)w, (float)h)->y;
-  io->DisplayFramebufferScale.x = w > 0 ? ((float)display_w / w) : 0; //ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->x;
-  io->DisplayFramebufferScale.y = h > 0 ? ((float)display_h / h) : 0; //ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->y;
+  io->DisplayFramebufferScale.x = w > 0 ? ((float)display_w / w) : 1; //ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->x;
+  io->DisplayFramebufferScale.y = h > 0 ? ((float)display_h / h) : 1; //ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->y;
   io->DeltaTime = dt;
 
   igNewFrame();
@@ -1019,14 +1043,22 @@ void gui_wrap_new_frame(binocle_window *window, float dt) {
 }
 
 int l_gui_wrap_new_frame(lua_State *L) {
-  l_binocle_window_t *window = luaL_checkudata(L, 1, "binocle_window");
+  l_binocle_window_t *window_wrapper = luaL_checkudata(L, 1, "binocle_window");
   float dt = (float)lua_tonumber(L, 2);
-  gui_wrap_new_frame(window->window, dt);
+  int w = lua_tonumber(L, 3);
+  int h = lua_tonumber(L, 4);
+  int display_w = w;
+  int display_h = h;
+  if (w == 0 || h == 0) {
+    SDL_GetWindowSize(window_wrapper->window->window, &w, &h);
+    SDL_GL_GetDrawableSize(window_wrapper->window->window, &display_w, &display_h);
+  }
+  gui_wrap_new_frame(window_wrapper->window, dt, w, h, display_w, display_h);
   return 0;
 }
 
-void gui_wrap_render_frame() {
-  sg_begin_pass(imgui_pass, &imgui_pass_action);
+void gui_wrap_render_frame(gui_t *gui) {
+  sg_begin_pass(gui->imgui_pass, &imgui_pass_action);
   igRender();
   draw_imgui(igGetDrawData());
   sg_end_pass();
@@ -1034,18 +1066,22 @@ void gui_wrap_render_frame() {
 
 
 int l_gui_wrap_render_frame(lua_State *L) {
-  gui_wrap_render_frame();
+  const char *name = luaL_checkstring(L, 1);
+  gui_t *gui = gui_resources_get_gui(name);
+  gui_wrap_render_frame(gui);
   return 0;
 }
 
 int l_gui_wrap_render_to_screen(lua_State *L) {
-  l_binocle_gd_t *gd = luaL_checkudata(L, 1, "binocle_gd");
-  l_binocle_window_t *window = luaL_checkudata(L, 2, "binocle_window");
-  float design_width = (float)luaL_checknumber(L, 3);
-  float design_height = (float)luaL_checknumber(L, 4);
-  kmAABB2 **vp = lua_touserdata(L, 5);
-  l_binocle_camera_t *camera = luaL_checkudata(L, 6, "binocle_camera");
-  gui_render_to_screen(gd->gd, window->window, design_width, design_height, **vp, camera->camera->viewport_adapter->scale_matrix, camera->camera->viewport_adapter->inverse_multiplier);
+  const char *name = luaL_checkstring(L, 1);
+  l_binocle_gd_t *gd = luaL_checkudata(L, 2, "binocle_gd");
+  l_binocle_window_t *window = luaL_checkudata(L, 3, "binocle_window");
+  float design_width = (float)luaL_checknumber(L, 4);
+  float design_height = (float)luaL_checknumber(L, 5);
+  kmAABB2 **vp = lua_touserdata(L, 6);
+  l_binocle_camera_t *camera = luaL_checkudata(L, 7, "binocle_camera");
+  gui_t *gui = gui_resources_get_gui(name);
+  gui_render_to_screen(gui, gd->gd, window->window, design_width, design_height, **vp, camera->camera->viewport_adapter->scale_matrix, camera->camera->viewport_adapter->inverse_multiplier);
   return 0;
 }
 

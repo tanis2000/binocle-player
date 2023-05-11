@@ -8,28 +8,29 @@
 #include "kazmath/kazmath.h"
 
 struct lua_State;
-struct binocle_inputl;
+struct binocle_input;
 struct binocle_window;
 struct binocle_gd;
 struct sg_shader;
 struct ImGuiContext;
+struct gui_t;
 
-typedef struct gui_t {
-  struct ImGuiContext *ctx;
-  const char *name;
-} gui_t;
+typedef struct gui_handle_t {
+  int id;
+} gui_handle_t;
 
 void gui_resources_setup();
-gui_t *gui_resources_create_gui(const char *name);
-gui_t *gui_resources_get_gui(const char *name);
-void gui_pass_input_to_imgui(gui_t *gui, struct binocle_input *input);
+gui_handle_t gui_resources_create_gui(const char *name);
+struct gui_t *gui_resources_get_gui(const char *name);
+struct gui_t *gui_resources_get_gui_with_handle(gui_handle_t handle);
+void gui_pass_input_to_imgui(gui_handle_t handle, struct binocle_input *input);
 void gui_draw(struct binocle_window *window, struct binocle_input *input, float dt);
 void gui_imgui_to_offscreen_render(float width, float height);
-void gui_init_imgui(gui_t *gui, float width, float height);
+void gui_init_imgui(gui_handle_t handle, float width, float height);
 void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_assets_dir);
-void gui_render_to_screen(struct binocle_gd *gd, struct binocle_window *window, float design_width, float design_height, kmAABB2 viewport, kmMat4 matrix, float scale);
-void gui_setup_screen_pipeline(struct sg_shader display_shader);
-void gui_recreate_imgui_render_target(gui_t *gui, int width, int height);
+void gui_render_to_screen(struct gui_t *gui, struct binocle_gd *gd, struct binocle_window *window, float design_width, float design_height, kmAABB2 viewport, kmMat4 matrix, float scale);
+void gui_setup_screen_pipeline(gui_handle_t handle, struct sg_shader display_shader);
+void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height);
 int l_gui_wrap_new_frame(struct lua_State *L);
 int l_gui_wrap_render_frame(struct lua_State *L);
 int l_gui_wrap_render_to_screen(struct lua_State *L);

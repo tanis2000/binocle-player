@@ -135,7 +135,8 @@ function on_init()
     local music = audio.load_music(audio_instance, assets_dir .. "data/music/theme.mp3")
     G.musics["main"] = music
     audio.play_music(audio_instance, music)
-    audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
+    audio.set_music_volume(audio_instance, G.musics["main"], 0)
+    --audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
 end
 
 function main.on_update(dt)
@@ -187,10 +188,10 @@ function main.on_update(dt)
     gd.render_screen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
     if G.debug then
         imgui.SetContext("debug")
-        imgui.RenderToScreen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
+        imgui.RenderToScreen("debug", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
     end
     imgui.SetContext("game")
-    imgui.RenderToScreen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
+    imgui.RenderToScreen("game", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
 
     sprite_batch.finish(sb, cam, viewport)
     --collectgarbage()
