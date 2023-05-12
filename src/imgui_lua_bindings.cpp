@@ -490,6 +490,7 @@ static const struct luaL_Reg imguilib [] = {
   { "RenderToScreen", l_gui_wrap_render_to_screen },
   { "SetContext", l_gui_wrap_set_context },
   { "GetWantCaptureMouse", l_gui_wrap_get_want_capture_mouse },
+  { "GetStyleFramePadding", l_gui_wrap_get_style_frame_padding },
     {NULL, NULL}
 };
 

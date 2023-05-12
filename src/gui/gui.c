@@ -48,7 +48,7 @@ sg_bindings imgui_to_offscreen_bind;
 sg_pass_action imgui_to_offscreen_action;
 
 sg_pass_action gui_screen_pass_action;
-sg_pipeline gui_screen_pip;
+
 sg_bindings gui_screen_bind;
 sg_pass gui_screen_pass;
 sg_buffer gui_screen_vbuf;
@@ -88,6 +88,11 @@ typedef struct gui_t {
   const char *name;
   sg_image imgui_render_target;
   sg_pass imgui_pass;
+  sg_pipeline gui_screen_pip;
+  float viewport_w;
+  float viewport_h;
+  float rt_w;
+  float rt_h;
 } gui_t;
 
 typedef struct gui_resources_t {
@@ -158,6 +163,9 @@ void gui_set_context(gui_t *gui) {
 void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height) {
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
   gui_set_context(gui);
+  gui->rt_w = width;
+  gui->rt_h = height;
+
   if (sg_query_image_state(gui->imgui_render_target) == SG_RESOURCESTATE_VALID) {
     sg_destroy_image(gui->imgui_render_target);
   }
@@ -180,11 +188,15 @@ void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height
   });
 }
 
-void gui_init_imgui(gui_handle_t handle, float width, float height) {
+void gui_init_imgui(gui_handle_t handle, float width, float height, float viewport_width, float viewport_height) {
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
   ImVec2Zero = ImVec2_ImVec2_Float(0, 0);
   shared_font_atlas = ImFontAtlas_ImFontAtlas();
   gui->ctx = igCreateContext(shared_font_atlas);
+  gui->viewport_w = viewport_width;
+  gui->viewport_h = viewport_height;
+  gui->rt_w = width;
+  gui->rt_h = height;
   igSetCurrentContext(gui->ctx);
   ImGuiIO *io = igGetIO(); (void)io;
   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
@@ -797,12 +809,14 @@ void gui_imgui_to_offscreen_render(float width, float height) {
 void gui_pass_input_to_imgui(gui_handle_t handle, binocle_input *input) {
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
   gui_set_context(gui);
+  float ratio = gui->rt_w / gui->viewport_w;
+
   ImGuiIO *io = igGetIO();
   io->MouseDown[0] = input->currentMouseButtons[MOUSE_LEFT];
   io->MouseDown[1] = input->currentMouseButtons[MOUSE_RIGHT];
   io->MouseDown[2] = input->currentMouseButtons[MOUSE_MIDDLE];
-  io->MousePos.x = input->mouseX;
-  io->MousePos.y = input->mouseY;
+  io->MousePos.x = input->mouseX * ratio;
+  io->MousePos.y = input->mouseY * ratio;
   if (input->mouseWheelX < 0) {
     io->MouseWheelH += 1;
   }
@@ -824,7 +838,7 @@ void gui_pass_input_to_imgui(gui_handle_t handle, binocle_input *input) {
   ImGuiIO_AddInputCharactersUTF8(io, input->text);
 }
 
-void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader) {
+void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bool pixel_perfect) {
   // Render to screen pipeline
 
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
@@ -869,7 +883,33 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader) {
   shd_desc.fs.uniform_blocks[0].uniforms[2].name = "viewport";
   shd_desc.fs.uniform_blocks[0].uniforms[2].type = SG_UNIFORMTYPE_FLOAT2;
 #if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
-  shd_desc.fs.source =
+  if (pixel_perfect) {
+      shd_desc.fs.source =
+    "#version 300 es\n"
+    "precision mediump float;\n"
+    "precision mediump int;\n"
+    "uniform sampler2D tex0;\n"
+    "in vec2 uvCoord;\n"
+    "out vec4 fragColor;\n"
+          "vec2 uv_iq( vec2 uv, vec2 texture_size ) {\n"
+      "    vec2 pixel = uv * texture_size;\n"
+      "\n"
+      "    vec2 seam = floor(pixel + 0.5);\n"
+      "    vec2 dudv = fwidth(pixel);\n"
+      "    pixel = seam + clamp( (pixel - seam) / dudv, -0.5, 0.5);\n"
+      "\n"
+      "    return pixel / texture_size;\n"
+      "}\n"
+      "\n"
+      "void main() {\n"
+      "\n"
+      "    vec2 uv = (gl_FragCoord.xy - viewport.xy) / resolution.xy * scale;\n"
+      "    vec2 pixelPerfectUV = uv_iq(uv, resolution.xy);\n"
+      "    fragColor = texture( tex0, pixelPerfectUV );\n"
+      "\n"
+      "}\n";
+  } else {
+      shd_desc.fs.source =
     "#version 300 es\n"
     "precision mediump float;\n"
     "precision mediump int;\n"
@@ -881,20 +921,48 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader) {
     "    fragColor = texcolor;\n"
     "    //gl_FragColor = texture2D(tex, uv) * color;\n"
     "}\n";
+  }
 #else
-  shd_desc.fs.source =
-"#version 330\n"
-"uniform vec2 resolution;\n"
-"uniform sampler2D tex0;\n"
-"uniform vec2 scale;\n"
-"uniform vec2 viewport;\n"
-"out vec4 fragColor;\n"
-"in vec2 uvCoord;\n"
-"void main(void) {\n"
-"vec4 texcolor = texture(tex0, uvCoord);\n"
-"//if (texcolor.a < 1) discard;\n"
-"fragColor = texcolor;\n"
-"}\n";
+  if (pixel_perfect) {
+    shd_desc.fs.source =
+      "#version 330\n"
+      "uniform vec2 resolution;\n"
+      "uniform sampler2D tex0;\n"
+      "uniform vec2 scale;\n"
+      "uniform vec2 viewport;\n"
+      "out vec4 fragColor;\n"
+      "in vec2 uvCoord;\n"
+      "vec2 uv_iq( vec2 uv, ivec2 texture_size ) {\n"
+      "    vec2 pixel = uv * texture_size;\n"
+      "\n"
+      "    vec2 seam = floor(pixel + 0.5);\n"
+      "    vec2 dudv = fwidth(pixel);\n"
+      "    pixel = seam + clamp( (pixel - seam) / dudv, -0.5, 0.5);\n"
+      "\n"
+      "    return pixel / texture_size;\n"
+      "}\n"
+      "\n"
+      "void main() {\n"
+      "\n"
+      "    vec2 uv = (gl_FragCoord.xy - viewport.xy) / resolution.xy * scale;\n"
+      "    vec2 pixelPerfectUV = uv_iq(uv, ivec2(resolution.xy));\n"
+      "    fragColor = texture(tex0, pixelPerfectUV);\n"
+      "}\n";
+  } else {
+    shd_desc.fs.source =
+      "#version 330\n"
+      "uniform vec2 resolution;\n"
+      "uniform sampler2D tex0;\n"
+      "uniform vec2 scale;\n"
+      "uniform vec2 viewport;\n"
+      "out vec4 fragColor;\n"
+      "in vec2 uvCoord;\n"
+      "void main(void) {\n"
+      "vec4 texcolor = texture(tex0, uvCoord);\n"
+      "//if (texcolor.a < 1) discard;\n"
+      "fragColor = texcolor;\n"
+      "}\n";
+  }
 #endif
   binocle_log_info("Compiling GUI shader for screen pipeline");
   sg_shader shd = sg_make_shader(&shd_desc);
@@ -917,7 +985,7 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader) {
 
   binocle_log_info("Creating GUI pipeline");
   // Pipeline state object for the screen (default) pass
-  gui_screen_pip = sg_make_pipeline(&(sg_pipeline_desc){
+  gui->gui_screen_pip = sg_make_pipeline(&(sg_pipeline_desc){
     .layout = {
       .attrs = {
         [0] = { .format = SG_VERTEXFORMAT_FLOAT3 }, // position
@@ -1018,7 +1086,7 @@ void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *win
   gui_screen_bind.fs_images[0] = gui->imgui_render_target;
 
   sg_begin_default_pass(&gui_screen_pass_action, window->width, window->height);
-  sg_apply_pipeline(gui_screen_pip);
+  sg_apply_pipeline(gui->gui_screen_pip);
   sg_apply_bindings(&gui_screen_bind);
   sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, &SG_RANGE(screen_vs_params));
   sg_apply_uniforms(SG_SHADERSTAGE_FS, 0, &SG_RANGE(screen_fs_params));
@@ -1101,4 +1169,12 @@ int l_gui_wrap_get_want_capture_mouse(lua_State *L) {
   ImGuiIO *io = igGetIO();
   lua_pushboolean(L, io->WantCaptureMouse);
   return 1;
+}
+
+int l_gui_wrap_get_style_frame_padding(lua_State *L) {
+  ImGuiStyle *style = igGetStyle();
+  ImVec2 padding = style->FramePadding;
+  lua_pushnumber(L, padding.x);
+  lua_pushnumber(L, padding.y);
+  return 2;
 }

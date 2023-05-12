@@ -339,7 +339,7 @@ void main_loop() {
 
   binocle_input_update(input);
   gui_pass_input_to_imgui(debug_gui_handle, input);
-  gui_pass_input_to_imgui(debug_gui_handle, input);
+  gui_pass_input_to_imgui(game_gui_handle, input);
 
   if (input->resized) {
     kmVec2 oldWindowSize = {.x = window->width, .y = window->height};
@@ -526,12 +526,12 @@ int main(int argc, char *argv[])
 
   gui_resources_setup();
   debug_gui_handle = gui_resources_create_gui("debug");
-  gui_init_imgui(debug_gui_handle, window->width, window->height);
-  gui_setup_screen_pipeline(debug_gui_handle, screen_shader);
+  gui_init_imgui(debug_gui_handle, window->width, window->height, window->width, window->height);
+  gui_setup_screen_pipeline(debug_gui_handle, screen_shader, false);
 
   game_gui_handle = gui_resources_create_gui("game");
-  gui_init_imgui(game_gui_handle, DESIGN_WIDTH, DESIGN_HEIGHT);
-  gui_setup_screen_pipeline(game_gui_handle, screen_shader);
+  gui_init_imgui(game_gui_handle, DESIGN_WIDTH, DESIGN_HEIGHT, window->width, window->height);
+  gui_setup_screen_pipeline(game_gui_handle, screen_shader, true);
 
 //  gui_setup_imgui_to_offscreen_pipeline(gd, binocle_assets_dir);
 

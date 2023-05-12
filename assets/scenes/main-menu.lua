@@ -57,7 +57,7 @@ function MainMenu:init(shd)
     log.info(res)
 
     imgui.SetContext("game")
-    --print(dump(imgui))
+    print(dump(imgui))
     local colBg = imgui.ColorConvertFloat4ToU32(1, 1, 1, 1)
     local colText = imgui.ColorConvertFloat4ToU32(0, 0, 0, 1)
     local colTextDisabled = imgui.ColorConvertFloat4ToU32(0.3, 0.3, 0.3, 1)
@@ -102,26 +102,30 @@ function MainMenu:update(dt)
 
     imgui.SetContext("game")
     imgui.NewFrame(win, dt, const.DESIGN_WIDTH, const.DESIGN_HEIGHT)
-    print(dump(imgui.constant.WindowFlags))
+    --print(dump(imgui.constant.WindowFlags))
     imgui.SetNextWindowPos(0, 0)
+    imgui.SetNextWindowSize(const.DESIGN_WIDTH, const.DESIGN_HEIGHT)
     if imgui.Begin("Intro GUI", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize)) then
         imgui.TextUnformatted("Memory:   " .. string.format("%.2fmb", collectgarbage("count")/1024))
         imgui.TextUnformatted("Mobs:     " .. #G.mobs)
         imgui.TextUnformatted("Bullets:  " .. #G.mobs)
         imgui.TextUnformatted("Entities: " .. #G.entities)
         imgui.Button("Start")
+        if self:button_centered_on_line("Test") then
+            print("test")
+        end
     end
     imgui.End()
     imgui.Render("game")
 
 
     if not imgui.GetWantCaptureMouse() then
-        if input.is_key_pressed(input_mgr, key.KEY_RETURN) or input.is_mouse_down(input_mgr, mouse.MOUSE_LEFT) then
-            local game = Game(self.shader)
-            scene = game
-            self:on_destroy()
-            return
-        end
+        --if input.is_key_pressed(input_mgr, key.KEY_RETURN) or input.is_mouse_down(input_mgr, mouse.MOUSE_LEFT) then
+        --    local game = Game(self.shader)
+        --    scene = game
+        --    self:on_destroy()
+        --    return
+        --end
     end
 
     local s = "Press ENTER or LEFT MOUSE CLICK to START"
@@ -139,6 +143,21 @@ function MainMenu:on_destroy()
         ttfont.destroy(self.default_font)
         self.default_font = nil
     end
+end
+
+function MainMenu:button_centered_on_line(label, alignment)
+    if alignment == nil then
+        alignment = 0.5
+    end
+    local padX, padY = imgui.GetStyleFramePadding()
+    local size = imgui.CalcTextSize(label).x + padX * 2
+    local avail = imgui.GetContentRegionAvail().x
+    local off = (avail - size) * alignment
+    if (off > 0) then
+        imgui.SetCursorPosX(imgui.GetCursorPosX() + off)
+    end
+
+    return imgui.Button(label)
 end
 
 return MainMenu
