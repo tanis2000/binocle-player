@@ -160,6 +160,12 @@ void gui_set_context(gui_t *gui) {
   gui_resources.current_context_gui = gui;
 }
 
+void gui_set_viewport(gui_handle_t handle, int width, int height) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
+  gui->viewport_w = width;
+  gui->viewport_h = height;
+}
+
 void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height) {
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
   gui_set_context(gui);
@@ -903,7 +909,7 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
       "\n"
       "void main() {\n"
       "\n"
-      "    vec2 uv = (gl_FragCoord.xy - viewport.xy) / resolution.xy * scale;\n"
+      "    vec2 uv = (gl_FragCoord.xy - floor(viewport.xy)) / resolution.xy * scale;\n"
       "    vec2 pixelPerfectUV = uv_iq(uv, resolution.xy);\n"
       "    fragColor = texture( tex0, pixelPerfectUV );\n"
       "\n"
@@ -944,7 +950,7 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
       "\n"
       "void main() {\n"
       "\n"
-      "    vec2 uv = (gl_FragCoord.xy - viewport.xy) / resolution.xy * scale;\n"
+      "    vec2 uv = (gl_FragCoord.xy - floor(viewport.xy)) / resolution.xy * scale;\n"
       "    vec2 pixelPerfectUV = uv_iq(uv, ivec2(resolution.xy));\n"
       "    fragColor = texture(tex0, pixelPerfectUV);\n"
       "}\n";

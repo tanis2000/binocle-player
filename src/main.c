@@ -348,6 +348,7 @@ void main_loop() {
     // Update the pixel-perfect rescaling viewport adapter
     binocle_viewport_adapter_reset(camera->viewport_adapter, oldWindowSize, input->newWindowSize);
     gui_recreate_imgui_render_target(debug_gui_handle, window->width, window->height);
+    gui_set_viewport(debug_gui_handle, window->width, window->height);
     input->resized = false;
   }
 

@@ -72,6 +72,7 @@ function MainMenu:init(shd)
     imgui.PushStyleColor(imgui.constant.Col.ButtonHovered, colBg)
     imgui.PushStyleColor(imgui.constant.Col.ButtonActive, colFgActive)
 
+    G.using_game_gui = true
 end
 
 function MainMenu:update(dt)
@@ -110,9 +111,13 @@ function MainMenu:update(dt)
         imgui.TextUnformatted("Mobs:     " .. #G.mobs)
         imgui.TextUnformatted("Bullets:  " .. #G.mobs)
         imgui.TextUnformatted("Entities: " .. #G.entities)
-        imgui.Button("Start")
-        if self:button_centered_on_line("Test") then
-            print("test")
+        imgui.Button("Test")
+        if self:button_centered_on_line("Start") then
+            print("start pressed")
+            local game = Game(self.shader)
+            scene = game
+            self:on_destroy()
+            return
         end
     end
     imgui.End()
@@ -143,6 +148,7 @@ function MainMenu:on_destroy()
         ttfont.destroy(self.default_font)
         self.default_font = nil
     end
+    G.using_game_gui = false
 end
 
 function MainMenu:button_centered_on_line(label, alignment)

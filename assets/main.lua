@@ -27,6 +27,7 @@ G = {
     level = nil,
     colorize_shader = nil,
     grass_shader = nil,
+    using_game_gui = false,
 }
 
 log.info("Checking is LUAJIT is available")
@@ -190,8 +191,10 @@ function main.on_update(dt)
         imgui.SetContext("debug")
         imgui.RenderToScreen("debug", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
     end
-    imgui.SetContext("game")
-    imgui.RenderToScreen("game", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
+    if G.using_game_gui then
+        imgui.SetContext("game")
+        imgui.RenderToScreen("game", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
+    end
 
     sprite_batch.finish(sb, cam, viewport)
     --collectgarbage()

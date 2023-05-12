@@ -31,6 +31,7 @@ void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_a
 void gui_render_to_screen(struct gui_t *gui, struct binocle_gd *gd, struct binocle_window *window, float design_width, float design_height, kmAABB2 viewport, kmMat4 matrix, float scale);
 void gui_setup_screen_pipeline(gui_handle_t handle, struct sg_shader display_shader, bool pixel_perfect);
 void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height);
+void gui_set_viewport(gui_handle_t handle, int width, int height);
 int l_gui_wrap_new_frame(struct lua_State *L);
 int l_gui_wrap_render_frame(struct lua_State *L);
 int l_gui_wrap_render_to_screen(struct lua_State *L);
