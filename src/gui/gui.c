@@ -93,6 +93,7 @@ typedef struct gui_t {
   float viewport_h;
   float rt_w;
   float rt_h;
+  binocle_viewport_adapter *viewport_adapter;
 } gui_t;
 
 typedef struct gui_resources_t {
@@ -164,6 +165,11 @@ void gui_set_viewport(gui_handle_t handle, int width, int height) {
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
   gui->viewport_w = width;
   gui->viewport_h = height;
+}
+
+void gui_set_viewport_adapter(gui_handle_t handle, binocle_viewport_adapter *viewport_adapter) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
+  gui->viewport_adapter = viewport_adapter;
 }
 
 void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height) {
@@ -815,14 +821,30 @@ void gui_imgui_to_offscreen_render(float width, float height) {
 void gui_pass_input_to_imgui(gui_handle_t handle, binocle_input *input) {
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
   gui_set_context(gui);
-  float ratio = gui->rt_w / gui->viewport_w;
+  float ratio = 1.0f;
+
+  kmVec2 pos = {
+    .x = input->mouseX,
+    .y = input->mouseY,
+  };
+  if (gui->viewport_adapter != NULL) {
+    ratio = gui->rt_w / gui->viewport_adapter->viewport.max.x;
+//    binocle_log_info("M: %.0f %.0f {%.1f}", pos.x, pos.y, ratio);
+    pos = binocle_viewport_adapter_point_to_virtual_viewport(*gui->viewport_adapter, pos);
+//    binocle_log_info("V: %.0f %.0f {%.0f %.0f %.0f %.0f}", pos.x, pos.y, gui->viewport_adapter->viewport.min.x, gui->viewport_adapter->viewport.min.y, gui->viewport_adapter->viewport.max.x, gui->viewport_adapter->viewport.max.y);
+  } else {
+    ratio = gui->rt_w / gui->viewport_w;
+  }
+
+  pos.x *= ratio;
+  pos.y *= ratio;
 
   ImGuiIO *io = igGetIO();
   io->MouseDown[0] = input->currentMouseButtons[MOUSE_LEFT];
   io->MouseDown[1] = input->currentMouseButtons[MOUSE_RIGHT];
   io->MouseDown[2] = input->currentMouseButtons[MOUSE_MIDDLE];
-  io->MousePos.x = input->mouseX * ratio;
-  io->MousePos.y = input->mouseY * ratio;
+  io->MousePos.x = pos.x;
+  io->MousePos.y = pos.y;
   if (input->mouseWheelX < 0) {
     io->MouseWheelH += 1;
   }

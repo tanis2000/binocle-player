@@ -9,6 +9,7 @@
 
 struct lua_State;
 struct binocle_input;
+struct binocle_viewport_adapter;
 struct binocle_window;
 struct binocle_gd;
 struct sg_shader;
@@ -32,6 +33,7 @@ void gui_render_to_screen(struct gui_t *gui, struct binocle_gd *gd, struct binoc
 void gui_setup_screen_pipeline(gui_handle_t handle, struct sg_shader display_shader, bool pixel_perfect);
 void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height);
 void gui_set_viewport(gui_handle_t handle, int width, int height);
+void gui_set_viewport_adapter(gui_handle_t handle, struct binocle_viewport_adapter *viewport_adapter);
 int l_gui_wrap_new_frame(struct lua_State *L);
 int l_gui_wrap_render_frame(struct lua_State *L);
 int l_gui_wrap_render_to_screen(struct lua_State *L);

@@ -531,6 +531,7 @@ int main(int argc, char *argv[])
   gui_setup_screen_pipeline(debug_gui_handle, screen_shader, false);
 
   game_gui_handle = gui_resources_create_gui("game");
+  gui_set_viewport_adapter(game_gui_handle, binocle_camera_get_viewport_adapter(*camera));
   gui_init_imgui(game_gui_handle, DESIGN_WIDTH, DESIGN_HEIGHT, window->width, window->height);
   gui_setup_screen_pipeline(game_gui_handle, screen_shader, true);
 

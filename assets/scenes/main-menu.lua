@@ -89,7 +89,7 @@ function MainMenu:update(dt)
     local y = (const.DESIGN_HEIGHT - (self.TEX_HEIGHT * scale_y)) / 2.0
 
     --io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
-    sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale_x, scale_y, cam, 0)
+    --sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale_x, scale_y, cam, 0)
 
     scale_x = const.DESIGN_WIDTH / self.TANIS_TEX_WIDTH * 0.25
     scale_y = const.DESIGN_HEIGHT / self.TANIS_TEX_WIDTH * 0.25
@@ -133,13 +133,13 @@ function MainMenu:update(dt)
         --end
     end
 
-    local s = "Press ENTER or LEFT MOUSE CLICK to START"
-    local width = ttfont.get_string_width(self.default_font, s)
-    ttfont.draw_string(self.default_font, s, gd_instance, (const.DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam, 0);
-
-    s = "A sample game by Valerio Santinelli"
-    width = ttfont.get_string_width(self.default_font, s)
-    ttfont.draw_string(self.default_font, s, gd_instance, (const.DESIGN_WIDTH - width)/2, 170, viewport, color.black, cam, 0);
+    --local s = "Press ENTER or LEFT MOUSE CLICK to START"
+    --local width = ttfont.get_string_width(self.default_font, s)
+    --ttfont.draw_string(self.default_font, s, gd_instance, (const.DESIGN_WIDTH - width)/2, 50, viewport, color.black, cam, 0);
+    --
+    --s = "A sample game by Valerio Santinelli"
+    --width = ttfont.get_string_width(self.default_font, s)
+    --ttfont.draw_string(self.default_font, s, gd_instance, (const.DESIGN_WIDTH - width)/2, 170, viewport, color.black, cam, 0);
 end
 
 function MainMenu:on_destroy()
