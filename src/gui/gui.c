@@ -94,6 +94,7 @@ typedef struct gui_t {
   float rt_w;
   float rt_h;
   binocle_viewport_adapter *viewport_adapter;
+  bool apply_scissor;
 } gui_t;
 
 typedef struct gui_resources_t {
@@ -170,6 +171,11 @@ void gui_set_viewport(gui_handle_t handle, int width, int height) {
 void gui_set_viewport_adapter(gui_handle_t handle, binocle_viewport_adapter *viewport_adapter) {
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
   gui->viewport_adapter = viewport_adapter;
+}
+
+void gui_set_apply_scissor(gui_handle_t handle, bool value) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
+  gui->apply_scissor = value;
 }
 
 void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height) {
@@ -1118,6 +1124,9 @@ void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *win
   sg_apply_bindings(&gui_screen_bind);
   sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, &SG_RANGE(screen_vs_params));
   sg_apply_uniforms(SG_SHADERSTAGE_FS, 0, &SG_RANGE(screen_fs_params));
+  if (gui->apply_scissor) {
+    sg_apply_scissor_rect(viewport.min.x, viewport.min.y, design_width / scale, design_height / scale, false);
+  }
   sg_draw(0, 6, 1);
   sg_end_pass();
 
