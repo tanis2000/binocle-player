@@ -25,6 +25,11 @@ function audio.init(audio) end
 function audio.load_music(audio, filename) end
 
 ---@param audio Audio the audio system
+---@param filename string the filename including the path of the music to load
+---@return AudioMusic the music
+function audio.load_music_from_assets(audio, filename) end
+
+---@param audio Audio the audio system
 ---@param music AudioMusic the music to play
 function audio.play_music(audio, music) end
 
@@ -42,6 +47,11 @@ function audio.update_music_stream(audio, music) end
 ---@param filename string the filename including the path of the music to load
 ---@return AudioSound the sound
 function audio.load_sound(audio, filename) end
+
+---@param audio Audio the audio system
+---@param filename string the filename including the path of the music to load
+---@return AudioSound the sound
+function audio.load_sound_from_assets(audio, filename) end
 
 ---@param sound AudioSound the sound to play
 function audio.play_sound(sound) end

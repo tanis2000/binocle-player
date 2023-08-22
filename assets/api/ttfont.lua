@@ -12,6 +12,12 @@ local TTFont = {}
 ---@return TTFont the font instance
 function ttfont.from_file(filename, size, shader) end
 
+---@param filename string the filename including the path of the TTF to load
+---@param size number the font size
+---@param shader Shader the shader instance to use to render the font
+---@return TTFont the font instance
+function ttfont.from_assets(filename, size, shader) end
+
 ---@param font TTFont the font instance
 ---@param text string the text to draw
 ---@param gd GraphicsDevice the gd instance
