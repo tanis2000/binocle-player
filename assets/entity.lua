@@ -127,7 +127,7 @@ function Entity.pre_update(self, dt)
     -- update AI?
 end
 
-function Entity.on_touch_wall(self)
+function Entity.on_touch_wall(self, direction)
 
 end
 
@@ -246,6 +246,7 @@ end
 
 function Entity:draw()
     if self.visible and self.sprite then
+        -- NOTE: batch drawing does not support custom pipelines, yet. The grass shader will not be applied.
         --sprite.draw(self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam, self.depth)
         sprite.draw_batch(sb, self.sprite, gd_instance, self.sprite_x, self.sprite_y, viewport, 0, self.sprite_scale_x, self.sprite_scale_y, cam, self.depth)
     end
