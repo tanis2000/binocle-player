@@ -2,6 +2,7 @@ local Process = require("process")
 local Game = require("scenes.game")
 local const = require("const")
 local bit = require("lib.bitop")
+local json = require("lib.json")
 local MainMenu = Process:extend()
 
 function MainMenu:new()
@@ -11,6 +12,7 @@ function MainMenu:new()
     self.TANIS_TEX_WIDTH = 512
     self.TANIS_TEX_HEIGHT = 250
     self.default_font = nil
+    self.leaderboard = nil
 end
 
 
@@ -52,9 +54,10 @@ function MainMenu:init(shd)
     local res = http.decode(body)
     log.info(res)
 
-    body = http.get("https://podium.altralogica.it/l/binocle-example/top/0")
+    body = http.get("https://podium.altralogica.it/l/binocle-example/top/0?pageSize=10")
     res = http.decode(body)
     log.info(res)
+    self.leaderboard = json.decode(res)
 
     imgui.SetContext("game")
     print(dump(imgui))
@@ -107,18 +110,34 @@ function MainMenu:update(dt)
     imgui.SetNextWindowPos(0, 0)
     imgui.SetNextWindowSize(const.DESIGN_WIDTH, const.DESIGN_HEIGHT)
     if imgui.Begin("Intro GUI", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize)) then
-        imgui.TextUnformatted("Memory:   " .. string.format("%.2fmb", collectgarbage("count")/1024))
-        imgui.TextUnformatted("Mobs:     " .. #G.mobs)
-        imgui.TextUnformatted("Bullets:  " .. #G.mobs)
-        imgui.TextUnformatted("Entities: " .. #G.entities)
-        imgui.Button("Test")
-        if self:button_centered_on_line("Start") then
-            print("start pressed")
-            local game = Game(self.shader)
-            scene = game
-            self:on_destroy()
-            return
+        imgui.SetNextWindowPos(0, 0)
+        imgui.SetNextWindowSize(const.DESIGN_WIDTH/3 * 2, const.DESIGN_HEIGHT)
+        if imgui.Begin("Leaderboard", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize)) then
+            imgui.TextUnformatted("Leaderboard")
+            for _, row in pairs(self.leaderboard.members) do
+                imgui.TextUnformatted(row.rank .. ". " .. string.format("%08d ", row.score) .. row.publicID)
+            end
         end
+        imgui.End()
+
+        imgui.SetNextWindowPos(const.DESIGN_WIDTH/3 * 2, 0)
+        imgui.SetNextWindowSize(const.DESIGN_WIDTH/3, const.DESIGN_HEIGHT)
+        if imgui.Begin("Menu", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize)) then
+            imgui.TextUnformatted("GAME TITLE")
+            if self:button_centered_on_line("Start") then
+                print("start pressed")
+                local game = Game(self.shader)
+                scene = game
+                self:on_destroy()
+                return
+            end
+
+            if self:button_centered_on_line("Quit") then
+                input.set_quit_requested(input_mgr, true)
+                return
+            end
+        end
+        imgui.End()
     end
     imgui.End()
     imgui.Render("game")
