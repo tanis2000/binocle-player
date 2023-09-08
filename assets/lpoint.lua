@@ -128,7 +128,7 @@ function LPoint:dist_px(e, pt, lvl_x, lvl_y)
     elseif pt ~= nil then
         return M.dist(self:get_level_x(), self:get_level_y(), pt:get_level_x(), pt:get_level_y())
     else
-        return M.dist(self:get_foot_x(), self:get_foot_y(), lvl_x, lvl_y)
+        return M.dist(self:get_level_x(), self:get_level_y(), lvl_x, lvl_y)
     end
 end
 

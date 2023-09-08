@@ -6,6 +6,7 @@ function DebugGui:draw(dt)
         return
     end
 
+    imgui.SetContext("debug")
     imgui.NewFrame(win, dt)
     if imgui.Begin("Info") then
         imgui.TextUnformatted("Memory:   " .. string.format("%.2fmb", collectgarbage("count")/1024))
@@ -54,7 +55,7 @@ function DebugGui:draw(dt)
 
     self:gamecamera()
     imgui.End()
-    imgui.Render()
+    imgui.Render("debug")
 end
 
 function DebugGui:entity(en)

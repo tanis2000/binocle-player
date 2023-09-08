@@ -27,6 +27,10 @@ G = {
     level = nil,
     colorize_shader = nil,
     grass_shader = nil,
+    using_game_gui = false,
+    player_name = "",
+    preferences_dir = "",
+    save_filename = "save.txt",
 }
 
 log.info("Checking is LUAJIT is available")
@@ -135,7 +139,11 @@ function on_init()
     local music = audio.load_music(audio_instance, assets_dir .. "data/music/theme.mp3")
     G.musics["main"] = music
     audio.play_music(audio_instance, music)
-    audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
+    audio.set_music_volume(audio_instance, G.musics["main"], 0)
+    --audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
+
+    G.preferences_dir = sdl.preferences_dir("altralogica", "binocle-player")
+    G.player_name = sdl.load_text_file(G.preferences_dir .. G.save_filename)
 end
 
 function main.on_update(dt)
@@ -186,7 +194,12 @@ function main.on_update(dt)
     local screenViewport = viewport_adapter.get_viewport(adapter)
     gd.render_screen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
     if G.debug then
-        imgui.RenderToScreen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
+        imgui.SetContext("debug")
+        imgui.RenderToScreen("debug", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
+    end
+    if G.using_game_gui then
+        imgui.SetContext("game")
+        imgui.RenderToScreen("game", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
     end
 
     sprite_batch.finish(sb, cam, viewport)

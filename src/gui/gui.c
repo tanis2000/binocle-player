@@ -17,6 +17,7 @@
 #include "binocle_camera.h"
 #include "binocle_viewport_adapter.h"
 #include "binocle_log.h"
+#include "binocle_array.h"
 
 #define MAX_LOG_ENTRIES 4096
 #define max_ui_vertices (1 << 16)
@@ -35,8 +36,8 @@ ImFontAtlas *shared_font_atlas;
 sg_pass_action imgui_pass_action;
 sg_pipeline imgui_pip;
 sg_bindings imgui_bind;
-sg_image imgui_render_target;
-sg_pass imgui_pass;
+
+
 
 sg_pass imgui_to_offscreen_pass;
 sg_pipeline imgui_to_offscreen_pip;
@@ -47,7 +48,7 @@ sg_bindings imgui_to_offscreen_bind;
 sg_pass_action imgui_to_offscreen_action;
 
 sg_pass_action gui_screen_pass_action;
-sg_pipeline gui_screen_pip;
+
 sg_bindings gui_screen_bind;
 sg_pass gui_screen_pass;
 sg_buffer gui_screen_vbuf;
@@ -82,7 +83,27 @@ typedef struct gui_state_t {
   } console;
 } gui_state_t;
 
+typedef struct gui_t {
+  struct ImGuiContext *ctx;
+  const char *name;
+  sg_image imgui_render_target;
+  sg_pass imgui_pass;
+  sg_pipeline gui_screen_pip;
+  float viewport_w;
+  float viewport_h;
+  float rt_w;
+  float rt_h;
+  binocle_viewport_adapter *viewport_adapter;
+  bool apply_scissor;
+} gui_t;
+
+typedef struct gui_resources_t {
+  gui_t *guis_array;
+  gui_t *current_context_gui;
+} gui_resources_t;
+
 gui_state_t gui_state;
+gui_resources_t gui_resources;
 
 static void strtrim(char *str) {
   char *str_end = str + strlen(str);
@@ -102,9 +123,69 @@ void set_clipboard_text(void *caller, const char * text) {
   SDL_SetClipboardText(text);
 }
 
-void gui_recreate_imgui_render_target(int width, int height) {
-  if (sg_query_image_state(imgui_render_target) == SG_RESOURCESTATE_VALID) {
-    sg_destroy_image(imgui_render_target);
+void gui_resources_setup() {
+  gui_resources = (gui_resources_t){ 0 };
+  binocle_array_set_capacity(gui_resources.guis_array, 0);
+}
+
+gui_handle_t gui_resources_create_gui(const char *name) {
+  gui_handle_t handle = {.id=-1};
+  gui_t gui = {0};
+  gui.name = SDL_strdup(name);
+  gui_t *res = binocle_array_push(gui_resources.guis_array, gui);
+  for (int i = 0 ; i < binocle_array_size(gui_resources.guis_array) ; i++) {
+    gui_t *g = &gui_resources.guis_array[i];
+    if (g == res) {
+      handle.id = i;
+      return handle;
+    }
+  }
+  return handle;
+}
+
+gui_t *gui_resources_get_gui_with_handle(gui_handle_t handle) {
+  return &gui_resources.guis_array[handle.id];
+}
+
+gui_t *gui_resources_get_gui(const char *name) {
+  for (int i = 0 ; i < binocle_array_size(gui_resources.guis_array) ; i++) {
+    gui_t *gui = &gui_resources.guis_array[i];
+    if (SDL_strcmp(gui->name, name) == 0) {
+      return gui;
+    }
+  }
+  return NULL;
+}
+
+void gui_set_context(gui_t *gui) {
+  igSetCurrentContext(gui->ctx);
+  gui_resources.current_context_gui = gui;
+}
+
+void gui_set_viewport(gui_handle_t handle, int width, int height) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
+  gui->viewport_w = width;
+  gui->viewport_h = height;
+}
+
+void gui_set_viewport_adapter(gui_handle_t handle, binocle_viewport_adapter *viewport_adapter) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
+  gui->viewport_adapter = viewport_adapter;
+}
+
+void gui_set_apply_scissor(gui_handle_t handle, bool value) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
+  gui->apply_scissor = value;
+}
+
+void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
+  gui_set_context(gui);
+  gui->rt_w = width;
+  gui->rt_h = height;
+
+  if (sg_query_image_state(gui->imgui_render_target) == SG_RESOURCESTATE_VALID) {
+    sg_destroy_image(gui->imgui_render_target);
   }
   sg_image_desc rt_desc = {
     .render_target = true,
@@ -119,16 +200,22 @@ void gui_recreate_imgui_render_target(int width, int height) {
 #endif
     .sample_count = 1,
   };
-  imgui_render_target = sg_make_image(&rt_desc);
-  imgui_pass = sg_make_pass(&(sg_pass_desc){
-    .color_attachments[0].image = imgui_render_target,
+  gui->imgui_render_target = sg_make_image(&rt_desc);
+  gui->imgui_pass = sg_make_pass(&(sg_pass_desc){
+    .color_attachments[0].image = gui->imgui_render_target,
   });
 }
 
-void gui_init_imgui(float width, float height) {
-  ImVec2Zero = ImVec2_ImVec2Float(0, 0);
+void gui_init_imgui(gui_handle_t handle, float width, float height, float viewport_width, float viewport_height) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
+  ImVec2Zero = ImVec2_ImVec2_Float(0, 0);
   shared_font_atlas = ImFontAtlas_ImFontAtlas();
-  igCreateContext(shared_font_atlas);
+  gui->ctx = igCreateContext(shared_font_atlas);
+  gui->viewport_w = viewport_width;
+  gui->viewport_h = viewport_height;
+  gui->rt_w = width;
+  gui->rt_h = height;
+  igSetCurrentContext(gui->ctx);
   ImGuiIO *io = igGetIO(); (void)io;
   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
 
@@ -187,6 +274,8 @@ void gui_init_imgui(float width, float height) {
   img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
   img_desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
   img_desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
+  img_desc.min_filter = SG_FILTER_LINEAR;
+  img_desc.mag_filter = SG_FILTER_NEAREST;
   img_desc.data.subimage[0][0] = (sg_range){font_pixels, (size_t)(font_width * font_height * 4)};
   imgui_bind.fs_images[0] = sg_make_image(&img_desc);
 
@@ -313,7 +402,7 @@ void gui_init_imgui(float width, float height) {
   imgui_pass_action.colors[0].value = (sg_color){ 0.0f, 0.0f, 0.0f, 0.0f };
 
   // Create the render target image
-  gui_recreate_imgui_render_target((int)width, (int)height);
+  gui_recreate_imgui_render_target(handle, (int)width, (int)height);
 }
 
 void draw_imgui(ImDrawData* draw_data) {
@@ -461,15 +550,15 @@ void gui_draw_console_window(bool *show) {
   igSeparator();
 
   const float footer_height_to_reserve = style->ItemSpacing.y + igGetFrameHeightWithSpacing(); // 1 separator, 1 input text
-  igBeginChild("ScrollingRegion", (ImVec2){0, -footer_height_to_reserve}, false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
-  if (igBeginPopupContextWindow("ScrollingRegionPopup", 0, false)) {
-    if (igSelectable("Clear", false, ImGuiSelectableFlags_None, (ImVec2){100, 50})) {
+  igBeginChild_Str("ScrollingRegion", (ImVec2){0, -footer_height_to_reserve}, false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
+  if (igBeginPopupContextWindow("ScrollingRegionPopup", 0)) {
+    if (igSelectable_Bool("Clear", false, ImGuiSelectableFlags_None, (ImVec2){100, 50})) {
       gui_clear_log();
     }
     igEndPopup();
   }
 
-  igPushStyleVarVec2(ImGuiStyleVar_ItemSpacing, (ImVec2){4, 1});
+  igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing, (ImVec2){4, 1});
   if (copy_to_clipboard) {
     igLogToClipboard(0);
   }
@@ -478,7 +567,7 @@ void gui_draw_console_window(bool *show) {
     const gui_console_item_t* item = &gui_state.console.items[i];
     bool pop_color = false;
     if (item->type == 1) {
-      igPushStyleColor(ImGuiCol_Text, (ImVec4){1.0f, 0.4f, 0.4f, 1.0f});
+      igPushStyleColor_Vec4(ImGuiCol_Text, (ImVec4){1.0f, 0.4f, 0.4f, 1.0f});
       pop_color = true;
     }
     igTextUnformatted(item->text, NULL);
@@ -519,7 +608,7 @@ void gui_draw_console_window(bool *show) {
 
 }
 
-void gui_draw(binocle_window *window, binocle_input *input, float dt) {
+/*void gui_draw(binocle_window *window, binocle_input *input, float dt) {
   // Start the Dear ImGui frame
   //ImGui_ImplOpenGL3_NewFrame();
   //ImGui_ImplSDL2_NewFrame(window);
@@ -529,10 +618,10 @@ void gui_draw(binocle_window *window, binocle_input *input, float dt) {
   int display_w, display_h;
   SDL_GetWindowSize(window->window, &w, &h);
   SDL_GL_GetDrawableSize(window->window, &display_w, &display_h);
-  io->DisplaySize.x = ImVec2_ImVec2Float((float)w, (float)h)->x;
-  io->DisplaySize.y = ImVec2_ImVec2Float((float)w, (float)h)->y;
-  io->DisplayFramebufferScale.x = ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->x;
-  io->DisplayFramebufferScale.y = ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->y;
+  io->DisplaySize.x = ImVec2_ImVec2_Float((float)w, (float)h)->x;
+  io->DisplaySize.y = ImVec2_ImVec2_Float((float)w, (float)h)->y;
+  io->DisplayFramebufferScale.x = ImVec2_ImVec2_Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->x;
+  io->DisplayFramebufferScale.y = ImVec2_ImVec2_Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->y;
   io->DeltaTime = dt;
 
   igNewFrame();
@@ -545,24 +634,24 @@ void gui_draw(binocle_window *window, binocle_input *input, float dt) {
   // Main menu
   if (igBeginMainMenuBar()) {
     if (igBeginMenu("File", true)) {
-      if (igMenuItemBool("New", "CTRL+N", false, true)) {
+      if (igMenuItem_Bool("New", "CTRL+N", false, true)) {
       }
-      if (igMenuItemBool("Open...", "CTRL+O", false, true)) {
+      if (igMenuItem_Bool("Open...", "CTRL+O", false, true)) {
       }
-      if (igMenuItemBool("Save as...", "CTRL+A", false, true)) {
+      if (igMenuItem_Bool("Save as...", "CTRL+A", false, true)) {
       }
-      if (igMenuItemBool("Save", "CTRL+S", false, false)) {
+      if (igMenuItem_Bool("Save", "CTRL+S", false, false)) {
       }
-      if (igMenuItemBool("Properties...", "CTRL+P", false, true)) {
+      if (igMenuItem_Bool("Properties...", "CTRL+P", false, true)) {
       }
-      if (igMenuItemBool("Quit", "ALT+F4", false, true)) {
+      if (igMenuItem_Bool("Quit", "ALT+F4", false, true)) {
         input->quit_requested = true;
       }
       igEndMenu();
     }
 
     if (igBeginMenu("View", true)) {
-      if (igMenuItemBool("Console", "CTRL+C", show_console_window, true)) {
+      if (igMenuItem_Bool("Console", "CTRL+C", show_console_window, true)) {
         show_console_window = !show_console_window;
       }
       igEndMenu();
@@ -587,9 +676,9 @@ void gui_draw(binocle_window *window, binocle_input *input, float dt) {
 //  glClear(GL_COLOR_BUFFER_BIT);
 //
 //  ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-}
+}*/
 
-void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_assets_dir) {
+/*void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_assets_dir) {
   binocle_log_info("Setting up IMGUI offscreen pipeline");
   char vert[4096];
   char frag[4096];
@@ -718,7 +807,7 @@ void gui_setup_imgui_to_offscreen_pipeline(binocle_gd *gd, const char *binocle_a
     }
   };
   binocle_log_info("Done setting up IMGUI offscreen pipeline");
-}
+}*/
 
 void gui_imgui_to_offscreen_render(float width, float height) {
   imgui_to_offscreen_shader_fs_params_t uniforms = {
@@ -735,13 +824,33 @@ void gui_imgui_to_offscreen_render(float width, float height) {
   sg_end_pass();
 }
 
-void gui_pass_input_to_imgui(binocle_input *input) {
+void gui_pass_input_to_imgui(gui_handle_t handle, binocle_input *input) {
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
+  gui_set_context(gui);
+  float ratio = 1.0f;
+
+  kmVec2 pos = {
+    .x = input->mouseX,
+    .y = input->mouseY,
+  };
+  if (gui->viewport_adapter != NULL) {
+    ratio = gui->rt_w / gui->viewport_adapter->viewport.max.x;
+//    binocle_log_info("M: %.0f %.0f {%.1f}", pos.x, pos.y, ratio);
+    pos = binocle_viewport_adapter_point_to_virtual_viewport(*gui->viewport_adapter, pos);
+//    binocle_log_info("V: %.0f %.0f {%.0f %.0f %.0f %.0f}", pos.x, pos.y, gui->viewport_adapter->viewport.min.x, gui->viewport_adapter->viewport.min.y, gui->viewport_adapter->viewport.max.x, gui->viewport_adapter->viewport.max.y);
+  } else {
+    ratio = gui->rt_w / gui->viewport_w;
+  }
+
+  pos.x *= ratio;
+  pos.y *= ratio;
+
   ImGuiIO *io = igGetIO();
   io->MouseDown[0] = input->currentMouseButtons[MOUSE_LEFT];
   io->MouseDown[1] = input->currentMouseButtons[MOUSE_RIGHT];
   io->MouseDown[2] = input->currentMouseButtons[MOUSE_MIDDLE];
-  io->MousePos.x = input->mouseX;
-  io->MousePos.y = input->mouseY;
+  io->MousePos.x = pos.x;
+  io->MousePos.y = pos.y;
   if (input->mouseWheelX < 0) {
     io->MouseWheelH += 1;
   }
@@ -763,8 +872,10 @@ void gui_pass_input_to_imgui(binocle_input *input) {
   ImGuiIO_AddInputCharactersUTF8(io, input->text);
 }
 
-void gui_setup_screen_pipeline(sg_shader display_shader) {
+void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bool pixel_perfect) {
   // Render to screen pipeline
+
+  gui_t *gui = gui_resources_get_gui_with_handle(handle);
 
   // shader object for imgui rendering
   sg_shader_desc shd_desc = {0};
@@ -806,7 +917,33 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
   shd_desc.fs.uniform_blocks[0].uniforms[2].name = "viewport";
   shd_desc.fs.uniform_blocks[0].uniforms[2].type = SG_UNIFORMTYPE_FLOAT2;
 #if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
-  shd_desc.fs.source =
+  if (pixel_perfect) {
+      shd_desc.fs.source =
+    "#version 300 es\n"
+    "precision mediump float;\n"
+    "precision mediump int;\n"
+    "uniform sampler2D tex0;\n"
+    "in vec2 uvCoord;\n"
+    "out vec4 fragColor;\n"
+          "vec2 uv_iq( vec2 uv, vec2 texture_size ) {\n"
+      "    vec2 pixel = uv * texture_size;\n"
+      "\n"
+      "    vec2 seam = floor(pixel + 0.5);\n"
+      "    vec2 dudv = fwidth(pixel);\n"
+      "    pixel = seam + clamp( (pixel - seam) / dudv, -0.5, 0.5);\n"
+      "\n"
+      "    return pixel / texture_size;\n"
+      "}\n"
+      "\n"
+      "void main() {\n"
+      "\n"
+      "    vec2 uv = (gl_FragCoord.xy - floor(viewport.xy)) / resolution.xy * scale;\n"
+      "    vec2 pixelPerfectUV = uv_iq(uv, resolution.xy);\n"
+      "    fragColor = texture( tex0, pixelPerfectUV );\n"
+      "\n"
+      "}\n";
+  } else {
+      shd_desc.fs.source =
     "#version 300 es\n"
     "precision mediump float;\n"
     "precision mediump int;\n"
@@ -818,20 +955,48 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
     "    fragColor = texcolor;\n"
     "    //gl_FragColor = texture2D(tex, uv) * color;\n"
     "}\n";
+  }
 #else
-  shd_desc.fs.source =
-"#version 330\n"
-"uniform vec2 resolution;\n"
-"uniform sampler2D tex0;\n"
-"uniform vec2 scale;\n"
-"uniform vec2 viewport;\n"
-"out vec4 fragColor;\n"
-"in vec2 uvCoord;\n"
-"void main(void) {\n"
-"vec4 texcolor = texture(tex0, uvCoord);\n"
-"//if (texcolor.a < 1) discard;\n"
-"fragColor = texcolor;\n"
-"}\n";
+  if (pixel_perfect) {
+    shd_desc.fs.source =
+      "#version 330\n"
+      "uniform vec2 resolution;\n"
+      "uniform sampler2D tex0;\n"
+      "uniform vec2 scale;\n"
+      "uniform vec2 viewport;\n"
+      "out vec4 fragColor;\n"
+      "in vec2 uvCoord;\n"
+      "vec2 uv_iq( vec2 uv, ivec2 texture_size ) {\n"
+      "    vec2 pixel = uv * texture_size;\n"
+      "\n"
+      "    vec2 seam = floor(pixel + 0.5);\n"
+      "    vec2 dudv = fwidth(pixel);\n"
+      "    pixel = seam + clamp( (pixel - seam) / dudv, -0.5, 0.5);\n"
+      "\n"
+      "    return pixel / texture_size;\n"
+      "}\n"
+      "\n"
+      "void main() {\n"
+      "\n"
+      "    vec2 uv = (gl_FragCoord.xy - floor(viewport.xy)) / resolution.xy * scale;\n"
+      "    vec2 pixelPerfectUV = uv_iq(uv, ivec2(resolution.xy));\n"
+      "    fragColor = texture(tex0, pixelPerfectUV);\n"
+      "}\n";
+  } else {
+    shd_desc.fs.source =
+      "#version 330\n"
+      "uniform vec2 resolution;\n"
+      "uniform sampler2D tex0;\n"
+      "uniform vec2 scale;\n"
+      "uniform vec2 viewport;\n"
+      "out vec4 fragColor;\n"
+      "in vec2 uvCoord;\n"
+      "void main(void) {\n"
+      "vec4 texcolor = texture(tex0, uvCoord);\n"
+      "//if (texcolor.a < 1) discard;\n"
+      "fragColor = texcolor;\n"
+      "}\n";
+  }
 #endif
   binocle_log_info("Compiling GUI shader for screen pipeline");
   sg_shader shd = sg_make_shader(&shd_desc);
@@ -854,7 +1019,7 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
 
   binocle_log_info("Creating GUI pipeline");
   // Pipeline state object for the screen (default) pass
-  gui_screen_pip = sg_make_pipeline(&(sg_pipeline_desc){
+  gui->gui_screen_pip = sg_make_pipeline(&(sg_pipeline_desc){
     .layout = {
       .attrs = {
         [0] = { .format = SG_VERTEXFORMAT_FLOAT3 }, // position
@@ -929,11 +1094,12 @@ void gui_setup_screen_pipeline(sg_shader display_shader) {
     },
     .index_buffer = gui_screen_ibuf,
     .fs_images = {
-      [0] = imgui_render_target,
+      [0] = gui->imgui_render_target,
     }
   };
 }
-void gui_render_to_screen(binocle_gd *gd, struct binocle_window *window, float design_width, float design_height, kmAABB2 viewport, kmMat4 matrix, float scale) {
+
+void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *window, float design_width, float design_height, kmAABB2 viewport, kmMat4 matrix, float scale) {
   // Render the offscreen to the display
 
 
@@ -951,29 +1117,29 @@ void gui_render_to_screen(binocle_gd *gd, struct binocle_window *window, float d
   screen_fs_params.viewport[0] = viewport.min.x;
   screen_fs_params.viewport[1] = viewport.min.y;
 
-  gui_screen_bind.fs_images[0] = imgui_render_target;
+  gui_screen_bind.fs_images[0] = gui->imgui_render_target;
 
   sg_begin_default_pass(&gui_screen_pass_action, window->width, window->height);
-  sg_apply_pipeline(gui_screen_pip);
+  sg_apply_pipeline(gui->gui_screen_pip);
   sg_apply_bindings(&gui_screen_bind);
   sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, &SG_RANGE(screen_vs_params));
   sg_apply_uniforms(SG_SHADERSTAGE_FS, 0, &SG_RANGE(screen_fs_params));
+  if (gui->apply_scissor) {
+    sg_apply_scissor_rect(viewport.min.x, viewport.min.y, design_width / scale, design_height / scale, false);
+  }
   sg_draw(0, 6, 1);
   sg_end_pass();
 
   sg_commit();
 }
 
-void gui_wrap_new_frame(binocle_window *window, float dt) {
+void gui_wrap_new_frame(binocle_window *window, float dt, int w, int h, int display_w, int display_h) {
   ImGuiIO *io = igGetIO();
-  int w, h;
-  int display_w, display_h;
-  SDL_GetWindowSize(window->window, &w, &h);
-  SDL_GL_GetDrawableSize(window->window, &display_w, &display_h);
+
   io->DisplaySize.x = (float)w; //ImVec2_ImVec2Float((float)w, (float)h)->x;
   io->DisplaySize.y = (float)h; //ImVec2_ImVec2Float((float)w, (float)h)->y;
-  io->DisplayFramebufferScale.x = w > 0 ? ((float)display_w / w) : 0; //ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->x;
-  io->DisplayFramebufferScale.y = h > 0 ? ((float)display_h / h) : 0; //ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->y;
+  io->DisplayFramebufferScale.x = w > 0 ? ((float)display_w / w) : 1; //ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->x;
+  io->DisplayFramebufferScale.y = h > 0 ? ((float)display_h / h) : 1; //ImVec2_ImVec2Float(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0)->y;
   io->DeltaTime = dt;
 
   igNewFrame();
@@ -982,14 +1148,22 @@ void gui_wrap_new_frame(binocle_window *window, float dt) {
 }
 
 int l_gui_wrap_new_frame(lua_State *L) {
-  l_binocle_window_t *window = luaL_checkudata(L, 1, "binocle_window");
-  float dt = lua_tonumber(L, 2);
-  gui_wrap_new_frame(window->window, dt);
+  l_binocle_window_t *window_wrapper = luaL_checkudata(L, 1, "binocle_window");
+  float dt = (float)lua_tonumber(L, 2);
+  int w = lua_tonumber(L, 3);
+  int h = lua_tonumber(L, 4);
+  int display_w = w;
+  int display_h = h;
+  if (w == 0 || h == 0) {
+    SDL_GetWindowSize(window_wrapper->window->window, &w, &h);
+    SDL_GL_GetDrawableSize(window_wrapper->window->window, &display_w, &display_h);
+  }
+  gui_wrap_new_frame(window_wrapper->window, dt, w, h, display_w, display_h);
   return 0;
 }
 
-void gui_wrap_render_frame() {
-  sg_begin_pass(imgui_pass, &imgui_pass_action);
+void gui_wrap_render_frame(gui_t *gui) {
+  sg_begin_pass(gui->imgui_pass, &imgui_pass_action);
   igRender();
   draw_imgui(igGetDrawData());
   sg_end_pass();
@@ -997,17 +1171,47 @@ void gui_wrap_render_frame() {
 
 
 int l_gui_wrap_render_frame(lua_State *L) {
-  gui_wrap_render_frame();
+  const char *name = luaL_checkstring(L, 1);
+  gui_t *gui = gui_resources_get_gui(name);
+  gui_wrap_render_frame(gui);
   return 0;
 }
 
 int l_gui_wrap_render_to_screen(lua_State *L) {
-  l_binocle_gd_t *gd = luaL_checkudata(L, 1, "binocle_gd");
-  l_binocle_window_t *window = luaL_checkudata(L, 2, "binocle_window");
-  float design_width = (float)luaL_checknumber(L, 3);
-  float design_height = (float)luaL_checknumber(L, 4);
-  kmAABB2 **vp = lua_touserdata(L, 5);
-  l_binocle_camera_t *camera = luaL_checkudata(L, 6, "binocle_camera");
-  gui_render_to_screen(gd->gd, window->window, design_width, design_height, **vp, camera->camera->viewport_adapter->scale_matrix, camera->camera->viewport_adapter->inverse_multiplier);
+  const char *name = luaL_checkstring(L, 1);
+  l_binocle_gd_t *gd = luaL_checkudata(L, 2, "binocle_gd");
+  l_binocle_window_t *window = luaL_checkudata(L, 3, "binocle_window");
+  float design_width = (float)luaL_checknumber(L, 4);
+  float design_height = (float)luaL_checknumber(L, 5);
+  kmAABB2 **vp = lua_touserdata(L, 6);
+  l_binocle_camera_t *camera = luaL_checkudata(L, 7, "binocle_camera");
+  gui_t *gui = gui_resources_get_gui(name);
+  gui_render_to_screen(gui, gd->gd, window->window, design_width, design_height, **vp, camera->camera->viewport_adapter->scale_matrix, camera->camera->viewport_adapter->inverse_multiplier);
   return 0;
+}
+
+int l_gui_wrap_set_context(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  gui_t *gui = gui_resources_get_gui(name);
+  if (gui != NULL) {
+    gui_set_context(gui);
+    lua_pushboolean(L, true);
+  } else {
+    lua_pushboolean(L, false);
+  }
+  return 1;
+}
+
+int l_gui_wrap_get_want_capture_mouse(lua_State *L) {
+  ImGuiIO *io = igGetIO();
+  lua_pushboolean(L, io->WantCaptureMouse);
+  return 1;
+}
+
+int l_gui_wrap_get_style_frame_padding(lua_State *L) {
+  ImGuiStyle *style = igGetStyle();
+  ImVec2 padding = style->FramePadding;
+  lua_pushnumber(L, padding.x);
+  lua_pushnumber(L, padding.y);
+  return 2;
 }

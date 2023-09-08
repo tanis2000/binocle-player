@@ -77,6 +77,10 @@ float elapsed_time = 0;
 SDL_mutex *lua_mutex;
 sg_shader default_shader;
 sg_shader screen_shader;
+gui_handle_t debug_gui_handle;
+struct gui_t *debug_gui;
+gui_handle_t game_gui_handle;
+struct gui_t *game_gui;
 
 void lua_stack_dump (lua_State *L) {
   int i;
@@ -334,7 +338,8 @@ void main_loop() {
   elapsed_time += dt;
 
   binocle_input_update(input);
-  gui_pass_input_to_imgui(input);
+  gui_pass_input_to_imgui(debug_gui_handle, input);
+  gui_pass_input_to_imgui(game_gui_handle, input);
 
   if (input->resized) {
     kmVec2 oldWindowSize = {.x = window->width, .y = window->height};
@@ -342,7 +347,8 @@ void main_loop() {
     window->height = input->newWindowSize.y;
     // Update the pixel-perfect rescaling viewport adapter
     binocle_viewport_adapter_reset(camera->viewport_adapter, oldWindowSize, input->newWindowSize);
-    gui_recreate_imgui_render_target(window->width, window->height);
+    gui_recreate_imgui_render_target(debug_gui_handle, window->width, window->height);
+    gui_set_viewport(debug_gui_handle, window->width, window->height);
     input->resized = false;
   }
 
@@ -519,9 +525,19 @@ int main(int argc, char *argv[])
   binocle_gd_setup_default_pipeline(gd, DESIGN_WIDTH, DESIGN_HEIGHT, default_shader, screen_shader);
   binocle_gd_setup_flat_pipeline(gd);
 
-  gui_init_imgui(window->width, window->height);
+  gui_resources_setup();
+  debug_gui_handle = gui_resources_create_gui("debug");
+  gui_init_imgui(debug_gui_handle, window->width, window->height, window->width, window->height);
+  gui_setup_screen_pipeline(debug_gui_handle, screen_shader, false);
+
+  game_gui_handle = gui_resources_create_gui("game");
+  gui_set_apply_scissor(game_gui_handle, true);
+  gui_set_viewport_adapter(game_gui_handle, binocle_camera_get_viewport_adapter(*camera));
+  gui_init_imgui(game_gui_handle, DESIGN_WIDTH, DESIGN_HEIGHT, window->width, window->height);
+  gui_setup_screen_pipeline(game_gui_handle, screen_shader, true);
+
 //  gui_setup_imgui_to_offscreen_pipeline(gd, binocle_assets_dir);
-  gui_setup_screen_pipeline(screen_shader);
+
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop, 0, 1);
 #else

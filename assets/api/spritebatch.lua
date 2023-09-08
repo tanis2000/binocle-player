@@ -17,7 +17,8 @@ function sprite_batch.set_gd(batch, gd) end
 ---@param camera Camera the Camera instance
 ---@param shader Shader the Shader instance
 ---@param viewport kmAABB2 the viewport to use when drawing. It might be different than the one used by the ViewAdapter attached to the camera
-function sprite_batch.begin(batch, camera, shader, viewport) end
+---@param sort string the sorting mode to apply to this batch
+function sprite_batch.begin(batch, camera, shader, viewport, sort) end
 
 ---@param batch SpriteBatch the SpriteBatch instance
 ---@param camera Camera the Camera instance

@@ -13,7 +13,7 @@ local ViewportAdapter = {}
 ---@param height number
 ---@param virtual_width number
 ---@param virtual_height number
----@return viewport_adapter ViewportAdapter
+---@return ViewportAdapter viewport_adapter viewport adapter instance
 function viewport_adapter.new(window, kind, scaling, width, height, virtual_width, virtual_height) end
 
 ---@param viewport_adapter ViewportAdapter an instance of ViewportAdapter

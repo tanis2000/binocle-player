@@ -1,6 +1,7 @@
 local Process = require("process")
-local Game = require("scenes.game")
+local MainMenu = require("scenes.main-menu")
 local const = require("const")
+local bit = require("lib.bitop")
 local Intro = Process:extend()
 
 function Intro:new()
@@ -46,14 +47,6 @@ function Intro:init(shd)
     material.set_pipeline(self.tanis_mat, G.colorize_shader) -- NOTE: this overrides the shader, too
     material.set_uniform_float4(self.tanis_mat, "FS", "customColor", 1.0, 0, 0, 1.0)
     self.tanis = sprite.from_material(self.tanis_mat)
-
-    local body = http.put("https://podium.altralogica.it/l/binocle-example/members/tanis/score", "{\"score\":2}")
-    local res = http.decode(body)
-    log.info(res)
-
-    body = http.get("https://podium.altralogica.it/l/binocle-example/top/0")
-    res = http.decode(body)
-    log.info(res)
 end
 
 function Intro:update(dt)
@@ -82,11 +75,10 @@ function Intro:update(dt)
 
     sprite.draw(self.tanis, gd_instance, x, y - 40, viewport, 0, scale_x, scale_y, cam, 0)
 
-    --io.write("input: " .. tostring(dump(input)) .. "\n")
-    --io.write("input_mgr: " .. tostring(dump(input_mgr)) .. "\n")
     if input.is_key_pressed(input_mgr, key.KEY_RETURN) or input.is_mouse_down(input_mgr, mouse.MOUSE_LEFT) then
-        local game = Game(self.shader)
-        scene = game
+        local mainMenu = MainMenu()
+        mainMenu:init(G.default_shader)
+        scene = mainMenu
         self:on_destroy()
         return
     end

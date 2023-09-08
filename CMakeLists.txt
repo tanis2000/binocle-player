@@ -145,7 +145,8 @@ endif ()
 
 file(GLOB SOURCE_FILES
 ${CMAKE_SOURCE_DIR}/src/*.c
-${CMAKE_SOURCE_DIR}/src/*.cpp
+${CMAKE_SOURCE_DIR}/src/cimgui.cpp
+${CMAKE_SOURCE_DIR}/src/imgui_lua_bindings.cpp
 ${CMAKE_SOURCE_DIR}/src/*.h
 ${CMAKE_SOURCE_DIR}/src/**/*.c
 ${CMAKE_SOURCE_DIR}/src/**/*.cpp
@@ -284,6 +285,7 @@ if (MSVC)
         add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${RES_FILE} ${CMAKE_CURRENT_BINARY_DIR}/src/assets/${RES_PATH}
+                COMMENT "Copying to target directory ${RES_FILE} ${CMAKE_CURRENT_BINARY_DIR}/src/assets/${RES_PATH}"
     )
     endforeach(RES_FILE)
 elseif (APPLE)

@@ -67,5 +67,6 @@ build/
 build-web/
 build-win/
 sys_config.h
+.cache/
 
 # Project specific
