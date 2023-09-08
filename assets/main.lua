@@ -28,6 +28,9 @@ G = {
     colorize_shader = nil,
     grass_shader = nil,
     using_game_gui = false,
+    player_name = "",
+    preferences_dir = "",
+    save_filename = "save.txt",
 }
 
 log.info("Checking is LUAJIT is available")
@@ -138,6 +141,9 @@ function on_init()
     audio.play_music(audio_instance, music)
     audio.set_music_volume(audio_instance, G.musics["main"], 0)
     --audio.set_music_volume(audio_instance, G.musics["main"], 0.5)
+
+    G.preferences_dir = sdl.preferences_dir("altralogica", "binocle-player")
+    G.player_name = sdl.load_text_file(G.preferences_dir .. G.save_filename)
 end
 
 function main.on_update(dt)

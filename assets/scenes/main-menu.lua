@@ -75,6 +75,9 @@ function MainMenu:init(shd)
     imgui.PushStyleColor(imgui.constant.Col.ButtonHovered, colBg)
     imgui.PushStyleColor(imgui.constant.Col.ButtonActive, colFgActive)
 
+    -- Remove borders from windows
+    imgui.PushStyleVar(imgui.constant.StyleVar.WindowBorderSize, 0)
+
     G.using_game_gui = true
 end
 
@@ -124,6 +127,11 @@ function MainMenu:update(dt)
         imgui.SetNextWindowSize(const.DESIGN_WIDTH/3, const.DESIGN_HEIGHT)
         if imgui.Begin("Menu", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize)) then
             imgui.TextUnformatted("GAME TITLE")
+            local res, name = imgui.InputText("NAME", G.player_name, 50)
+            if res then
+                G.player_name = name
+                sdl.save_text_file(G.preferences_dir .. G.save_filename, G.player_name, #G.player_name)
+            end
             if self:button_centered_on_line("Start") then
                 print("start pressed")
                 local game = Game(self.shader)
