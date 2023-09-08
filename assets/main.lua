@@ -144,6 +144,9 @@ function on_init()
 
     G.preferences_dir = sdl.preferences_dir("altralogica", "binocle-player")
     G.player_name = sdl.load_text_file(G.preferences_dir .. G.save_filename)
+    if G.player_name == nil then
+        G.player_name = ""
+    end
 end
 
 function main.on_update(dt)
