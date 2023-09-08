@@ -132,7 +132,7 @@ function MainMenu:update(dt)
                 G.player_name = name
                 sdl.save_text_file(G.preferences_dir .. G.save_filename, G.player_name, #G.player_name)
             end
-            if self:button_centered_on_line("Start") then
+            if self:button_centered_on_line("Start!") then
                 print("start pressed")
                 local game = Game(self.shader)
                 scene = game
