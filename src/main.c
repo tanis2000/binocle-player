@@ -551,6 +551,7 @@ int main(int argc, char *argv[])
   SDL_DestroyMutex(lua_mutex);
   binocle_app_destroy(&app);
   binocle_sdl_exit();
+  return 0;
 }
 
 
