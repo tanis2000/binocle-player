@@ -383,7 +383,9 @@ void gui_init_imgui(gui_handle_t handle, float width, float height, float viewpo
         .src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA,
         .dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
         .src_factor_alpha = SG_BLENDFACTOR_ONE,
-        .dst_factor_alpha = SG_BLENDFACTOR_ONE
+        .dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+        .op_rgb = SG_BLENDOP_ADD,
+        .op_alpha = SG_BLENDOP_ADD,
       },
       .write_mask = SG_COLORMASK_RGBA
     },
@@ -396,8 +398,6 @@ void gui_init_imgui(gui_handle_t handle, float width, float height, float viewpo
   binocle_log_info("Done creating GUI pipeline");
 
   // initial clear color
-//  imgui_pass_action.colors[0].action = BINOCLE_ACTION_CLEAR;
-//  imgui_pass_action.colors[0].value = (binocle_color){ 0.0f, 0.5f, 0.7f, 1.0f };
   imgui_pass_action.colors[0].action = SG_ACTION_CLEAR;
   imgui_pass_action.colors[0].value = (sg_color){ 0.0f, 0.0f, 0.0f, 0.0f };
 
@@ -1022,7 +1022,7 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
   };
   gui_screen_pass_action = default_action;
 
-  binocle_log_info("Creating GUI pipeline");
+  binocle_log_info("Creating GUI screen pipeline");
   // Pipeline state object for the screen (default) pass
   gui->gui_screen_pip = sg_make_pipeline(&(sg_pipeline_desc){
     .layout = {
@@ -1063,7 +1063,7 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
 #endif
     }
   });
-  binocle_log_info("Done creating GUI pipeline");
+  binocle_log_info("Done creating GUI screen pipeline");
 
 //  float vertices[] = {
 //    /* pos                  color                       uvs */
