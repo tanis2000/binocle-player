@@ -1,4 +1,5 @@
 local Object = require("lib.classic")
+local Cache = require("cache")
 local DebugGui = Object:extend();
 
 function DebugGui:draw(dt)
@@ -54,6 +55,7 @@ function DebugGui:draw(dt)
     end
 
     self:gamecamera()
+    self:cache()
     imgui.End()
     imgui.Render("debug")
 end
@@ -154,6 +156,72 @@ end
 function DebugGui:wave(wave)
     imgui.TextUnformatted(string.format("Total mobs: %d", wave.total_mobs))
     imgui.TextUnformatted(string.format("Max concurrent: %d", wave.max_concurrent))
+end
+
+function DebugGui:cache()
+    if imgui.Begin("Cache") then
+        if imgui.Button("Reload All") then
+            for idx, entry in pairs(Cache.map) do
+                Cache.map[idx] = nil
+                Cache.load(idx)
+            end
+        end
+
+        imgui.SameLine()
+
+        if imgui.Button("Clear All") then
+            Cache.clear()
+        end
+
+        for idx, entry in pairs(Cache.map) do
+            if imgui.TreeNode(idx) then
+                if entry:type_of() == "image" then
+                    --imgui.Image(entry, image.get_info(entry))
+                elseif entry:type_of() == "sound" then
+                    --imgui.ProgressBar(entry:tell() / entry:getDuration())
+                    --imgui.Text(os.date("!%X", entry:tell()) .. " / " .. os.date("!%X", entry:getDuration()))
+
+                    if imgui.Button("Play") then
+                        audio.play_sound(audio_instance, entry)
+                    end
+
+                    imgui.SameLine()
+
+                    if imgui.Button("Pause") then
+                        --entry:pause()
+                    end
+
+                    imgui.SameLine()
+
+                    if imgui.Button("Stop") then
+                        --entry:stop()
+                    end
+                elseif entry:type_of() == "music" then
+                    --imgui.ProgressBar(entry:tell() / entry:getDuration())
+                    --imgui.Text(os.date("!%X", entry:tell()) .. " / " .. os.date("!%X", entry:getDuration()))
+
+                    if imgui.Button("Play") then
+                        audio.play_music(audio_instance, entry)
+                    end
+
+                    imgui.SameLine()
+
+                    if imgui.Button("Pause") then
+                        --entry:pause()
+                    end
+
+                    imgui.SameLine()
+
+                    if imgui.Button("Stop") then
+                        --entry:stop()
+                    end
+                end
+
+                imgui.TreePop()
+            end
+        end
+    end
+    imgui.End()
 end
 
 function DebugGui:update(dt)
