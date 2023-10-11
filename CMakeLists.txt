@@ -1,12 +1,12 @@
+cmake_minimum_required(VERSION 3.1)
+
 project(binocle-player)
 
-cmake_minimum_required(VERSION 2.8.12)
-
 # Policies
-if("${CMAKE_VERSION}" VERSION_GREATER 3.1)
-	cmake_policy(SET CMP0054 NEW)
-	cmake_policy(SET CMP0025 NEW)
-endif()
+#if("${CMAKE_VERSION}" VERSION_GREATER 3.1)
+#	cmake_policy(SET CMP0054 NEW)
+#	cmake_policy(SET CMP0025 NEW)
+#endif()
 
 # cmake modules directory
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/binocle-c/cmake")
