@@ -95,7 +95,7 @@ function MainMenu:update(dt)
     local y = (const.DESIGN_HEIGHT - (self.TEX_HEIGHT * scale_y)) / 2.0
 
     --io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
-    --sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale_x, scale_y, cam, 0)
+    sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale_x, scale_y, cam, 0)
 
     scale_x = const.DESIGN_WIDTH / self.TANIS_TEX_WIDTH * 0.25
     scale_y = const.DESIGN_HEIGHT / self.TANIS_TEX_WIDTH * 0.25
@@ -105,17 +105,19 @@ function MainMenu:update(dt)
     y = (const.DESIGN_HEIGHT - (self.TANIS_TEX_HEIGHT * scale_y)) / 2.0
 
 
-    sprite.draw(self.tanis, gd_instance, x, y - 40, viewport, 0, scale_x, scale_y, cam, 0)
+    --sprite.draw(self.tanis, gd_instance, x, y - 40, viewport, 0, scale_x, scale_y, cam, 0)
 
     imgui.SetContext("game")
     imgui.NewFrame(win, dt, const.DESIGN_WIDTH, const.DESIGN_HEIGHT)
     --print(dump(imgui.constant.WindowFlags))
     imgui.SetNextWindowPos(0, 0)
     imgui.SetNextWindowSize(const.DESIGN_WIDTH, const.DESIGN_HEIGHT)
-    if imgui.Begin("Intro GUI", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize)) then
+    imgui.SetNextWindowBgAlpha(1)
+    if imgui.Begin("Intro GUI", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize, imgui.constant.WindowFlags.NoBackground)) then
         imgui.SetNextWindowPos(0, 0)
         imgui.SetNextWindowSize(const.DESIGN_WIDTH/3 * 2, const.DESIGN_HEIGHT)
-        if imgui.Begin("Leaderboard", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize)) then
+        imgui.SetNextWindowBgAlpha(0)
+        if imgui.Begin("Leaderboard", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize, imgui.constant.WindowFlags.NoBackground)) then
             imgui.TextUnformatted("Leaderboard")
             for _, row in pairs(self.leaderboard.members) do
                 imgui.TextUnformatted(row.rank .. ". " .. string.format("%08d ", row.score) .. row.publicID)
@@ -125,7 +127,8 @@ function MainMenu:update(dt)
 
         imgui.SetNextWindowPos(const.DESIGN_WIDTH/3 * 2, 0)
         imgui.SetNextWindowSize(const.DESIGN_WIDTH/3, const.DESIGN_HEIGHT)
-        if imgui.Begin("Menu", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize)) then
+        imgui.SetNextWindowBgAlpha(0)
+        if imgui.Begin("Menu", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize, imgui.constant.WindowFlags.NoBackground)) then
             imgui.TextUnformatted("GAME TITLE")
             local res, name = imgui.InputText("NAME", G.player_name, 50)
             if res then
