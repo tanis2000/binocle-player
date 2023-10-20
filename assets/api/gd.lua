@@ -53,4 +53,28 @@ function gd.create_shader(shader) end
 ---@param shader shader the shader instance
 function gd.create_pipeline(shader) end
 
+---Draws a filled rectangle
+---@param gd_instance GraphicsDevice the GraphicsDevice instance
+---@param center_x number the horizontal center of the rectangle
+---@param center_y number the vertical center of the rectangle
+---@param width number the width of the rectangle
+---@param height number the height of the rectangle
+---@param color Color the color to use
+---@param viewport kmAABB2 the viewport
+---@param camera Camera the Camera instance
+---@param depth number the depth to use
+function gd.draw_rect(gd_instance, center_x, center_y, width, height, color, viewport, camera, depth) end
+
+---Draws a the lines of the outline of the rectangle
+---@param gd_instance GraphicsDevice the GraphicsDevice instance
+---@param center_x number the horizontal center of the rectangle
+---@param center_y number the vertical center of the rectangle
+---@param width number the width of the rectangle
+---@param height number the height of the rectangle
+---@param color Color the color to use
+---@param viewport kmAABB2 the viewport
+---@param camera Camera the Camera instance
+---@param depth number the depth to use
+function gd.draw_rect_outline(gd_instance, center_x, center_y, width, height, color, viewport, camera, depth) end
+
 return gd

@@ -64,7 +64,8 @@ log.info("Begin of main.lua\n");
 color.azure = color.new(192.0 / 255.0, 1.0, 1.0, 1.0)
 color.white = color.new(1.0, 1.0, 1.0, 1.0)
 color.black = color.new(0, 0, 0, 1.0)
-color.trans_green = color.new(0, 1, 0, 0.5)
+color.debug_bounds = color.new(0, 1, 0, 0.2)
+color.debug_origin = color.new(0, 1, 0, 0.7)
 
 local quit_requests = 0
 ---@class Intro

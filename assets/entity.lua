@@ -236,11 +236,16 @@ function Entity.post_update(self)
     self.sprite_scale_y = self.sprite_scale_set_y
 end
 
+function Entity:get_debug_string()
+    return string.format("G(%.0f,%.0f) P(%.0f, %.0f)", self.cx, self.cy, self:get_center_x(), self:get_center_y())
+end
+
 function Entity:draw_debug()
     if G.debug then
-        local s = string.format("(%.0f,%.0f) (%.0f, %.0f)", self.cx, self.cy, self:get_center_x(), self:get_center_y())
+        local s = self:get_debug_string()
         ttfont.draw_string(G.game.default_font, s, gd_instance, self:get_center_x(), self:get_top(), viewport, color.white, cam, layers.TEXT);
-        gd.draw_rect(gd_instance, self:get_center_x(), self:get_center_y(), self.wid, self.hei, color.trans_green, viewport, cam)
+        gd.draw_rect(gd_instance, self:get_center_x(), self:get_center_y(), self.wid, self.hei, color.debug_bounds, viewport, cam)
+        gd.draw_rect_outline(gd_instance, self:get_attach_x(), self:get_attach_y(), 3, 3, color.debug_origin, viewport, cam)
     end
 end
 
