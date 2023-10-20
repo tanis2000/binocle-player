@@ -44,4 +44,8 @@ function sprite.set_subtexture(sprite, subtexture) end
 ---@param y number the vertical position of the origin
 function sprite.set_origin(sprite, x, y) end
 
+---Destroy the sprite instance
+---@param sprite Sprite the sprite instance
+function sprite.destroy(sprite) end
+
 return sprite

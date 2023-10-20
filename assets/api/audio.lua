@@ -53,8 +53,9 @@ function audio.load_sound(audio, filename) end
 ---@return AudioSound the sound
 function audio.load_sound_from_assets(audio, filename) end
 
+---@param audio Audio the audio system
 ---@param sound AudioSound the sound to play
-function audio.play_sound(sound) end
+function audio.play_sound(audio, sound) end
 
 ---@param sound AudioSound the sound to play
 ---@param volume number the volume 0..1

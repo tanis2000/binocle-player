@@ -127,7 +127,7 @@ function on_init()
     io.write("sb: " .. tostring(sb) .. "\n")
 
     -- Create a viewport that corresponds to the size of our render target
-    center = lkazmath.kmVec2New();
+    local center = lkazmath.kmVec2New();
     center.x = const.DESIGN_WIDTH / 2;
     center.y = const.DESIGN_HEIGHT / 2;
     viewport = lkazmath.kmAABB2New();
