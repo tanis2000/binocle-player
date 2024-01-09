@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.6)
 
 project(binocle-player)
 
@@ -20,9 +20,6 @@ include(CMakeToolsHelpers OPTIONAL)
 # Skip the platform compiler checks for cross compiling
 set (CMAKE_CXX_COMPILER_WORKS TRUE)
 set (CMAKE_C_COMPILER_WORKS TRUE)
-
-# Enables CMake debugging with VSCode
-include(CMakeToolsHelpers OPTIONAL)
 
 # Add our own DEBUG define for Debug build types
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
