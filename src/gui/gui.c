@@ -87,6 +87,7 @@ typedef struct gui_t {
   struct ImGuiContext *ctx;
   const char *name;
   sg_image imgui_render_target;
+  sg_sampler imgui_sampler;
   sg_pass imgui_pass;
   sg_pipeline gui_screen_pip;
   float viewport_w;
@@ -191,8 +192,6 @@ void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height
     .render_target = true,
     .width = width,
     .height = height,
-    .min_filter = SG_FILTER_LINEAR,
-    .mag_filter = SG_FILTER_LINEAR,
 #ifdef BINOCLE_GL
     .pixel_format = SG_PIXELFORMAT_RGBA8,
 #else
@@ -200,6 +199,10 @@ void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height
 #endif
     .sample_count = 1,
   };
+  gui->imgui_sampler = sg_make_sampler(&(sg_sampler_desc){
+    .min_filter = SG_FILTER_LINEAR,
+    .mag_filter = SG_FILTER_LINEAR,
+  });
   gui->imgui_render_target = sg_make_image(&rt_desc);
   gui->imgui_pass = sg_make_pass(&(sg_pass_desc){
     .color_attachments[0].image = gui->imgui_render_target,
@@ -272,12 +275,15 @@ void gui_init_imgui(gui_handle_t handle, float width, float height, float viewpo
   img_desc.width = font_width;
   img_desc.height = font_height;
   img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
-  img_desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
-  img_desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
-  img_desc.min_filter = SG_FILTER_LINEAR;
-  img_desc.mag_filter = SG_FILTER_NEAREST;
   img_desc.data.subimage[0][0] = (sg_range){font_pixels, (size_t)(font_width * font_height * 4)};
-  imgui_bind.fs_images[0] = sg_make_image(&img_desc);
+  sg_sampler_desc sampler_desc = {
+    .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
+    .wrap_v = SG_WRAP_CLAMP_TO_EDGE,
+    .min_filter = SG_FILTER_LINEAR,
+    .mag_filter = SG_FILTER_LINEAR,
+  };
+  imgui_bind.fs.samplers[0] = sg_make_sampler(&sampler_desc);
+  imgui_bind.fs.images[0] = sg_make_image(&img_desc);
 
   // shader object for imgui rendering
   sg_shader_desc shd_desc = {0};
@@ -324,9 +330,14 @@ void gui_init_imgui(gui_handle_t handle, float width, float height, float viewpo
     "    color = color0;\n"
     "}\n";
 #endif
-  shd_desc.fs.images[0].name = "tex";
+  shd_desc.fs.samplers[0].sampler_type = SG_SAMPLERTYPE_FILTERING;
+  shd_desc.fs.samplers[0].used = true;
   shd_desc.fs.images[0].image_type = SG_IMAGETYPE_2D;
-  shd_desc.fs.images[0].sampler_type = SG_SAMPLERTYPE_FLOAT;
+  shd_desc.fs.images[0].used = true;
+  shd_desc.fs.image_sampler_pairs[0].glsl_name = "tex";
+  shd_desc.fs.image_sampler_pairs[0].image_slot = 0;
+  shd_desc.fs.image_sampler_pairs[0].sampler_slot = 0;
+  shd_desc.fs.image_sampler_pairs[0].used = true;
 #if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
   shd_desc.fs.source =
     "#version 300 es\n"
@@ -398,8 +409,8 @@ void gui_init_imgui(gui_handle_t handle, float width, float height, float viewpo
   binocle_log_info("Done creating GUI pipeline");
 
   // initial clear color
-  imgui_pass_action.colors[0].action = SG_ACTION_CLEAR;
-  imgui_pass_action.colors[0].value = (sg_color){ 0.0f, 0.0f, 0.0f, 0.0f };
+  imgui_pass_action.colors[0].load_action = SG_LOADACTION_CLEAR;
+  imgui_pass_action.colors[0].clear_value = (sg_color){ 0.0f, 0.0f, 0.0f, 0.0f };
 
   // Create the render target image
   gui_recreate_imgui_render_target(handle, (int)width, (int)height);
@@ -483,7 +494,7 @@ void draw_imgui(ImDrawData* draw_data) {
       else {
         if (tex_id != pcmd->TextureId) {
           tex_id = pcmd->TextureId;
-          imgui_bind.fs_images[0].id = (uint32_t)(uintptr_t)tex_id;
+          imgui_bind.fs.images[0].id = (uint32_t)(uintptr_t)tex_id;
           sg_apply_bindings(&imgui_bind);
         }
         const int scissor_x = (int) ((pcmd->ClipRect.x - clip_off.x) * clip_scale.x);
@@ -906,9 +917,14 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
     "uvCoord = (position.xy + vec2(1,1))/2.0;\n"
     "}\n";
 #endif
-  shd_desc.fs.images[0].name = "tex0";
+  shd_desc.fs.images[0].used = true;
   shd_desc.fs.images[0].image_type = SG_IMAGETYPE_2D;
-  shd_desc.fs.images[0].sampler_type = SG_SAMPLERTYPE_FLOAT;
+  shd_desc.fs.samplers[0].used = true;
+  shd_desc.fs.samplers[0].sampler_type = SG_SAMPLERTYPE_FILTERING;
+  shd_desc.fs.image_sampler_pairs[0].used = true;
+  shd_desc.fs.image_sampler_pairs[0].glsl_name = "tex0";
+  shd_desc.fs.image_sampler_pairs[0].image_slot = 0;
+  shd_desc.fs.image_sampler_pairs[0].sampler_slot = 0;
   shd_desc.fs.uniform_blocks[0].size = sizeof(screen_fs_params_t);
   shd_desc.fs.uniform_blocks[0].uniforms[0].name = "resolution";
   shd_desc.fs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT2;
@@ -1011,8 +1027,8 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
   sg_color clear_color = binocle_color_green();
   sg_pass_action default_action = {
     .colors[0] = {
-      .action = SG_ACTION_DONTCARE,
-      .value = {
+      .load_action = SG_LOADACTION_DONTCARE,
+      .clear_value = {
         .r = clear_color.r,
         .g = clear_color.g,
         .b = clear_color.b,
@@ -1098,8 +1114,13 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
       [0] = gui_screen_vbuf,
     },
     .index_buffer = gui_screen_ibuf,
-    .fs_images = {
-      [0] = gui->imgui_render_target,
+    .fs = {
+      .images = {
+        [0] = gui->imgui_render_target,
+      },
+      .samplers = {
+        [0] = gui->imgui_sampler,
+      }
     }
   };
 }
@@ -1122,7 +1143,8 @@ void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *win
   screen_fs_params.viewport[0] = viewport.min.x;
   screen_fs_params.viewport[1] = viewport.min.y;
 
-  gui_screen_bind.fs_images[0] = gui->imgui_render_target;
+  gui_screen_bind.fs.images[0] = gui->imgui_render_target;
+  gui_screen_bind.fs.samplers[0] = gui->imgui_sampler;
 
   sg_begin_default_pass(&gui_screen_pass_action, window->width, window->height);
   sg_apply_pipeline(gui->gui_screen_pip);

@@ -58,6 +58,7 @@ typedef struct screen_shader_fs_params_t {
   float resolution[2];
   float scale[2];
   float viewport[2];
+  uint8_t _pad_24[8];
 } screen_shader_fs_params_t;
 
 typedef struct screen_shader_vs_params_t {
@@ -458,7 +459,9 @@ int main(int argc, char *argv[])
     .fs.byte_code = default_fs_bytecode,
     .fs.byte_code_size = sizeof(default_fs_bytecode),
 #endif
-    .fs.images[0] = { .name = "tex0", .image_type = SG_IMAGETYPE_2D},
+    .fs.images[0] = { .used = true, .image_type = SG_IMAGETYPE_2D},
+    .fs.samplers[0] = {.used = true, .sampler_type = SG_SAMPLERTYPE_FILTERING},
+    .fs.image_sampler_pairs[0] = {.used = true, .glsl_name = "tex0", .image_slot = 0, .sampler_slot = 0},
   };
   default_shader = sg_make_shader(&default_shader_desc);
 
@@ -498,13 +501,17 @@ int main(int argc, char *argv[])
     .fs.byte_code = screen_fs_bytecode,
     .fs.byte_code_size = sizeof(screen_fs_bytecode),
 #endif
-    .fs.images[0] = { .name = "tex0", .image_type = SG_IMAGETYPE_2D},
+    .fs.images[0] = { .used = true, .image_type = SG_IMAGETYPE_2D},
+    .fs.samplers[0] = {.used = true, .sampler_type = SG_SAMPLERTYPE_FILTERING},
+    .fs.image_sampler_pairs[0] = {.used = true, .glsl_name = "tex0", .image_slot = 0, .sampler_slot = 0},
     .fs.uniform_blocks[0] = {
       .size = sizeof(screen_shader_fs_params_t),
+      .layout = SG_UNIFORMLAYOUT_STD140,
       .uniforms = {
         [0] = { .name = "resolution", .type = SG_UNIFORMTYPE_FLOAT2 },
         [1] = { .name = "scale", .type = SG_UNIFORMTYPE_FLOAT2 },
         [2] = { .name = "viewport", .type = SG_UNIFORMTYPE_FLOAT2 },
+        [3] = { .name = "pad24", .type = SG_UNIFORMTYPE_FLOAT2 },
       },
     },
   };
