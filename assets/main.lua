@@ -270,6 +270,16 @@ function get_audio_instance()
     return audio_instance
 end
 
+function get_design_width()
+    io.write("get_design_width: " .. tostring(const.DESIGN_WIDTH) .."\n")
+    return const.DESIGN_WIDTH
+end
+
+function get_design_height()
+    io.write("get_design_height: " .. tostring(const.DESIGN_HEIGHT) .."\n")
+    return const.DESIGN_HEIGHT
+end
+
 function dump(o)
     if type(o) == 'table' then
         local s = '{ '

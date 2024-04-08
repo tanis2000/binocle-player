@@ -1,6 +1,6 @@
 //
 //  Binocle
-//  Copyright(C)2015-2020 Valerio Santinelli
+//  Copyright(C)2015-2024 Valerio Santinelli
 //
 
 #include <stdio.h>
@@ -23,19 +23,13 @@
 #include <binocle_sprite_wrap.h>
 
 #define BINOCLE_MATH_IMPL
-#include "binocle_math.h"
 #include "binocle_gd.h"
 #include "binocle_log.h"
-#include "binocle_bitmapfont.h"
-#include "binocle_ttfont.h"
 #include "binocle_audio.h"
 #include "binocle_audio_wrap.h"
 #include "gui.h"
 #include "imgui_lua_bindings.h"
 #include "curl/curl.h"
-
-#define DESIGN_WIDTH 320
-#define DESIGN_HEIGHT 240
 
 #if defined(BINOCLE_MACOS) && defined(BINOCLE_METAL)
 #include "../../assets/shaders/metal/default-metal-macosx.h"
@@ -82,6 +76,8 @@ gui_handle_t debug_gui_handle;
 struct gui_t *debug_gui;
 gui_handle_t game_gui_handle;
 struct gui_t *game_gui;
+uint32_t design_width;
+uint32_t design_height;
 
 void lua_stack_dump (lua_State *L) {
   int i;
@@ -238,6 +234,34 @@ void lua_bridge_audio() {
   audio = audio_instance->audio;
 }
 
+void lua_bridge_const() {
+  lua_stack_dump(lua.L);
+  lua_getglobal(lua.L, "get_design_width");
+  if (lua_pcall(lua.L, 0, 1, 0) != 0) {
+    binocle_log_error("can't get the design width from Lua. Please make sure you defined a global function get_design_width that design width");
+  }
+  lua_stack_dump(lua.L);
+  if (!lua_isnumber(lua.L, -1)) {
+    binocle_log_error("returned value is not a number");
+  }
+  lua_stack_dump(lua.L);
+  lua_pop(lua.L, 1);
+  design_width = (uint32_t)luaL_checknumber(lua.L, 0);
+
+  lua_stack_dump(lua.L);
+  lua_getglobal(lua.L, "get_design_height");
+  if (lua_pcall(lua.L, 0, 1, 0) != 0) {
+    binocle_log_error("can't get the design height from Lua. Please make sure you defined a global function get_design_height that design height");
+  }
+  lua_stack_dump(lua.L);
+  if (!lua_isnumber(lua.L, -1)) {
+    binocle_log_error("returned value is not a number");
+  }
+  lua_stack_dump(lua.L);
+  lua_pop(lua.L, 1);
+  design_height = (uint32_t)luaL_checknumber(lua.L, 0);
+}
+
 int lua_on_init() {
   SDL_LockMutex(lua_mutex);
   lua_getglobal(lua.L, "on_init");
@@ -388,12 +412,18 @@ void main_loop() {
 
 int main(int argc, char *argv[])
 {
+  // Initialize the design width and height with some sane values.
+  // They will be overridden from a call to Lua.
+  design_width = 320;
+  design_height = 240;
+
+  // Initialize the application
   binocle_app_desc_t app_desc = {0};
   if (argc > 1) {
     char *path = argv[1];
     app_desc.forced_asset_origin_path = path;
     if (!binocle_sdl_directory_exists(path)) {
-      binocle_log_error("Directory %s does not exist. Quitting.", path);
+      binocle_log_error("Directory %s specified as argument to set the application path does not exist. Quitting.", path);
       return -1;
     }
   }
@@ -525,11 +555,12 @@ int main(int argc, char *argv[])
   lua_bridge_gd();
   lua_bridge_sprite_batch();
   lua_bridge_audio();
+  lua_bridge_const();
 
   SetLuaState(lua.L);
   LoadImguiBindings();
 
-  binocle_gd_setup_default_pipeline(gd, DESIGN_WIDTH, DESIGN_HEIGHT, default_shader, screen_shader);
+  binocle_gd_setup_default_pipeline(gd, design_width, design_height, default_shader, screen_shader);
   binocle_gd_setup_flat_pipeline(gd);
 
   gui_resources_setup();
@@ -540,7 +571,7 @@ int main(int argc, char *argv[])
   game_gui_handle = gui_resources_create_gui("game");
   gui_set_apply_scissor(game_gui_handle, true);
   gui_set_viewport_adapter(game_gui_handle, binocle_camera_get_viewport_adapter(*camera));
-  gui_init_imgui(game_gui_handle, DESIGN_WIDTH, DESIGN_HEIGHT, window->width, window->height);
+  gui_init_imgui(game_gui_handle, design_width, design_height, window->width, window->height);
   gui_setup_screen_pipeline(game_gui_handle, screen_shader, true);
 
 //  gui_setup_imgui_to_offscreen_pipeline(gd, binocle_assets_dir);
