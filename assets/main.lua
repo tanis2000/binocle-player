@@ -3,6 +3,8 @@ local entity = require("entity")
 local Intro = require("scenes/intro")
 local cache  = require("cache")
 
+require("LuaPanda").start("127.0.0.1", 8818);
+
 main = {}
 
 ---@type table

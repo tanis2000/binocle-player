@@ -42,7 +42,7 @@ SET(VERSION_MINOR "1")
 SET(VERSION_PATCH "0")
 SET(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-set(BINOCLE_LINK_LIBRARIES binocle-static lua)
+set(BINOCLE_LINK_LIBRARIES binocle-static lua luasocket)
 
 if (MSVC)
 	message("Including Windows defines")
