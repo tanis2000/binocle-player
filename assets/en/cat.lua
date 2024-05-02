@@ -14,10 +14,9 @@ function Cat:new()
     self.owner = nil
     self.caged = false
     self.time = 0
-    self:load_image("data/img/cat.png", 32, 32)
-    material.set_pipeline(self.material, G.grass_shader) -- NOTE: this overrides the shader, too
+    self:load_image("data/img/cat.png", 32, 32, G.grass_shader)
     material.set_uniform_float(self.material, "FS", "time", self.time)
-    material.set_uniform_float(self.material, "FS", "verticalOffset", 0)
+    material.set_uniform_float(self.material, "FS", "verticalOffset", -1)
     material.set_uniform_float(self.material, "FS", "horizontalOffset", 0)
     self:add_animation("idle", {
         1,

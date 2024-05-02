@@ -113,6 +113,7 @@ function on_init()
     gd.create_pipeline(shader)
     G.colorize_shader = shader
 
+    log.info("Creating grass shader and pipeline")
     vs = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/default_vert.glsl");
     frag = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/grass_frag.glsl");
     local grass_shader = gd.create_shader_desc(vs, frag)
@@ -122,6 +123,7 @@ function on_init()
     gd.create_shader(grass_shader)
     gd.create_pipeline(grass_shader)
     G.grass_shader = grass_shader
+    log.info("Done creating grass shader and pipeline")
     -- END experimental code to setup a shader, pipeline and renderer
 
     sb = sprite_batch.new()

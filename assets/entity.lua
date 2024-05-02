@@ -71,13 +71,19 @@ end
 ---@param filename string the path to the image to load
 ---@param width number the width of a single frame
 ---@param height number the height of a single frame
-function Entity:load_image(filename, width, height)
+---@param shader Shader the shader to use. If nil it will use the default
+function Entity:load_image(filename, width, height, shader)
     self.image = G.cache.load(filename)
     self.texture = texture.from_image(self.image)
     self.material = material.new()
 
     material.set_texture(self.material, self.texture)
-    material.set_shader(self.material, G.default_shader)
+    if shader ~= nil then
+        material.set_shader(self.material, shader)
+        material.set_pipeline(self.material, shader) -- NOTE: this overrides the shader, too
+    else
+        material.set_shader(self.material, G.default_shader)
+    end
     self.sprite = sprite.from_material(self.material)
     self.frames = {}
     local original_image_width, original_image_height = image.get_info(self.image)

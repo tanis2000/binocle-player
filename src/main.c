@@ -144,7 +144,7 @@ void lua_bridge_window() {
   }
   lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
-    binocle_log_error("returned value is not userdata");
+    binocle_log_error("get_window: returned value is not userdata");
   }
   lua_stack_dump(lua.L);
   lua_pop(lua.L, 1);
@@ -160,7 +160,7 @@ void lua_bridge_camera() {
   }
   lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
-    binocle_log_error("returned value is not userdata");
+    binocle_log_error("get_camera: returned value is not userdata");
   }
   lua_stack_dump(lua.L);
   lua_pop(lua.L, 1);
@@ -176,7 +176,7 @@ void lua_bridge_input() {
   }
   lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
-    binocle_log_error("returned value is not userdata");
+    binocle_log_error("get_input_mgr: returned value is not userdata");
   }
   lua_stack_dump(lua.L);
   lua_pop(lua.L, 1);
@@ -194,7 +194,7 @@ void lua_bridge_gd() {
   binocle_log_info("num: %d", num);
   lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
-    binocle_log_error("returned value is not userdata");
+    binocle_log_error("get_gd_instance: returned value is not userdata");
   }
   lua_stack_dump(lua.L);
   lua_pop(lua.L, 1);
@@ -210,7 +210,7 @@ void lua_bridge_sprite_batch() {
   }
   lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, 0)) {
-    binocle_log_error("returned value is not userdata");
+    binocle_log_error("get_sprite_batch_instance: returned value is not userdata");
   }
   lua_stack_dump(lua.L);
   lua_pop(lua.L, 1);
@@ -226,7 +226,7 @@ void lua_bridge_audio() {
   }
   lua_stack_dump(lua.L);
   if (!lua_isuserdata(lua.L, -1)) {
-    binocle_log_error("returned value is not userdata");
+    binocle_log_error("get_audio_instance: returned value is not userdata");
   }
   lua_stack_dump(lua.L);
   lua_pop(lua.L, 1);
@@ -242,7 +242,7 @@ void lua_bridge_const() {
   }
   lua_stack_dump(lua.L);
   if (!lua_isnumber(lua.L, -1)) {
-    binocle_log_error("returned value is not a number");
+    binocle_log_error("get_design_width: returned value is not a number");
   }
   lua_stack_dump(lua.L);
   lua_pop(lua.L, 1);
@@ -255,7 +255,7 @@ void lua_bridge_const() {
   }
   lua_stack_dump(lua.L);
   if (!lua_isnumber(lua.L, -1)) {
-    binocle_log_error("returned value is not a number");
+    binocle_log_error("get_design_height: returned value is not a number");
   }
   lua_stack_dump(lua.L);
   lua_pop(lua.L, 1);

@@ -26,10 +26,10 @@ function sprite_batch.begin(batch, camera, shader, viewport, sort) end
 function sprite_batch.finish(batch, camera, viewport) end
 
 ---@param batch SpriteBatch the SpriteBatch instance
----@param texture Texture the Texture instance
+---@param material Material the Material instance
 ---@param x number the horizontal position
 ---@param y number the vertical position
 ---@param depth number the depth
-function sprite_batch.draw(batch, texture, x, y, depth) end
+function sprite_batch.draw(batch, material, x, y, depth) end
 
 return sprite_batch
