@@ -12,7 +12,7 @@ function SayMark:update(dt)
     SayMark.super.update(self, dt)
 
     if G.game.h:is_alive() and self:dist_case(G.game.h) < self.trigger_distance then
-        print("trigger say")
+        log.info("trigger say")
         G.game.h:say(self.text)
         self:kill()
     end

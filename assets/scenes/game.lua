@@ -45,7 +45,7 @@ function Game:new(shd)
     self:spawn_cats(3)
 
     self.gui = Gui()
-    print(self.gui)
+    log.info(tostring(self.gui))
     self:add_child(self.gui)
 
     self.day_cycle = DayCycle()
@@ -92,7 +92,7 @@ function Game:update(dt)
 
     if input.is_key_pressed(input_mgr, key.KEY_L) then
         camera.set_position(cam, camera.x(cam) + 100 * dt, camera.y(cam))
-        io.write(camera.x(cam).."\n")
+        log.info(camera.x(cam))
     elseif input.is_key_pressed(input_mgr, key.KEY_J) then
         camera.set_position(cam, camera.x(cam) - 100 * dt, camera.y(cam))
     end
@@ -177,7 +177,7 @@ function Game:garbage_collect()
     for idx in lume.ripairs(G.entities) do
         en = G.entities[idx]
         if en.destroyed then
-            print("dispose")
+            log.info("dispose")
             en:on_dispose()
         end
     end

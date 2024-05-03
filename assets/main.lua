@@ -3,6 +3,7 @@ local entity = require("entity")
 local Intro = require("scenes/intro")
 local cache  = require("cache")
 
+-- Initialize the LuaPanda debugger (we use a custom version)
 require("LuaPanda").start("127.0.0.1", 8818);
 
 main = {}
@@ -76,33 +77,33 @@ local intro
 function on_init()
     ---@type Window
     win = window.new(const.DESIGN_WIDTH * const.SCALE, const.DESIGN_HEIGHT * const.SCALE, G.title)
-    io.write("win: " .. tostring(win) .."\n")
+    log.info("win: " .. tostring(win))
     local bg_color = color.black
-    io.write("bg_color: " .. tostring(bg_color) .."\n")
+    log.info("bg_color: " .. tostring(bg_color))
     window.set_background_color(win, bg_color)
     window.set_minimum_size(win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT)
 
     input_mgr = input.new()
-    io.write("input_mgr: " .. tostring(input_mgr) .."\n")
+    log.info("input_mgr: " .. tostring(input_mgr))
 
     adapter = viewport_adapter.new(win, "scaling", "pixel_perfect",
         const.DESIGN_WIDTH, const.DESIGN_HEIGHT, const.DESIGN_WIDTH, const.DESIGN_HEIGHT);
-    io.write("adapter: " .. tostring(adapter) .."\n")
+    log.info("adapter: " .. tostring(adapter))
 
     cam = camera.new(adapter)
-    io.write("cam: " .. tostring(cam) .."\n")
+    log.info("cam: " .. tostring(cam))
 
     --default_shader = shader.load_from_file(assets_dir .. "shaders/default_vert.glsl",
     --    assets_dir .. "shaders/default_frag.glsl")
-    --io.write("default shader: " .. tostring(default_shader) .. "\n")
+    --log.info("default shader: " .. tostring(default_shader))
     --
     --screen_shader = shader.load_from_file(assets_dir .. "shaders/screen_vert.glsl",
     --    assets_dir .. "shaders/screen_frag.glsl")
-    --io.write("screen shader: " .. tostring(screen_shader) .. "\n")
+    --log.info("screen shader: " .. tostring(screen_shader))
 
     gd_instance = gd.new()
     gd.init(gd_instance, win)
-    io.write("gd_instance: " .. tostring(gd_instance) .. "\n")
+    log.info("gd_instance: " .. tostring(gd_instance))
 
     -- BEGIN experimental code to setup a shader, pipeline and renderer
     local vs = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/default_vert.glsl");
@@ -128,7 +129,7 @@ function on_init()
 
     sb = sprite_batch.new()
     sprite_batch.set_gd(sb, gd_instance)
-    io.write("sb: " .. tostring(sb) .. "\n")
+    log.info("sb: " .. tostring(sb))
 
     -- Create a viewport that corresponds to the size of our render target
     local center = lkazmath.kmVec2New();
@@ -139,7 +140,7 @@ function on_init()
 
     audio_instance = audio.new()
     audio.init(audio_instance)
-    io.write("audio_instance: " .. tostring(audio_instance) .. "\n")
+    log.info("audio_instance: " .. tostring(audio_instance))
 
     local music = audio.load_music(audio_instance, assets_dir .. "data/music/theme.mp3")
     G.musics["main"] = music
@@ -155,7 +156,7 @@ function on_init()
 end
 
 function main.on_update(dt)
-    --io.write("dt: " .. tostring(dt) .. "\n")
+    --log.info("dt: " .. tostring(dt))
     if not scene then
         G.default_shader = shader.defaultShader()
     end
@@ -175,18 +176,18 @@ function main.on_update(dt)
         scene = intro
         --return
     end
-    --io.write("scene: " .. tostring(scene.name) .. "\n")
+    --log.info("scene: " .. tostring(scene.name))
 
     scene:pre_update(dt)
 
     if input.is_key_down(input_mgr, key.KEY_1) then
         G.debug = not G.debug
-        print(G.debug)
+        log.info(tostring(G.debug))
     end
 
     if input.is_key_down(input_mgr, key.KEY_ESCAPE) then
         quit_requests = quit_requests + 1
-        print(quit_requests)
+        log.info(tostring(quit_requests))
         if quit_requests > 1 then
             input.set_quit_requested(input_mgr, true)
         end
@@ -240,47 +241,47 @@ function load_sfx(name, filename)
 end
 
 function get_window()
-    io.write("get_window win: " .. tostring(win) .."\n")
+    log.info("get_window win: " .. tostring(win))
     return win
 end
 
 function get_adapter()
-    io.write("get_adapter adapter: " .. tostring(adapter) .."\n")
+    log.info("get_adapter adapter: " .. tostring(adapter))
     return adapter
 end
 
 function get_camera()
-    io.write("get_camera cam: " .. tostring(cam) .."\n")
+    log.info("get_camera cam: " .. tostring(cam))
     return cam
 end
 
 function get_input_mgr()
-    io.write("get_input_mgr input_mgr: " .. tostring(input_mgr) .."\n")
+    log.info("get_input_mgr input_mgr: " .. tostring(input_mgr))
     return input_mgr
 end
 
 function get_gd_instance()
-    io.write("get_gd_instance gd: " .. tostring(gd_instance) .."\n")
+    log.info("get_gd_instance gd: " .. tostring(gd_instance))
     return gd_instance
 end
 
 function get_sprite_batch_instance()
-    io.write("get_sprite_batch_instance sb: " .. tostring(sb) .."\n")
+    log.info("get_sprite_batch_instance sb: " .. tostring(sb))
     return sb
 end
 
 function get_audio_instance()
-    io.write("get_audio_instance audio_instance: " .. tostring(audio_instance) .."\n")
+    log.info("get_audio_instance audio_instance: " .. tostring(audio_instance))
     return audio_instance
 end
 
 function get_design_width()
-    io.write("get_design_width: " .. tostring(const.DESIGN_WIDTH) .."\n")
+    log.info("get_design_width: " .. tostring(const.DESIGN_WIDTH))
     return const.DESIGN_WIDTH
 end
 
 function get_design_height()
-    io.write("get_design_height: " .. tostring(const.DESIGN_HEIGHT) .."\n")
+    log.info("get_design_height: " .. tostring(const.DESIGN_HEIGHT))
     return const.DESIGN_HEIGHT
 end
 
@@ -297,5 +298,5 @@ function dump(o)
     end
 end
 
-io.write("End of main.lua\n")
+log.info("End of main.lua")
 

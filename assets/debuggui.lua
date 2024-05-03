@@ -70,7 +70,6 @@ function DebugGui:entity(en)
     local res = false
     res, cx = imgui.DragFloat("cx", cx, 1, 0, 0, "%.2f", 1)
     if res then
-        print(cx)
         en:set_pos_grid(cx, en.cy)
     end
     local cy = en.cy

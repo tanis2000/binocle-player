@@ -29,8 +29,8 @@ end
 
 function Process:add_child(child)
     assert(child:is(Process))
-    print("adding children " .. child:__tostring() .. " to " .. self:__tostring())
-    print(child.id)
+    log.info("adding children " .. child:__tostring() .. " to " .. self:__tostring())
+    log.info(tostring(child.id))
     if child.parent ~= nil then
         child.parent:remove_child(child)
     end

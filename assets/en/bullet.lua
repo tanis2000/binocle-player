@@ -41,7 +41,7 @@ function Bullet:update(dt)
         and self:get_center_x() <= en:get_center_x()+en.radius
         and self:get_bottom() >= en:get_bottom() and self:get_bottom() <= en:get_bottom() + en.hei then
             -- hit the mob
-            print("hit")
+            log.info("hit")
             -- remove this from the scene
             self:kill()
             lume.remove(G.bullets, self)
@@ -51,7 +51,7 @@ function Bullet:update(dt)
 
     if not G.game.level:is_valid(self.cx, self.cy) or G.game.level:has_collision(self.cx, self.cy) then
         -- remove this from the scene
-        print("wall")
+        log.info("wall")
         self:kill()
         lume.remove(G.bullets, self)
     end

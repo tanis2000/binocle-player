@@ -5,8 +5,10 @@ local traceback = debug.traceback
 local delta_time = 0
 
 local function on_error(msg)
-    print("msg: " .. msg .. "\n" .. traceback())
-    input.set_quit_requested(input_mgr, true)
+    log.error("Error: " .. msg .. "\n" .. traceback())
+    if input.set_quit_requested ~= nil then
+        input.set_quit_requested(input_mgr, true)
+    end
 end
 
 local function call(fn, ...)

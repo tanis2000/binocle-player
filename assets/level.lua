@@ -180,7 +180,7 @@ function Level:has_wall_collision(cx, cy)
 end
 
 function Level:set_mark(x, y, v)
-    print("setting mark " .. tostring(v) .. " at " .. tostring(x) .. "," .. tostring(y))
+    log.info("setting mark " .. tostring(v) .. " at " .. tostring(x) .. "," .. tostring(y))
     if self:is_valid(x, y) then
         if v then
             self.marks_map[self:coord_id(x, y)] = v
@@ -218,7 +218,7 @@ function Level:render()
                     if layer.name == "fg" then
                         depth = layers.FG
                     end
-                    -- io.write("v: " .. tostring(value) .. "cx: " .. cx .. "cy: " .. cy .. "\n")
+                    -- log.info("v: " .. tostring(value) .. "cx: " .. cx .. "cy: " .. cy)
                     --sprite.draw(self.tiles[value].sprite, gd_instance, cx * const.GRID, (layer.height-1) * const.GRID - cy * const.GRID, viewport, 0, self.scale.x, self.scale.y, cam, depth)
                     sprite.draw_batch(sb, self.tiles[value].sprite, gd_instance, cx * const.GRID, (layer.height-1) * const.GRID - cy * const.GRID, viewport, 0, self.scale.x, self.scale.y, cam, depth)
                 end

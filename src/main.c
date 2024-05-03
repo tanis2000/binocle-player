@@ -42,6 +42,8 @@
 #define SHADER_PATH "gl33"
 #endif
 
+#define VERSION "0.1.0"
+
 typedef struct default_shader_params_t {
   float projectionMatrix[16];
   float modelMatrix[16];
@@ -80,6 +82,7 @@ uint32_t design_width;
 uint32_t design_height;
 
 void lua_stack_dump (lua_State *L) {
+  binocle_log_info("Stack dump:");
   int i;
   int top = lua_gettop(L);
   for (i = 1; i <= top; i++) {  /* repeat for each level */
@@ -87,33 +90,33 @@ void lua_stack_dump (lua_State *L) {
     switch (t) {
 
       case LUA_TSTRING:  /* strings */
-        printf("`%s'", lua_tostring(L, i));
+        binocle_log_info("S: `%s'", lua_tostring(L, i));
         break;
 
       case LUA_TBOOLEAN:  /* booleans */
-        printf(lua_toboolean(L, i) ? "true" : "false");
+        binocle_log_info("B: %s", lua_toboolean(L, i) ? "true" : "false");
         break;
 
       case LUA_TNUMBER:  /* numbers */
-        printf("%g", lua_tonumber(L, i));
+        binocle_log_info("N: %g", lua_tonumber(L, i));
         break;
 
       case LUA_TUSERDATA:  /* userdata */
-        printf("%#010llx", (uint64_t)lua_touserdata(L, i));
+        binocle_log_info("UD: %#010llx", (uint64_t)lua_touserdata(L, i));
         break;
 
       case LUA_TTABLE:
-        printf("table %s", lua_tostring(L, -2));
+        binocle_log_info("T: %s", lua_tostring(L, -2));
         break;
 
       default:  /* other values */
-        printf("%s", lua_typename(L, t));
+        binocle_log_info("UNK: %s", lua_typename(L, t));
         break;
 
     }
-    printf("  ");  /* put a separator */
+    binocle_log_info("-");  /* put a separator */
   }
-  printf("\n");  /* end the listing */
+  binocle_log_info("-----");  /* end the listing */
 }
 
 int l_default_shader(lua_State *L) {
@@ -412,14 +415,17 @@ void main_loop() {
 
 int main(int argc, char *argv[])
 {
+  binocle_log_info("Binocle Player v%s", VERSION);
+
   // Initialize the design width and height with some sane values.
-  // They will be overridden from a call to Lua.
+  // They will be overridden by a Lua call to get_design_width() and get_design_height().
   design_width = 320;
   design_height = 240;
 
   // Initialize the application
   binocle_app_desc_t app_desc = {0};
   if (argc > 1) {
+    // The first (and only) argument is the path to a folder with your game
     char *path = argv[1];
     app_desc.forced_asset_origin_path = path;
     if (!binocle_sdl_directory_exists(path)) {
@@ -437,6 +443,9 @@ int main(int argc, char *argv[])
   binocle_lua_init(&lua);
 
   char main_lua[1024];
+  // The Lua script that is being called at bootstrap time is boot.lua
+  // I am still not entirely sure whether it would make sense to fallback to an embedded boot.lua if it is not
+  // part of the game sources.
   sprintf(main_lua, "%s%s", binocle_assets_dir, "boot.lua");
   binocle_lua_run_script(&lua, main_lua);
 
@@ -547,8 +556,10 @@ int main(int argc, char *argv[])
   };
   screen_shader = sg_make_shader(&screen_shader_desc);
 
+  // Inject the default shaders into Lua code
   lua_inject_shaders();
 
+  // Read global instances that have been created in Lua space
   lua_bridge_window();
   lua_bridge_camera();
   lua_bridge_input();
@@ -560,6 +571,7 @@ int main(int argc, char *argv[])
   SetLuaState(lua.L);
   LoadImguiBindings();
 
+  // Setup the default and flat pipeline
   binocle_gd_setup_default_pipeline(gd, design_width, design_height, default_shader, screen_shader);
   binocle_gd_setup_flat_pipeline(gd);
 

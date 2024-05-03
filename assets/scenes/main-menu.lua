@@ -24,9 +24,9 @@ function MainMenu:init(shd)
     self.tex = texture.from_image(self.img)
     self.mat = material.new()
 
-    io.write("intro.mat: " .. tostring(self.mat) .."\n")
-    io.write("material: " .. tostring(material) .."\n")
-    io.write("shd: " .. tostring(shd) .."\n")
+    log.info("intro.mat: " .. tostring(self.mat))
+    log.info("material: " .. tostring(material))
+    log.info("shd: " .. tostring(shd))
     material.set_texture(self.mat, self.tex)
     material.set_shader(self.mat, shd)
     self.logo = sprite.from_material(self.mat)
@@ -60,7 +60,7 @@ function MainMenu:init(shd)
     self.leaderboard = json.decode(res)
 
     imgui.SetContext("game")
-    print(dump(imgui))
+    log.info(dump(imgui))
     local colBg = imgui.ColorConvertFloat4ToU32(1, 1, 1, 1)
     local colText = imgui.ColorConvertFloat4ToU32(0, 0, 0, 1)
     local colTextDisabled = imgui.ColorConvertFloat4ToU32(0.3, 0.3, 0.3, 1)
@@ -94,7 +94,7 @@ function MainMenu:update(dt)
     local x = (const.DESIGN_WIDTH - (self.TEX_WIDTH * scale_x)) / 2.0
     local y = (const.DESIGN_HEIGHT - (self.TEX_HEIGHT * scale_y)) / 2.0
 
-    --io.write("x: " .. tostring(x) .. " y: " .. tostring(y) .. "\n")
+    --log.info("x: " .. tostring(x) .. " y: " .. tostring(y))
     sprite.draw(self.logo, gd_instance, x, y, viewport, 0, scale_x, scale_y, cam, 0)
 
     scale_x = const.DESIGN_WIDTH / self.TANIS_TEX_WIDTH * 0.25
@@ -136,7 +136,7 @@ function MainMenu:update(dt)
                 sdl.save_text_file(G.preferences_dir .. G.save_filename, G.player_name, #G.player_name)
             end
             if self:button_centered_on_line("Start!") then
-                print("start pressed")
+                log.info("start pressed")
                 local game = Game(self.shader)
                 scene = game
                 self:on_destroy()
@@ -173,7 +173,7 @@ function MainMenu:update(dt)
 end
 
 function MainMenu:on_destroy()
-    print("intro:on_destroy()")
+    log.info("intro:on_destroy()")
     if self.default_font ~= nil then
         ttfont.destroy(self.default_font)
         self.default_font = nil

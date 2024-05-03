@@ -6,7 +6,7 @@ function SayText:new(owner, s)
     SayText.super.new(self)
     self.depth = layers.TEXT
     self.owner = owner
-    print(owner)
+    log.info(tostring(owner))
     self.s = s
     self.cd:set("keep_saying", 2.5 + 0.10 * string.len(s))
 end
@@ -15,7 +15,7 @@ function SayText:update(dt)
     SayText.super.update(self, dt)
 
     if not self.cd:has("keep_saying") then
-        print("removing saying")
+        log.info("removing saying")
         self:kill()
     end
 end

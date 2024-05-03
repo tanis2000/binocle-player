@@ -89,7 +89,7 @@ function Entity:load_image(filename, width, height, shader)
     local original_image_width, original_image_height = image.get_info(self.image)
     for y = 0, original_image_height / height - 1 do
         for x = 0, original_image_width / width - 1 do
-            print(self.name .. " image x "..tostring(x) .. " y " .. tostring(y) .. " w " .. tostring(width) .. " h " .. tostring(height))
+            log.info(self.name .. " image x "..tostring(x) .. " y " .. tostring(y) .. " w " .. tostring(width) .. " h " .. tostring(height))
             local frame = subtexture.subtexture_with_texture(self.texture, x * width, y * height, width, height)
             sprite.set_subtexture(self.sprite, frame)
             table.insert(self.frames, frame)

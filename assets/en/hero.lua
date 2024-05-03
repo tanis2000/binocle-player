@@ -163,7 +163,7 @@ function Hero.is_shooting(self)
 end
 
 function Hero.say(self, s)
-    print("saying "..s)
+    log.info("saying "..s)
     self:clear_saying()
     SayText(self, s)
 end
@@ -181,7 +181,7 @@ function Hero.see_cats(self)
         if self:dist_case(c) < 3 and not self.cd:has("cat_seen") then
             self.cats_seen = self.cats_seen + 1
             if self.cats_seen < #self.cats_sentences+1 then
-                print("cats")
+                log.info("cats")
                 self:say(self.cats_sentences[self.cats_seen])
                 self.cd:set("cat_seen", 10)
                 return

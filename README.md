@@ -1,5 +1,9 @@
 # Binocle Player
 
+[![Windows](https://github.com/tanis2000/binocle-player/actions/workflows/windows.yml/badge.svg)](https://github.com/tanis2000/binocle-player/actions/workflows/windows.yml)
+[![macOS](https://github.com/tanis2000/binocle-player/actions/workflows/macos.yml/badge.svg)](https://github.com/tanis2000/binocle-player/actions/workflows/macos.yml)
+[![Wasm](https://github.com/tanis2000/binocle-player/actions/workflows/wasm.yml/badge.svg)](https://github.com/tanis2000/binocle-player/actions/workflows/wasm.yml)
+
 Binocle Player aims at providing a pre-compiled version of Binocle that can be used to quickly write 2D games in Lua.
 
 The core philosophy  is somewhat similar to Love2D. Binocle Player comes as a pre-compiled binary for macOS and Windows and can run games from the command line.

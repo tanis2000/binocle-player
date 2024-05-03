@@ -38,7 +38,7 @@ function Mob:update(dt)
         self.target = G.game.h
         self.dir = self:dir_to(self.target)
         self:bump(0, 0.1)
-        print("target qcquired")
+        log.info("target qcquired")
     end
 
     local spd = 1

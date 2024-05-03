@@ -68,7 +68,7 @@ function Cat:update(dt)
                 and self:get_bottom() <= en:get_bottom() + en.hei
                 and self.cd:has("projectile") then
             -- hit the mob
-            print("hit")
+            log.info("hit")
             en:hurt(1, self.dir)
         end
     end
