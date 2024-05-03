@@ -57,6 +57,17 @@ end
 function Hero:update(dt)
     Hero.super.update(self, dt)
 
+    if not self.cd:has("lost_ground") and not self:on_ground() and self.was_on_ground then
+        self.cd:set("lost_ground", 0.1)
+    end
+
+    if self:on_ground() then
+        self.was_on_ground = true
+        self.jumped = false
+    else
+        self.was_on_ground = false
+    end
+
     local spd = 2
     if self:is_alive() and (input.is_key_pressed(input_mgr, key.KEY_LEFT) or input.is_key_pressed(input_mgr, key.KEY_A)) then
         self.dx = self.dx - spd * dt * self.time_mul
@@ -67,7 +78,8 @@ function Hero:update(dt)
     end
 
     if self:is_alive() and input.is_key_pressed(input_mgr, key.KEY_W) then
-        if self:on_ground() then
+        if not self.jumped and (self:on_ground() or self.cd:has("lost_ground")) then
+            self.jumped = true
             self.dy = 0.9
             audio.play_sound(G.sounds["jump"])
             local fx = Fx("data/img/jump.png", 6, 0.3)
