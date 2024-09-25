@@ -35,6 +35,10 @@ if(BINOCLE_SHOW_CONSOLE)
     add_definitions(-DBINOCLE_SHOW_CONSOLE)
 endif ()
 
+if(BINOCLE_LOG_MEMORY_ALLOCATIONS)
+    add_definitions(-DBINOCLE_LOG_MEMORY_ALLOCATIONS)
+endif()
+
 include(BinocleUtils)
 
 SET(VERSION_MAJOR "0")
@@ -101,7 +105,7 @@ message("Linking with the following libraries: ${BINOCLE_LINK_LIBRARIES}")
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps
-    ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl_mixer
+    ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/stb_image
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/physfs
     ${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sokol
@@ -117,7 +121,6 @@ if (APPLE)
     else ()
         include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/lua/src)
     endif ()
-    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include)
     if (IOS)
         include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/default)
     else ()
@@ -127,13 +130,11 @@ if (APPLE)
 endif ()
 
 if (ANDROID)
-    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/luajit/src)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/default)
 endif ()
 
 if (WIN32)
-    include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/lua/src)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/sdl/include/configs/windows)
     include_directories(${CMAKE_SOURCE_DIR}/binocle-c/src/deps/glew/include)
