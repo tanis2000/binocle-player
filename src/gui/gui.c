@@ -39,7 +39,7 @@ sg_bindings imgui_bind;
 
 
 
-sg_pass imgui_to_offscreen_pass;
+sg_attachments imgui_to_offscreen_attachments;
 sg_pipeline imgui_to_offscreen_pip;
 sg_shader imgui_to_offscreen_shader;
 sg_buffer imgui_to_offscreen_vbuf;
@@ -88,7 +88,7 @@ typedef struct gui_t {
   const char *name;
   sg_image imgui_render_target;
   sg_sampler imgui_sampler;
-  sg_pass imgui_pass;
+  sg_attachments imgui_attachments;
   sg_pipeline gui_screen_pip;
   float viewport_w;
   float viewport_h;
@@ -204,8 +204,8 @@ void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height
     .mag_filter = SG_FILTER_LINEAR,
   });
   gui->imgui_render_target = sg_make_image(&rt_desc);
-  gui->imgui_pass = sg_make_pass(&(sg_pass_desc){
-    .color_attachments[0].image = gui->imgui_render_target,
+  gui->imgui_attachments = sg_make_attachments(&(sg_attachments_desc){
+    .colors[0].image = gui->imgui_render_target,
   });
 }
 
@@ -827,7 +827,9 @@ void gui_imgui_to_offscreen_render(float width, float height) {
     }
   };
 
-  sg_begin_pass(imgui_to_offscreen_pass, &imgui_to_offscreen_action);
+  sg_begin_pass(&(sg_pass){
+    .attachments = imgui_to_offscreen_attachments,
+    .action = imgui_to_offscreen_action});
   sg_apply_pipeline(imgui_to_offscreen_pip);
   sg_apply_bindings(&imgui_to_offscreen_bind);
   sg_apply_uniforms(SG_SHADERSTAGE_FS, 0, &SG_RANGE(uniforms));
@@ -1150,7 +1152,10 @@ void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *win
   gui_screen_bind.fs.images[0] = gui->imgui_render_target;
   gui_screen_bind.fs.samplers[0] = gui->imgui_sampler;
 
-  sg_begin_default_pass(&gui_screen_pass_action, window->width, window->height);
+  sg_begin_pass(&(sg_pass){
+    .action = gui_screen_pass_action,
+    .swapchain = binocle_window_get_swapchain(window)
+  });
   sg_apply_pipeline(gui->gui_screen_pip);
   sg_apply_bindings(&gui_screen_bind);
   sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, &SG_RANGE(screen_vs_params));
@@ -1194,7 +1199,10 @@ int l_gui_wrap_new_frame(lua_State *L) {
 }
 
 void gui_wrap_render_frame(gui_t *gui) {
-  sg_begin_pass(gui->imgui_pass, &imgui_pass_action);
+  sg_begin_pass(&(sg_pass){
+    .action = imgui_pass_action,
+    .attachments = gui->imgui_attachments
+  });
   igRender();
   draw_imgui(igGetDrawData());
   sg_end_pass();
