@@ -1034,7 +1034,11 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
         .b = clear_color.b,
         .a = clear_color.a,
       }
-    }
+    },
+    // .depth = {
+    //   .load_action = SG_LOADACTION_DONTCARE,
+    //   .store_action = SG_STOREACTION_DONTCARE,
+    // }
   };
   gui_screen_pass_action = default_action;
 
@@ -1044,22 +1048,22 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
     .layout = {
       .attrs = {
         [0] = { .format = SG_VERTEXFORMAT_FLOAT3 }, // position
-//        [1] = { .format = SG_VERTEXFORMAT_FLOAT4 }, // color
-//        [2] = { .format = SG_VERTEXFORMAT_FLOAT2 }, // texture uv
+        //        [1] = { .format = SG_VERTEXFORMAT_FLOAT4 }, // color
+        //        [2] = { .format = SG_VERTEXFORMAT_FLOAT2 }, // texture uv
       }
     },
     .shader = shd,
     .index_type = SG_INDEXTYPE_UINT16,
-#if !defined(BINOCLE_GL)
+    #if !defined(BINOCLE_GL)
     .depth = {
-      .pixel_format = SG_PIXELFORMAT_NONE,
+      .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL,
       .compare = SG_COMPAREFUNC_NEVER,
       .write_enabled = false,
     },
     .stencil = {
       .enabled = false,
     },
-#endif
+    #endif
     .colors = {
 #ifdef BINOCLE_GL
       [0] = {
@@ -1081,7 +1085,7 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
   });
   binocle_log_info("Done creating GUI screen pipeline");
 
-//  float vertices[] = {
+  //  float vertices[] = {
 //    /* pos                  color                       uvs */
 //    -1.0f, -1.0f, 0.0f,    1.0f, 1.0f, 1.0f, 1.0f,     0.0f, 0.0f,
 //    1.0f, -1.0f, 0.0f,    1.0f, 1.0f, 1.0f, 1.0f,     1.0f, 0.0f,

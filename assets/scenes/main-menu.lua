@@ -112,11 +112,11 @@ function MainMenu:update(dt)
     --print(dump(imgui.constant.WindowFlags))
     imgui.SetNextWindowPos(0, 0)
     imgui.SetNextWindowSize(const.DESIGN_WIDTH, const.DESIGN_HEIGHT)
-    imgui.SetNextWindowBgAlpha(1)
+    imgui.SetNextWindowBgAlpha(0)
     if imgui.Begin("Intro GUI", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize, imgui.constant.WindowFlags.NoBackground)) then
         imgui.SetNextWindowPos(0, 0)
         imgui.SetNextWindowSize(const.DESIGN_WIDTH/3 * 2, const.DESIGN_HEIGHT)
-        imgui.SetNextWindowBgAlpha(0)
+        imgui.SetNextWindowBgAlpha(0.8)
         if imgui.Begin("Leaderboard", nil, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoResize, imgui.constant.WindowFlags.NoBackground)) then
             imgui.TextUnformatted("Leaderboard")
             for _, row in pairs(self.leaderboard.members) do
