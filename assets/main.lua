@@ -106,18 +106,18 @@ function on_init()
     log.info("gd_instance: " .. tostring(gd_instance))
 
     -- BEGIN experimental code to setup a shader, pipeline and renderer
-    local vs = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/default_vert.glsl");
-    local frag = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/colorize_frag.glsl");
-    local shader = gd.create_shader_desc(vs, frag)
+    local vs = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/colorize_colorize" .. app.shader_vs_suffix());
+    local frag = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/colorize_colorize" .. app.shader_fs_suffix());
+    local shader = gd.create_shader_desc("colorize", vs, frag)
     gd.add_uniform_to_shader_desc(shader, "FS", 0, "customColor", "vec4")
     gd.create_shader(shader)
     gd.create_pipeline(shader)
     G.colorize_shader = shader
 
     log.info("Creating grass shader and pipeline")
-    vs = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/default_vert.glsl");
-    frag = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/grass_frag.glsl");
-    local grass_shader = gd.create_shader_desc(vs, frag)
+    vs = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/grass_grass" .. app.shader_vs_suffix());
+    frag = fs.load_text_file("/assets/shaders/" .. app.shader_prefix() .. "/grass_grass" .. app.shader_fs_suffix());
+    local grass_shader = gd.create_shader_desc("grass", vs, frag)
     gd.add_uniform_to_shader_desc(grass_shader, "FS", 0, "time", "float")
     gd.add_uniform_to_shader_desc(grass_shader, "FS", 1, "verticalOffset", "float")
     gd.add_uniform_to_shader_desc(grass_shader, "FS", 2, "horizontalOffset", "float")
@@ -204,11 +204,11 @@ function main.on_update(dt)
     gd.render_screen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
     if G.debug then
         imgui.SetContext("debug")
-        imgui.RenderToScreen("debug", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
+        imgui.RenderToScreen("debug", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam, true)
     end
     if G.using_game_gui then
         imgui.SetContext("game")
-        imgui.RenderToScreen("game", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
+        imgui.RenderToScreen("game", gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam, false)
     end
 
     sprite_batch.finish(sb, cam, viewport)

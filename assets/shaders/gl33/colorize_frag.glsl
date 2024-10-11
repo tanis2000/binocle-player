@@ -1,4 +1,4 @@
-#version 330
+#version 410
 uniform sampler2D tex0;
 uniform vec4 customColor;
 in vec2 tcoord;

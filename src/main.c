@@ -32,14 +32,41 @@
 #include "curl/curl.h"
 
 #if defined(BINOCLE_MACOS) && defined(BINOCLE_METAL)
-#include "../../assets/shaders/metal/default-metal-macosx.h"
-#include "../../assets/shaders/metal/screen-metal-macosx.h"
-#endif
-
-#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
-#define SHADER_PATH "gles"
+#define SHADER_PATH "dst/metal-macos"
+#define DEFAULT_VS_FILENAME "default_default_metal_macos_vs.metal"
+#define DEFAULT_FS_FILENAME "default_default_metal_macos_fs.metal"
+#define SCREEN_VS_FILENAME "screen_screen_metal_macos_vs.metal"
+#define SCREEN_FS_FILENAME "screen_screen_metal_macos_fs.metal"
+#define IMGUI_VS_FILENAME "imgui_imgui_metal_macos_vs.metal"
+#define IMGUI_FS_FILENAME "imgui_imgui_metal_macos_fs.metal"
+#define IMGUI_SCREEN_VS_FILENAME "imgui_screen_imgui_screen_metal_macos_vs.metal"
+#define IMGUI_SCREEN_FS_FILENAME "imgui_screen_imgui_screen_metal_macos_fs.metal"
+#define FLAT_VS_FILENAME "flat_flat_metal_macos_vs.metal"
+#define FLAT_FS_FILENAME "flat_flat_metal_macos_fs.metal"
+#elif defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+#define SHADER_PATH "dst/gles"
+#define DEFAULT_VS_FILENAME "default_default_glsl300es_vs.glsl"
+#define DEFAULT_FS_FILENAME "default_default_glsl300es_fs.glsl"
+#define SCREEN_VS_FILENAME "screen_screen_glsl300es_vs.glsl"
+#define SCREEN_FS_FILENAME "screen_screen_glsl300es_fs.glsl"
+#define IMGUI_VS_FILENAME "imgui_imgui_glsl300es_vs.glsl"
+#define IMGUI_FS_FILENAME "imgui_imgui_glsl300es_fs.glsl"
+#define IMGUI_SCREEN_VS_FILENAME "imgui_screen_imgui_screen_glsl300es_vs.glsl"
+#define IMGUI_SCREEN_FS_FILENAME "imgui_screen_imgui_screen_glsl300es_fs.glsl"
+#define FLAT_VS_FILENAME "flat_flat_glsl300es_vs.glsl"
+#define FLAT_FS_FILENAME "flat_flat_glsl300es_fs.glsl"
 #else
-#define SHADER_PATH "gl33"
+#define SHADER_PATH "dst/gl33"
+#define DEFAULT_VS_FILENAME "default_default_glsl410_vs.glsl"
+#define DEFAULT_FS_FILENAME "default_default_glsl410_fs.glsl"
+#define SCREEN_VS_FILENAME "screen_screen_glsl410_vs.glsl"
+#define SCREEN_FS_FILENAME "screen_screen_glsl410_fs.glsl"
+#define IMGUI_VS_FILENAME "imgui_imgui_glsl410_vs.glsl"
+#define IMGUI_FS_FILENAME "imgui_imgui_glsl410_fs.glsl"
+#define IMGUI_SCREEN_VS_FILENAME "imgui_screen_imgui_screen_glsl410_vs.glsl"
+#define IMGUI_SCREEN_FS_FILENAME "imgui_screen_imgui_screen_glsl410_fs.glsl"
+#define FLAT_VS_FILENAME "flat_flat_glsl410_vs.glsl"
+#define FLAT_FS_FILENAME "flat_flat_glsl410_fs.glsl"
 #endif
 
 #define VERSION "0.1.0"
@@ -455,13 +482,11 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-
-#ifdef BINOCLE_GL
   // Default shader
   char vert[1024];
-  sprintf(vert, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, "default_vert.glsl");
+  sprintf(vert, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, DEFAULT_VS_FILENAME);
   char frag[1024];
-  sprintf(frag, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, "default_frag.glsl");
+  sprintf(frag, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, DEFAULT_FS_FILENAME);
 
   char *shader_vs_src;
   size_t shader_vs_src_size;
@@ -470,14 +495,12 @@ int main(int argc, char *argv[])
   char *shader_fs_src;
   size_t shader_fs_src_size;
   binocle_fs_load_text_file(frag, &shader_fs_src, &shader_fs_src_size);
-#endif
 
   sg_shader_desc default_shader_desc = {
-#ifdef BINOCLE_GL
+    .label = "default-shader",
     .vs.source = shader_vs_src,
-#else
-    .vs.byte_code = default_vs_bytecode,
-    .vs.byte_code_size = sizeof(default_vs_bytecode),
+#if defined(BINOCLE_METAL)
+    .vs.entry = "main0",
 #endif
     .attrs = {
       [0].name = "vertexPosition",
@@ -486,28 +509,24 @@ int main(int argc, char *argv[])
     },
     .vs.uniform_blocks[0] = {
       .size = sizeof(default_shader_params_t),
+      .layout = SG_UNIFORMLAYOUT_STD140,
       .uniforms = {
-        [0] = { .name = "projectionMatrix", .type = SG_UNIFORMTYPE_MAT4},
-        [1] = { .name = "viewMatrix", .type = SG_UNIFORMTYPE_MAT4},
-        [2] = { .name = "modelMatrix", .type = SG_UNIFORMTYPE_MAT4},
+        [0] = { .name = "vs_params", .type = SG_UNIFORMTYPE_FLOAT4, .array_count = 12},
       }
     },
-#ifdef BINOCLE_GL
     .fs.source = shader_fs_src,
-#else
-    .fs.byte_code = default_fs_bytecode,
-    .fs.byte_code_size = sizeof(default_fs_bytecode),
+#if defined(BINOCLE_METAL)
+    .fs.entry = "main0",
 #endif
-    .fs.images[0] = { .used = true, .image_type = SG_IMAGETYPE_2D},
+    .fs.images[0] = { .used = true, .image_type = SG_IMAGETYPE_2D, .sample_type = SG_IMAGESAMPLETYPE_FLOAT,},
     .fs.samplers[0] = {.used = true, .sampler_type = SG_SAMPLERTYPE_FILTERING},
-    .fs.image_sampler_pairs[0] = {.used = true, .glsl_name = "tex0", .image_slot = 0, .sampler_slot = 0},
+    .fs.image_sampler_pairs[0] = {.used = true, .glsl_name = "tex0_smp", .image_slot = 0, .sampler_slot = 0},
   };
   default_shader = sg_make_shader(&default_shader_desc);
 
-#ifdef BINOCLE_GL
   // Screen shader
-  sprintf(vert, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, "screen_vert.glsl");
-  sprintf(frag, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, "screen_frag.glsl");
+  sprintf(vert, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, SCREEN_VS_FILENAME);
+  sprintf(frag, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, SCREEN_FS_FILENAME);
 
   char *screen_shader_vs_src;
   size_t screen_shader_vs_src_size;
@@ -516,41 +535,35 @@ int main(int argc, char *argv[])
   char *screen_shader_fs_src;
   size_t screen_shader_fs_src_size;
   binocle_fs_load_text_file(frag, &screen_shader_fs_src, &screen_shader_fs_src_size);
-#endif
 
   sg_shader_desc screen_shader_desc = {
-#ifdef BINOCLE_GL
+    .label = "screen-shader",
     .vs.source = screen_shader_vs_src,
-#else
-    .vs.byte_code = screen_vs_bytecode,
-    .vs.byte_code_size = sizeof(screen_vs_bytecode),
+#if defined(BINOCLE_METAL)
+    .vs.entry = "main0",
 #endif
     .attrs = {
       [0].name = "position"
     },
     .vs.uniform_blocks[0] = {
       .size = sizeof(screen_shader_vs_params_t),
+      .layout = SG_UNIFORMLAYOUT_STD140,
       .uniforms = {
-        [0] = { .name = "transform", .type = SG_UNIFORMTYPE_MAT4},
+        [0] = { .name = "vs_params", .type = SG_UNIFORMTYPE_FLOAT4, .array_count = 4},
       },
     },
-#ifdef BINOCLE_GL
     .fs.source = screen_shader_fs_src,
-#else
-    .fs.byte_code = screen_fs_bytecode,
-    .fs.byte_code_size = sizeof(screen_fs_bytecode),
+#if defined(BINOCLE_METAL)
+    .fs.entry = "main0",
 #endif
-    .fs.images[0] = { .used = true, .image_type = SG_IMAGETYPE_2D},
+    .fs.images[0] = { .used = true, .image_type = SG_IMAGETYPE_2D, .sample_type = SG_IMAGESAMPLETYPE_FLOAT,},
     .fs.samplers[0] = {.used = true, .sampler_type = SG_SAMPLERTYPE_FILTERING},
-    .fs.image_sampler_pairs[0] = {.used = true, .glsl_name = "tex0", .image_slot = 0, .sampler_slot = 0},
+    .fs.image_sampler_pairs[0] = {.used = true, .glsl_name = "tex0_smp", .image_slot = 0, .sampler_slot = 0},
     .fs.uniform_blocks[0] = {
       .size = sizeof(screen_shader_fs_params_t),
       .layout = SG_UNIFORMLAYOUT_STD140,
       .uniforms = {
-        [0] = { .name = "resolution", .type = SG_UNIFORMTYPE_FLOAT2 },
-        [1] = { .name = "scale", .type = SG_UNIFORMTYPE_FLOAT2 },
-        [2] = { .name = "viewport", .type = SG_UNIFORMTYPE_FLOAT2 },
-        [3] = { .name = "pad24", .type = SG_UNIFORMTYPE_FLOAT2 },
+        [0] = { .name = "fs_params", .type = SG_UNIFORMTYPE_FLOAT4, .array_count = 2 },
       },
     },
   };
@@ -571,20 +584,65 @@ int main(int argc, char *argv[])
   SetLuaState(lua.L);
   LoadImguiBindings();
 
-  // Setup the default and flat pipeline
+  // Setup the default pipeline
   binocle_gd_setup_default_pipeline(gd, design_width, design_height, default_shader, screen_shader);
-  binocle_gd_setup_flat_pipeline(gd);
+
+  // Load the flat shader
+  char flat_vert[1024];
+  sprintf(flat_vert, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, FLAT_VS_FILENAME);
+  char flat_frag[1024];
+  sprintf(flat_frag, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, FLAT_FS_FILENAME);
+
+  char *flat_vs_src;
+  size_t flat_vs_src_size;
+  binocle_fs_load_text_file(flat_vert, &flat_vs_src, &flat_vs_src_size);
+
+  char *flat_fs_src;
+  size_t flat_fs_src_size;
+  binocle_fs_load_text_file(flat_frag, &flat_fs_src, &flat_fs_src_size);
+
+  // Setup the flat pipeline
+  binocle_gd_setup_flat_pipeline(gd, flat_vs_src, flat_fs_src);
 
   gui_resources_setup();
   debug_gui_handle = gui_resources_create_gui("debug");
-  gui_init_imgui(debug_gui_handle, window->width, window->height, window->width, window->height);
-  gui_setup_screen_pipeline(debug_gui_handle, screen_shader, false);
+
+  // Load the imgui shader
+  char imgui_vert[1024];
+  sprintf(imgui_vert, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, IMGUI_VS_FILENAME);
+  char imgui_frag[1024];
+  sprintf(imgui_frag, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, IMGUI_FS_FILENAME);
+
+  char *imgui_vs_src;
+  size_t imgui_vs_src_size;
+  binocle_fs_load_text_file(imgui_vert, &imgui_vs_src, &imgui_vs_src_size);
+
+  char *imgui_fs_src;
+  size_t imgui_fs_src_size;
+  binocle_fs_load_text_file(imgui_frag, &imgui_fs_src, &imgui_fs_src_size);
+
+  // Load the imgui screen shader
+  char imgui_screen_vert[1024];
+  sprintf(imgui_screen_vert, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, IMGUI_SCREEN_VS_FILENAME);
+  char imgui_screen_frag[1024];
+  sprintf(imgui_screen_frag, "%sshaders/%s/%s", binocle_assets_dir, SHADER_PATH, IMGUI_SCREEN_FS_FILENAME);
+
+  char *imgui_screen_vs_src;
+  size_t imgui_screen_vs_src_size;
+  binocle_fs_load_text_file(imgui_screen_vert, &imgui_screen_vs_src, &imgui_screen_vs_src_size);
+
+  char *imgui_screen_fs_src;
+  size_t imgui_screen_fs_src_size;
+  binocle_fs_load_text_file(imgui_screen_frag, &imgui_screen_fs_src, &imgui_screen_fs_src_size);
+
+  gui_init_imgui(debug_gui_handle, window->width, window->height, window->width, window->height, imgui_vs_src, imgui_fs_src);
+  gui_setup_screen_pipeline(debug_gui_handle, imgui_screen_vs_src, imgui_screen_fs_src);
 
   game_gui_handle = gui_resources_create_gui("game");
   gui_set_apply_scissor(game_gui_handle, true);
   gui_set_viewport_adapter(game_gui_handle, binocle_camera_get_viewport_adapter(*camera));
-  gui_init_imgui(game_gui_handle, design_width, design_height, window->width, window->height);
-  gui_setup_screen_pipeline(game_gui_handle, screen_shader, true);
+  gui_init_imgui(game_gui_handle, design_width, design_height, window->width, window->height, imgui_vs_src, imgui_fs_src);
+  gui_setup_screen_pipeline(game_gui_handle, imgui_screen_vs_src, imgui_screen_fs_src);
 
 //  gui_setup_imgui_to_offscreen_pipeline(gd, binocle_assets_dir);
 

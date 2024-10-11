@@ -1,4 +1,4 @@
-#version 330
+#version 410
 
 uniform vec2 resolution;
 uniform sampler2D tex0;

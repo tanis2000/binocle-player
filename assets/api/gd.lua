@@ -33,10 +33,11 @@ function gd.render_screen(gd_instance, window, width, height, viewport, camera) 
 ---@param a number alpha 0..1
 function gd.set_offscreen_clear_color(gd_instance, r, g, b, a) end
 
+---@param name string the name to associate to this shader for debugging purposes
 ---@param vs_src string the vertex shader source code
 ---@param fs_src string the fragment shader source code
 ---@return shader the instance of the shader that contains the shader descriptor and later on the reference to the compiled shader and the reference to the pipeline
-function gd.create_shader_desc(vs_src, fs_src) end
+function gd.create_shader_desc(name, vs_src, fs_src) end
 
 ---@param shader shader the shader instance
 ---@param stage string the shader stage, either VS or FS
