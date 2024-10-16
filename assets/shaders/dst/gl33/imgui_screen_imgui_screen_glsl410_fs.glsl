@@ -23,7 +23,7 @@ void main()
     }
     else
     {
-        fragColor = texture(tex0_smp, uvCoord);
+        fragColor = texture(tex0_smp, vec2(uvCoord.x, -uvCoord.y));
     }
 }
 

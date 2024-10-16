@@ -320,11 +320,11 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
 )
 
 set(SHADER_COMPILER "")
-if (APPLE)
+if (APPLE OR EMSCRIPTEN)
     set(SHADER_COMPILER "osx/sokol-shdc")
 elseif (WIN32)
     set(SHADER_COMPILER "win32/sokol-shdc.exe")
-endif (APPLE)
+endif ()
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
     get_filename_component(FILE_NAME ${GLSL} NAME_WLE)

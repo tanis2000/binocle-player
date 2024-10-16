@@ -1,6 +1,6 @@
 #pragma sokol @vs vs
 
-in vec3 vertexPosition;
+in vec2 vertexPosition;
 in vec4 vertexColor;
 in vec2 vertexTexture;
 
@@ -13,7 +13,7 @@ uniform vs_params {
 out vec4 color;
 
 void main(void) {
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition, 0.0, 1.0);
    //gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
     gl_PointSize = 1.0;
     color = vertexColor;
@@ -28,7 +28,7 @@ out vec4 fragColor;
 void main(void)
 {
     fragColor = color;
-    //fragColor = vec4(1.0, 1.0, 1.0, 1.0);
+//    fragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
 
 #pragma sokol @end

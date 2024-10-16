@@ -42,7 +42,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant fs_params& _50 [[buf
     }
     else
     {
-        out.fragColor = tex0.sample(smp, in.uvCoord);
+        out.fragColor = tex0.sample(smp, float2(in.uvCoord.x, -in.uvCoord.y));
     }
     return out;
 }

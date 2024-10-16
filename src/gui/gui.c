@@ -25,6 +25,7 @@
 
 typedef struct imgui_vs_params_t {
   ImVec2 disp_size;
+  uint8_t _pad_8[8];
   float projmat[4][4];
 } imgui_vs_params_t;
 
@@ -65,6 +66,7 @@ typedef struct screen_fs_params_t {
   float scale[2];
   float viewport[2];
   float pixel_perfect;
+  uint8_t _pad_28[4];
 } screen_fs_params_t;
 
 // Clipboard
@@ -293,10 +295,10 @@ void gui_init_imgui(gui_handle_t handle, float width, float height, float viewpo
   shd_desc.attrs[1].name = "texcoord0";
   shd_desc.attrs[2].name = "color0";
   shd_desc.vs.uniform_blocks[0].size = sizeof(imgui_vs_params_t);
-  shd_desc.vs.uniform_blocks[0].uniforms[0].name = "disp_size";
-  shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT2;
-  shd_desc.vs.uniform_blocks[0].uniforms[1].name = "projmtx";
-  shd_desc.vs.uniform_blocks[0].uniforms[1].type = SG_UNIFORMTYPE_MAT4;
+  shd_desc.vs.uniform_blocks[0].layout = SG_UNIFORMLAYOUT_STD140,
+  shd_desc.vs.uniform_blocks[0].uniforms[0].name = "vs_params";
+  shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT4;
+  shd_desc.vs.uniform_blocks[0].uniforms[0].array_count = 5;
   shd_desc.vs.source = vs_src;
 #if defined(BINOCLE_METAL)
   shd_desc.vs.entry = "main0";
@@ -304,6 +306,8 @@ void gui_init_imgui(gui_handle_t handle, float width, float height, float viewpo
   shd_desc.fs.samplers[0].sampler_type = SG_SAMPLERTYPE_FILTERING;
   shd_desc.fs.samplers[0].used = true;
   shd_desc.fs.images[0].image_type = SG_IMAGETYPE_2D;
+  shd_desc.fs.images[0].sample_type = SG_IMAGESAMPLETYPE_FLOAT;
+  shd_desc.fs.images[0].multisampled = false;
   shd_desc.fs.images[0].used = true;
   shd_desc.fs.image_sampler_pairs[0].glsl_name = "tex_smp";
   shd_desc.fs.image_sampler_pairs[0].image_slot = 0;
@@ -421,8 +425,8 @@ void draw_imgui(ImDrawData* draw_data) {
     // append vertices and indices to buffers, record start offsets in resource binding struct
     const uint32_t vtx_size = cl->VtxBuffer.Size * sizeof(ImDrawVert);
     const uint32_t idx_size = cl->IdxBuffer.Size * sizeof(ImDrawIdx);
-    const uint32_t vb_offset = sg_append_buffer(imgui_bind.vertex_buffers[0], &(sg_range){ cl->VtxBuffer.Data, vtx_size });
-    const uint32_t ib_offset = sg_append_buffer(imgui_bind.index_buffer, &(sg_range){ cl->IdxBuffer.Data, idx_size });
+    const uint32_t vb_offset = sg_append_buffer(imgui_bind.vertex_buffers[0], &(sg_range){ .ptr = cl->VtxBuffer.Data, .size = vtx_size });
+    const uint32_t ib_offset = sg_append_buffer(imgui_bind.index_buffer, &(sg_range){ .ptr = cl->IdxBuffer.Data, .size = idx_size });
     /* don't render anything if the buffer is in overflow state (this is also
         checked internally in sokol_gfx, draw calls that attempt from
         overflowed buffers will be silently dropped)
@@ -852,8 +856,10 @@ void gui_setup_screen_pipeline(gui_handle_t handle, const char *vs_src, const ch
   shd_desc.vs.entry = "main0";
 #endif
   shd_desc.vs.uniform_blocks[0].size = sizeof(screen_vs_params_t);
-  shd_desc.vs.uniform_blocks[0].uniforms[0].name = "transform";
-  shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_MAT4;
+  shd_desc.vs.uniform_blocks[0].layout = SG_UNIFORMLAYOUT_STD140;
+  shd_desc.vs.uniform_blocks[0].uniforms[0].name = "vs_params";
+  shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT4;
+  shd_desc.vs.uniform_blocks[0].uniforms[0].array_count = 4;
   shd_desc.fs.source = fs_src;
 #if defined(BINOCLE_METAL)
   shd_desc.fs.entry = "main0";
@@ -867,14 +873,10 @@ void gui_setup_screen_pipeline(gui_handle_t handle, const char *vs_src, const ch
   shd_desc.fs.image_sampler_pairs[0].image_slot = 0;
   shd_desc.fs.image_sampler_pairs[0].sampler_slot = 0;
   shd_desc.fs.uniform_blocks[0].size = sizeof(screen_fs_params_t);
-  shd_desc.fs.uniform_blocks[0].uniforms[0].name = "resolution";
-  shd_desc.fs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT2;
-  shd_desc.fs.uniform_blocks[0].uniforms[1].name = "scale";
-  shd_desc.fs.uniform_blocks[0].uniforms[1].type = SG_UNIFORMTYPE_FLOAT2;
-  shd_desc.fs.uniform_blocks[0].uniforms[2].name = "viewport";
-  shd_desc.fs.uniform_blocks[0].uniforms[2].type = SG_UNIFORMTYPE_FLOAT2;
-  shd_desc.fs.uniform_blocks[0].uniforms[3].name = "pixelPerfect";
-  shd_desc.fs.uniform_blocks[0].uniforms[3].type = SG_UNIFORMTYPE_FLOAT;
+  shd_desc.fs.uniform_blocks[0].layout = SG_UNIFORMLAYOUT_STD140;
+  shd_desc.fs.uniform_blocks[0].uniforms[0].name = "fs_params";
+  shd_desc.fs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT4;
+  shd_desc.fs.uniform_blocks[0].uniforms[0].array_count = 2;
 
   binocle_log_info("Compiling GUI shader for screen pipeline");
   sg_shader shd = sg_make_shader(&shd_desc);
@@ -1019,10 +1021,10 @@ void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *win
   gui_screen_bind.fs.images[0] = gui->imgui_render_target;
   gui_screen_bind.fs.samplers[0] = gui->imgui_sampler;
 
-  sg_begin_pass(&(sg_pass){
-    .action = gui_screen_pass_action,
-    .swapchain = binocle_window_get_swapchain(window)
-  });
+  // sg_begin_pass(&(sg_pass){
+  //   .action = gui_screen_pass_action,
+  //   .swapchain = binocle_window_get_swapchain(window)
+  // });
   sg_apply_pipeline(gui->gui_screen_pip);
   sg_apply_bindings(&gui_screen_bind);
   sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, &SG_RANGE(screen_vs_params));
@@ -1031,7 +1033,7 @@ void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *win
     sg_apply_scissor_rect(viewport.min.x, viewport.min.y, design_width / scale, design_height / scale, false);
   }
   sg_draw(0, 6, 1);
-  sg_end_pass();
+  // sg_end_pass();
 
   // sg_commit();
 }

@@ -8,14 +8,14 @@ cbuffer vs_params : register(b0)
 
 static float4 gl_Position;
 static float gl_PointSize;
-static float3 vertexPosition;
+static float2 vertexPosition;
 static float4 color;
 static float4 vertexColor;
 static float2 vertexTexture;
 
 struct SPIRV_Cross_Input
 {
-    float3 vertexPosition : TEXCOORD0;
+    float2 vertexPosition : TEXCOORD0;
     float4 vertexColor : TEXCOORD1;
     float2 vertexTexture : TEXCOORD2;
 };
@@ -28,7 +28,7 @@ struct SPIRV_Cross_Output
 
 void vert_main()
 {
-    gl_Position = mul(float4(vertexPosition, 1.0f), mul(_19_modelMatrix, mul(_19_viewMatrix, _19_projectionMatrix)));
+    gl_Position = mul(float4(vertexPosition, 0.0f, 1.0f), mul(_19_modelMatrix, mul(_19_viewMatrix, _19_projectionMatrix)));
     gl_PointSize = 1.0f;
     color = vertexColor;
 }

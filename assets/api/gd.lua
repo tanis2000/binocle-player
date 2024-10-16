@@ -78,4 +78,15 @@ function gd.draw_rect(gd_instance, center_x, center_y, width, height, color, vie
 ---@param depth number the depth to use
 function gd.draw_rect_outline(gd_instance, center_x, center_y, width, height, color, viewport, camera, depth) end
 
+---Begins the screen pass. During this pass multiple pipelines can be applied.
+---@param gd_instance GraphicsDevice an instance of GraphicsDevice
+---@param window Window an instance of Window
+function gd.begin_screen_pass(gd_instance, window) end
+
+---Ends the screen pass.
+function gd.end_screen_pass() end
+
+---Commits all the rendering buffers after all the passes are ended
+function gd.commit() end
+
 return gd

@@ -41,7 +41,7 @@ void frag_main()
     }
     else
     {
-        fragColor = tex0.Sample(smp, uvCoord);
+        fragColor = tex0.Sample(smp, float2(uvCoord.x, -uvCoord.y));
     }
 }
 

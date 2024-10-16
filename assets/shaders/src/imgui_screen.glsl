@@ -1,4 +1,5 @@
 #pragma sokol @vs vs
+#pragma sokol @glsl_options flip_vert_y
 
 in vec3 position;
 uniform vs_params {
@@ -42,7 +43,7 @@ void main() {
         vec2 pixelPerfectUV = uv_iq(uv, ivec2(resolution.xy));
         fragColor = texture(sampler2D(tex0, smp), pixelPerfectUV);
     } else {
-        vec4 texcolor = texture(sampler2D(tex0, smp), uvCoord);
+        vec4 texcolor = texture(sampler2D(tex0, smp), vec2(uvCoord.x, -uvCoord.y));
         fragColor = texcolor;
     }
 
