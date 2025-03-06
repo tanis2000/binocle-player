@@ -98,7 +98,7 @@ char *binocle_assets_dir;
 binocle_lua lua;
 binocle_app app;
 float elapsed_time = 0;
-SDL_mutex *lua_mutex;
+SDL_Mutex *lua_mutex;
 sg_shader default_shader;
 sg_shader screen_shader;
 gui_handle_t debug_gui_handle;

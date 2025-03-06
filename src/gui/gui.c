@@ -1061,7 +1061,7 @@ int l_gui_wrap_new_frame(lua_State *L) {
   int display_h = h;
   if (w == 0 || h == 0) {
     SDL_GetWindowSize(window_wrapper->window->window, &w, &h);
-    SDL_GL_GetDrawableSize(window_wrapper->window->window, &display_w, &display_h);
+    SDL_GetWindowSizeInPixels(window_wrapper->window->window, &display_w, &display_h);
   }
   gui_wrap_new_frame(window_wrapper->window, dt, w, h, display_w, display_h);
   return 0;
