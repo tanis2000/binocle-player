@@ -325,12 +325,15 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/assets/shaders/src/*.glsl"
 )
 
-set(SHADER_COMPILER "")
-if (APPLE OR EMSCRIPTEN)
+set(SHADER_COMPILER "missing-sokol-shdc-for-this-host-architecture")
+if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
     set(SHADER_COMPILER "osx/sokol-shdc")
-elseif (WIN32)
+elseif (CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     set(SHADER_COMPILER "win32/sokol-shdc.exe")
+elseif (CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+    set(SHADER_COMPILER "linux/sokol-shdc")
 endif ()
+message("Using shader compiler ${SHADER_COMPILER}")
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
     get_filename_component(FILE_NAME ${GLSL} NAME_WLE)
@@ -342,7 +345,8 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
     message("Compiling shader ${GLSL} to ${SPIRV_GL33}")
     message("Compiling shader ${GLSL} to ${SPIRV_GLES}")
     message("Compiling shader ${GLSL} to ${SPIRV_HLSL}")
-    message("Compiling shader ${GLSL} to ${SPIRV_METAL}")
+    message("Compiling shader ${GLSL} to ${SPIRV_METAL_MACOS}")
+    message("Compiling shader ${GLSL} to ${SPIRV_METAL_IOS}")
     add_custom_command(
             OUTPUT ${SPIRV_GL33}
             OUTPUT ${SPIRV_GLES}
@@ -370,9 +374,22 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
             COMMAND "${CMAKE_SOURCE_DIR}/binocle-c/tools/sokol-shdc/${SHADER_COMPILER}"
             ARGS "--input" "${GLSL}" "--output" "${SPIRV_METAL_IOS}" "--slang" "metal_ios" "-f" "bare"
     )
-    list(APPEND SPIRV_GENERATED_FILES ${SPIRV_GL33} ${SPIRV_GLES} ${SPIRV_HLSL} ${SPIRV_METAL})
+    if (BINOCLE_GL)
+        if (IOS)
+            list(APPEND SPIRV_GENERATED_FILES ${SPIRV_GLES})
+        else ()
+            list(APPEND SPIRV_GENERATED_FILES ${SPIRV_GL33})
+        endif ()
+    elseif (BINOCLE_METAL)
+        if (IOS)
+            list(APPEND SPIRV_GENERATED_FILES ${SPIRV_METAL_IOS})
+        else()
+            list(APPEND SPIRV_GENERATED_FILES ${SPIRV_METAL_MACOS})
+        endif ()
+    endif ()
 endforeach(GLSL)
 
+message("SPIRV files: ${SPIRV_GENERATED_FILES}")
 add_custom_target(
         Shaders
         DEPENDS ${SPIRV_GENERATED_FILES}
