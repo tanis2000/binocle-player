@@ -52,7 +52,7 @@ jobs:
 
       # Setup MSBuild.exe path if required
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.0.2
+        uses: microsoft/setup-msbuild@v1.1
 
 #      - name: Cache dependencies
 #        id: cache-dependencies
