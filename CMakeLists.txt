@@ -336,7 +336,7 @@ endif ()
 message("Using shader compiler ${SHADER_COMPILER}")
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
-    get_filename_component(FILE_NAME ${GLSL} NAME_WLE)
+    get_filename_component(FILE_NAME ${GLSL} NAME)
     set(SPIRV_GL33 "${CMAKE_SOURCE_DIR}/assets/shaders/dst/gl33/${FILE_NAME}")
     set(SPIRV_GLES "${CMAKE_SOURCE_DIR}/assets/shaders/dst/gles/${FILE_NAME}")
     set(SPIRV_HLSL "${CMAKE_SOURCE_DIR}/assets/shaders/dst/hlsl/${FILE_NAME}")
