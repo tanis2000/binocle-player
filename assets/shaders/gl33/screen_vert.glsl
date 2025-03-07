@@ -1,4 +1,4 @@
-#version 330
+#version 410
 in vec3 position;
 uniform mat4 transform;
 out vec2 uvCoord;

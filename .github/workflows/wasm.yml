@@ -36,6 +36,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: true
+          lfs: 'true'
 
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v12
@@ -87,7 +88,7 @@ jobs:
           tar -czvf ${{ env.RELEASE_NAME }}.tar.gz ${{ env.RELEASE_NAME }}
 
       - name: Upload artefacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.RELEASE_NAME }}.tar.gz
           path: ./build/${{ env.RELEASE_NAME }}.tar.gz

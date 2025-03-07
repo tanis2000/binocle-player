@@ -8,6 +8,12 @@ project(binocle-player)
 #	cmake_policy(SET CMP0025 NEW)
 #endif()
 
+# Workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/24104
+# See also https://github.com/libsdl-org/SDL/issues/6454
+if (APPLE)
+    enable_language(OBJC)
+endif ()
+
 # cmake modules directory
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/binocle-c/cmake")
 
@@ -314,6 +320,82 @@ if (ANDROID)
         COMMAND ${CMAKE_COMMAND} -E copy ${ANDROID_NDK}/sources/cxx-stl/llvm-libc++/libs/${ANDROID_ABI}/libc++_shared.so ${CMAKE_CURRENT_BINARY_DIR}/../../android-project/app/libs/${ANDROID_ABI}/libc++_shared.so)
     #file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/../android-project/libs/${ANDROID_ABI}/lib${PROJECT_NAME}.so ${CMAKE_CURRENT_BINARY_DIR}/../android-project/libs/${ANDROID_ABI}/libmain.so)
 endif ()
+
+file(GLOB_RECURSE GLSL_SOURCE_FILES
+        "${CMAKE_SOURCE_DIR}/assets/shaders/src/*.glsl"
+)
+
+set(SHADER_COMPILER "missing-sokol-shdc-for-this-host-architecture")
+if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
+    set(SHADER_COMPILER "osx/sokol-shdc")
+elseif (CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+    set(SHADER_COMPILER "win32/sokol-shdc.exe")
+elseif (CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+    set(SHADER_COMPILER "linux/sokol-shdc")
+endif ()
+message("Using shader compiler ${SHADER_COMPILER}")
+
+foreach(GLSL ${GLSL_SOURCE_FILES})
+    get_filename_component(FILE_NAME ${GLSL} NAME)
+    set(SPIRV_GL33 "${CMAKE_SOURCE_DIR}/assets/shaders/dst/gl33/${FILE_NAME}")
+    set(SPIRV_GLES "${CMAKE_SOURCE_DIR}/assets/shaders/dst/gles/${FILE_NAME}")
+    set(SPIRV_HLSL "${CMAKE_SOURCE_DIR}/assets/shaders/dst/hlsl/${FILE_NAME}")
+    set(SPIRV_METAL_MACOS "${CMAKE_SOURCE_DIR}/assets/shaders/dst/metal-macos/${FILE_NAME}")
+    set(SPIRV_METAL_IOS "${CMAKE_SOURCE_DIR}/assets/shaders/dst/metal-ios/${FILE_NAME}")
+    message("Compiling shader ${GLSL} to ${SPIRV_GL33}")
+    message("Compiling shader ${GLSL} to ${SPIRV_GLES}")
+    message("Compiling shader ${GLSL} to ${SPIRV_HLSL}")
+    message("Compiling shader ${GLSL} to ${SPIRV_METAL_MACOS}")
+    message("Compiling shader ${GLSL} to ${SPIRV_METAL_IOS}")
+    add_custom_command(
+            OUTPUT ${SPIRV_GL33}
+            OUTPUT ${SPIRV_GLES}
+            OUTPUT ${SPIRV_HLSL}
+            OUTPUT ${SPIRV_METAL_MACOS}
+            OUTPUT ${SPIRV_METAL_IOS}
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/assets/shaders/"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/assets/shaders/dst"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/assets/shaders/dst/gl33"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/assets/shaders/dst/gles"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/assets/shaders/dst/hlsl"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/assets/shaders/dst/metal-macos"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/assets/shaders/dst/metal-ios"
+            COMMAND "${CMAKE_SOURCE_DIR}/binocle-c/tools/sokol-shdc/${SHADER_COMPILER}"
+            ARGS "--input" "${GLSL}" "--output" "${SPIRV_GL33}" "--slang" "glsl410" "-f" "bare"
+            COMMAND "${CMAKE_SOURCE_DIR}/binocle-c/tools/sokol-shdc/${SHADER_COMPILER}"
+            # Enable the following to get a C output of the shaders for debugging purposes
+            #            ARGS "--input" "${GLSL}" "--output" "${SPIRV_GL33}" "--slang" "glsl330" "-f" "sokol"
+            #            COMMAND "${CMAKE_SOURCE_DIR}/binocle-c/tools/sokol-shdc/${SHADER_COMPILER}"
+            ARGS "--input" "${GLSL}" "--output" "${SPIRV_GLES}" "--slang" "glsl300es" "-f" "bare"
+            COMMAND "${CMAKE_SOURCE_DIR}/binocle-c/tools/sokol-shdc/${SHADER_COMPILER}"
+            ARGS "--input" "${GLSL}" "--output" "${SPIRV_HLSL}" "--slang" "hlsl4" "-f" "bare"
+            COMMAND "${CMAKE_SOURCE_DIR}/binocle-c/tools/sokol-shdc/${SHADER_COMPILER}"
+            ARGS "--input" "${GLSL}" "--output" "${SPIRV_METAL_MACOS}" "--slang" "metal_macos" "-f" "bare"
+            COMMAND "${CMAKE_SOURCE_DIR}/binocle-c/tools/sokol-shdc/${SHADER_COMPILER}"
+            ARGS "--input" "${GLSL}" "--output" "${SPIRV_METAL_IOS}" "--slang" "metal_ios" "-f" "bare"
+    )
+    if (BINOCLE_GL)
+        if (IOS)
+            list(APPEND SPIRV_GENERATED_FILES ${SPIRV_GLES})
+        else ()
+            list(APPEND SPIRV_GENERATED_FILES ${SPIRV_GL33})
+        endif ()
+    elseif (BINOCLE_METAL)
+        if (IOS)
+            list(APPEND SPIRV_GENERATED_FILES ${SPIRV_METAL_IOS})
+        else()
+            list(APPEND SPIRV_GENERATED_FILES ${SPIRV_METAL_MACOS})
+        endif ()
+    endif ()
+endforeach(GLSL)
+
+message("SPIRV files: ${SPIRV_GENERATED_FILES}")
+add_custom_target(
+        Shaders
+        DEPENDS ${SPIRV_GENERATED_FILES}
+)
+
+add_dependencies(${PROJECT_NAME} Shaders)
 
 #if (APPLE)
 #    add_custom_command ( TARGET ${PROJECT_NAME} POST_BUILD

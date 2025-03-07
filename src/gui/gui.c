@@ -25,6 +25,7 @@
 
 typedef struct imgui_vs_params_t {
   ImVec2 disp_size;
+  uint8_t _pad_8[8];
   float projmat[4][4];
 } imgui_vs_params_t;
 
@@ -39,7 +40,7 @@ sg_bindings imgui_bind;
 
 
 
-sg_pass imgui_to_offscreen_pass;
+sg_attachments imgui_to_offscreen_attachments;
 sg_pipeline imgui_to_offscreen_pip;
 sg_shader imgui_to_offscreen_shader;
 sg_buffer imgui_to_offscreen_vbuf;
@@ -64,6 +65,8 @@ typedef struct screen_fs_params_t {
   float resolution[2];
   float scale[2];
   float viewport[2];
+  float pixel_perfect;
+  uint8_t _pad_28[4];
 } screen_fs_params_t;
 
 // Clipboard
@@ -88,7 +91,7 @@ typedef struct gui_t {
   const char *name;
   sg_image imgui_render_target;
   sg_sampler imgui_sampler;
-  sg_pass imgui_pass;
+  sg_attachments imgui_attachments;
   sg_pipeline gui_screen_pip;
   float viewport_w;
   float viewport_h;
@@ -195,7 +198,7 @@ void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height
 #ifdef BINOCLE_GL
     .pixel_format = SG_PIXELFORMAT_RGBA8,
 #else
-    .pixel_format = BINOCLE_PIXELFORMAT_BGRA8,
+    .pixel_format = SG_PIXELFORMAT_RGBA8,
 #endif
     .sample_count = 1,
   };
@@ -204,12 +207,12 @@ void gui_recreate_imgui_render_target(gui_handle_t handle, int width, int height
     .mag_filter = SG_FILTER_LINEAR,
   });
   gui->imgui_render_target = sg_make_image(&rt_desc);
-  gui->imgui_pass = sg_make_pass(&(sg_pass_desc){
-    .color_attachments[0].image = gui->imgui_render_target,
+  gui->imgui_attachments = sg_make_attachments(&(sg_attachments_desc){
+    .colors[0].image = gui->imgui_render_target,
   });
 }
 
-void gui_init_imgui(gui_handle_t handle, float width, float height, float viewport_width, float viewport_height) {
+void gui_init_imgui(gui_handle_t handle, float width, float height, float viewport_width, float viewport_height, const char *vs_src, const char *fs_src) {
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
   ImVec2Zero = ImVec2_ImVec2_Float(0, 0);
   shared_font_atlas = ImFontAtlas_ImFontAtlas();
@@ -287,79 +290,32 @@ void gui_init_imgui(gui_handle_t handle, float width, float height, float viewpo
 
   // shader object for imgui rendering
   sg_shader_desc shd_desc = {0};
+  shd_desc.label = "imgui-shader";
   shd_desc.attrs[0].name = "position";
   shd_desc.attrs[1].name = "texcoord0";
   shd_desc.attrs[2].name = "color0";
   shd_desc.vs.uniform_blocks[0].size = sizeof(imgui_vs_params_t);
-  shd_desc.vs.uniform_blocks[0].uniforms[0].name = "disp_size";
-  shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT2;
-  shd_desc.vs.uniform_blocks[0].uniforms[1].name = "projmtx";
-  shd_desc.vs.uniform_blocks[0].uniforms[1].type = SG_UNIFORMTYPE_MAT4;
-#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
-  shd_desc.vs.source =
-    "#version 300 es\n"
-    "precision mediump float;\n"
-    "precision mediump int;\n"
-    "uniform vec2 disp_size;\n"
-    "uniform mat4 projmtx;\n"
-    "in vec2 position;\n"
-    "in vec2 texcoord0;\n"
-    "in vec4 color0;\n"
-    "out vec2 uv;\n"
-    "out vec4 color;\n"
-    "void main() {\n"
-    "    gl_Position = vec4(((position/disp_size)-0.5)*vec2(2.0,-2.0), 0.5, 1.0);\n"
-//    "    gl_Position = projmtx * vec4(position.xy,0,1);\n"
-    "    uv = texcoord0;\n"
-    "    color = color0;\n"
-    "}\n";
-#else
-  shd_desc.vs.source =
-    "#version 330\n"
-    "uniform vec2 disp_size;\n"
-    "uniform mat4 projmtx;\n"
-    "layout(location=0) in vec2 position;\n"
-    "layout(location=1) in vec2 texcoord0;\n"
-    "layout(location=2) in vec4 color0;\n"
-    "out vec2 uv;\n"
-    "out vec4 color;\n"
-    "void main() {\n"
-    "    gl_Position = vec4(((position/disp_size)-0.5)*vec2(2.0,-2.0), 0.5, 1.0);\n"
-//    "    gl_Position = projmtx * vec4(position.xy,0,1);\n"
-    "    uv = texcoord0;\n"
-    "    color = color0;\n"
-    "}\n";
+  shd_desc.vs.uniform_blocks[0].layout = SG_UNIFORMLAYOUT_STD140,
+  shd_desc.vs.uniform_blocks[0].uniforms[0].name = "vs_params";
+  shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT4;
+  shd_desc.vs.uniform_blocks[0].uniforms[0].array_count = 5;
+  shd_desc.vs.source = vs_src;
+#if defined(BINOCLE_METAL)
+  shd_desc.vs.entry = "main0";
 #endif
   shd_desc.fs.samplers[0].sampler_type = SG_SAMPLERTYPE_FILTERING;
   shd_desc.fs.samplers[0].used = true;
   shd_desc.fs.images[0].image_type = SG_IMAGETYPE_2D;
+  shd_desc.fs.images[0].sample_type = SG_IMAGESAMPLETYPE_FLOAT;
+  shd_desc.fs.images[0].multisampled = false;
   shd_desc.fs.images[0].used = true;
-  shd_desc.fs.image_sampler_pairs[0].glsl_name = "tex";
+  shd_desc.fs.image_sampler_pairs[0].glsl_name = "tex_smp";
   shd_desc.fs.image_sampler_pairs[0].image_slot = 0;
   shd_desc.fs.image_sampler_pairs[0].sampler_slot = 0;
   shd_desc.fs.image_sampler_pairs[0].used = true;
-#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
-  shd_desc.fs.source =
-    "#version 300 es\n"
-    "precision mediump float;\n"
-    "precision mediump int;\n"
-    "uniform sampler2D tex;\n"
-    "in vec2 uv;\n"
-    "in vec4 color;\n"
-    "out vec4 frag_color;\n"
-    "void main() {\n"
-    "    frag_color = texture(tex, uv) * color;\n"
-    "}\n";
-#else
-  shd_desc.fs.source =
-    "#version 330\n"
-    "uniform sampler2D tex;\n"
-    "in vec2 uv;\n"
-    "in vec4 color;\n"
-    "out vec4 frag_color;\n"
-    "void main() {\n"
-    "    frag_color = texture(tex, uv) * color;\n"
-    "}\n";
+  shd_desc.fs.source = fs_src;
+#if defined(BINOCLE_METAL)
+  shd_desc.fs.entry = "main0";
 #endif
   binocle_log_info("Compiling GUI shader for init");
   sg_shader shd = sg_make_shader(&shd_desc);
@@ -389,6 +345,7 @@ void gui_init_imgui(gui_handle_t handle, float width, float height, float viewpo
     .shader = shd,
     .index_type = SG_INDEXTYPE_UINT16,
     .colors[0] = {
+      .pixel_format = SG_PIXELFORMAT_RGBA8,
       .blend = {
         .enabled = true,
         .src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA,
@@ -468,8 +425,8 @@ void draw_imgui(ImDrawData* draw_data) {
     // append vertices and indices to buffers, record start offsets in resource binding struct
     const uint32_t vtx_size = cl->VtxBuffer.Size * sizeof(ImDrawVert);
     const uint32_t idx_size = cl->IdxBuffer.Size * sizeof(ImDrawIdx);
-    const uint32_t vb_offset = sg_append_buffer(imgui_bind.vertex_buffers[0], &(sg_range){ cl->VtxBuffer.Data, vtx_size });
-    const uint32_t ib_offset = sg_append_buffer(imgui_bind.index_buffer, &(sg_range){ cl->IdxBuffer.Data, idx_size });
+    const uint32_t vb_offset = sg_append_buffer(imgui_bind.vertex_buffers[0], &(sg_range){ .ptr = cl->VtxBuffer.Data, .size = vtx_size });
+    const uint32_t ib_offset = sg_append_buffer(imgui_bind.index_buffer, &(sg_range){ .ptr = cl->IdxBuffer.Data, .size = idx_size });
     /* don't render anything if the buffer is in overflow state (this is also
         checked internally in sokol_gfx, draw calls that attempt from
         overflowed buffers will be silently dropped)
@@ -827,7 +784,9 @@ void gui_imgui_to_offscreen_render(float width, float height) {
     }
   };
 
-  sg_begin_pass(imgui_to_offscreen_pass, &imgui_to_offscreen_action);
+  sg_begin_pass(&(sg_pass){
+    .attachments = imgui_to_offscreen_attachments,
+    .action = imgui_to_offscreen_action});
   sg_apply_pipeline(imgui_to_offscreen_pip);
   sg_apply_bindings(&imgui_to_offscreen_bind);
   sg_apply_uniforms(SG_SHADERSTAGE_FS, 0, &SG_RANGE(uniforms));
@@ -883,142 +842,42 @@ void gui_pass_input_to_imgui(gui_handle_t handle, binocle_input *input) {
   ImGuiIO_AddInputCharactersUTF8(io, input->text);
 }
 
-void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bool pixel_perfect) {
+void gui_setup_screen_pipeline(gui_handle_t handle, const char *vs_src, const char *fs_src) {
   // Render to screen pipeline
 
   gui_t *gui = gui_resources_get_gui_with_handle(handle);
 
   // shader object for imgui rendering
   sg_shader_desc shd_desc = {0};
+  shd_desc.label = "imgui-screen-shader";
   shd_desc.attrs[0].name = "position";
+  shd_desc.vs.source = vs_src;
+#if defined(BINOCLE_METAL)
+  shd_desc.vs.entry = "main0";
+#endif
   shd_desc.vs.uniform_blocks[0].size = sizeof(screen_vs_params_t);
-  shd_desc.vs.uniform_blocks[0].uniforms[0].name = "transform";
-  shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_MAT4;
-#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
-  shd_desc.vs.source =
-    "#version 300 es\n"
-    "precision mediump float;\n"
-    "precision mediump int;\n"
-    "in vec3 position;\n"
-    "uniform mat4 transform;\n"
-    "out vec2 uvCoord;\n"
-    "void main(void) {\n"
-    "gl_Position = transform * vec4( position, 1.0 );\n"
-    "uvCoord = (position.xy + vec2(1,1))/2.0;\n"
-    "}\n";
-#else
-  shd_desc.vs.source =
-    "#version 330\n"
-    "in vec3 position;\n"
-    "uniform mat4 transform;\n"
-    "out vec2 uvCoord;\n"
-    "void main(void) {\n"
-    "gl_Position = transform * vec4( position, 1.0 );\n"
-    "uvCoord = (position.xy + vec2(1,1))/2.0;\n"
-    "}\n";
+  shd_desc.vs.uniform_blocks[0].layout = SG_UNIFORMLAYOUT_STD140;
+  shd_desc.vs.uniform_blocks[0].uniforms[0].name = "vs_params";
+  shd_desc.vs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT4;
+  shd_desc.vs.uniform_blocks[0].uniforms[0].array_count = 4;
+  shd_desc.fs.source = fs_src;
+#if defined(BINOCLE_METAL)
+  shd_desc.fs.entry = "main0";
 #endif
   shd_desc.fs.images[0].used = true;
   shd_desc.fs.images[0].image_type = SG_IMAGETYPE_2D;
   shd_desc.fs.samplers[0].used = true;
   shd_desc.fs.samplers[0].sampler_type = SG_SAMPLERTYPE_FILTERING;
   shd_desc.fs.image_sampler_pairs[0].used = true;
-  shd_desc.fs.image_sampler_pairs[0].glsl_name = "tex0";
+  shd_desc.fs.image_sampler_pairs[0].glsl_name = "tex0_smp";
   shd_desc.fs.image_sampler_pairs[0].image_slot = 0;
   shd_desc.fs.image_sampler_pairs[0].sampler_slot = 0;
   shd_desc.fs.uniform_blocks[0].size = sizeof(screen_fs_params_t);
-  shd_desc.fs.uniform_blocks[0].uniforms[0].name = "resolution";
-  shd_desc.fs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT2;
-  shd_desc.fs.uniform_blocks[0].uniforms[1].name = "scale";
-  shd_desc.fs.uniform_blocks[0].uniforms[1].type = SG_UNIFORMTYPE_FLOAT2;
-  shd_desc.fs.uniform_blocks[0].uniforms[2].name = "viewport";
-  shd_desc.fs.uniform_blocks[0].uniforms[2].type = SG_UNIFORMTYPE_FLOAT2;
-#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
-  if (pixel_perfect) {
-      shd_desc.fs.source =
-    "#version 300 es\n"
-    "precision mediump float;\n"
-    "precision mediump int;\n"
-    "uniform vec2 resolution;\n"
-    "uniform sampler2D tex0;\n"
-    "uniform vec2 scale;\n"
-    "uniform vec2 viewport;\n"
-    "out vec4 fragColor;\n"
-    "in vec2 uvCoord;\n"
-          "vec2 uv_iq( vec2 uv, vec2 texture_size ) {\n"
-      "    vec2 pixel = uv * texture_size;\n"
-      "\n"
-      "    vec2 seam = floor(pixel + 0.5);\n"
-      "    vec2 dudv = fwidth(pixel);\n"
-      "    pixel = seam + clamp( (pixel - seam) / dudv, -0.5, 0.5);\n"
-      "\n"
-      "    return pixel / texture_size;\n"
-      "}\n"
-      "\n"
-      "void main() {\n"
-      "\n"
-      "    vec2 uv = (gl_FragCoord.xy - floor(viewport.xy)) / resolution.xy * scale;\n"
-      "    vec2 pixelPerfectUV = uv_iq(uv, resolution.xy);\n"
-      "    fragColor = texture( tex0, pixelPerfectUV );\n"
-      "\n"
-      "}\n";
-  } else {
-      shd_desc.fs.source =
-    "#version 300 es\n"
-    "precision mediump float;\n"
-    "precision mediump int;\n"
-    "uniform sampler2D tex0;\n"
-    "uniform vec2 scale;\n"
-    "uniform vec2 viewport;\n"
-    "out vec4 fragColor;\n"
-    "in vec2 uvCoord;\n"
-    "void main() {\n"
-    "    vec4 texcolor = texture(tex0, uvCoord);\n"
-    "    fragColor = texcolor;\n"
-    "    //gl_FragColor = texture2D(tex, uv) * color;\n"
-    "}\n";
-  }
-#else
-  if (pixel_perfect) {
-    shd_desc.fs.source =
-      "#version 330\n"
-      "uniform vec2 resolution;\n"
-      "uniform sampler2D tex0;\n"
-      "uniform vec2 scale;\n"
-      "uniform vec2 viewport;\n"
-      "out vec4 fragColor;\n"
-      "in vec2 uvCoord;\n"
-      "vec2 uv_iq( vec2 uv, ivec2 texture_size ) {\n"
-      "    vec2 pixel = uv * texture_size;\n"
-      "\n"
-      "    vec2 seam = floor(pixel + 0.5);\n"
-      "    vec2 dudv = fwidth(pixel);\n"
-      "    pixel = seam + clamp( (pixel - seam) / dudv, -0.5, 0.5);\n"
-      "\n"
-      "    return pixel / texture_size;\n"
-      "}\n"
-      "\n"
-      "void main() {\n"
-      "\n"
-      "    vec2 uv = (gl_FragCoord.xy - floor(viewport.xy)) / resolution.xy * scale;\n"
-      "    vec2 pixelPerfectUV = uv_iq(uv, ivec2(resolution.xy));\n"
-      "    fragColor = texture(tex0, pixelPerfectUV);\n"
-      "}\n";
-  } else {
-    shd_desc.fs.source =
-      "#version 330\n"
-      "uniform vec2 resolution;\n"
-      "uniform sampler2D tex0;\n"
-      "uniform vec2 scale;\n"
-      "uniform vec2 viewport;\n"
-      "out vec4 fragColor;\n"
-      "in vec2 uvCoord;\n"
-      "void main(void) {\n"
-      "vec4 texcolor = texture(tex0, uvCoord);\n"
-      "//if (texcolor.a < 1) discard;\n"
-      "fragColor = texcolor;\n"
-      "}\n";
-  }
-#endif
+  shd_desc.fs.uniform_blocks[0].layout = SG_UNIFORMLAYOUT_STD140;
+  shd_desc.fs.uniform_blocks[0].uniforms[0].name = "fs_params";
+  shd_desc.fs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT4;
+  shd_desc.fs.uniform_blocks[0].uniforms[0].array_count = 2;
+
   binocle_log_info("Compiling GUI shader for screen pipeline");
   sg_shader shd = sg_make_shader(&shd_desc);
   binocle_log_info("Done compiling GUI shader for screen pipeline");
@@ -1054,16 +913,16 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
     },
     .shader = shd,
     .index_type = SG_INDEXTYPE_UINT16,
-    #if !defined(BINOCLE_GL)
-    .depth = {
-      .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL,
-      .compare = SG_COMPAREFUNC_NEVER,
-      .write_enabled = false,
-    },
-    .stencil = {
-      .enabled = false,
-    },
-    #endif
+    // #if !defined(BINOCLE_GL)
+    // .depth = {
+    //   .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL,
+    //   .compare = SG_COMPAREFUNC_NEVER,
+    //   .write_enabled = false,
+    // },
+    // .stencil = {
+    //   .enabled = false,
+    // },
+    // #endif
     .colors = {
 #ifdef BINOCLE_GL
       [0] = {
@@ -1079,7 +938,18 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
         }
       }
 #else
-      [0] = { .pixel_format = SG_PIXELFORMAT_BGRA8 }
+      [0] = {
+        .pixel_format = SG_PIXELFORMAT_BGRA8,
+        .blend = {
+          .enabled = true,
+          .src_factor_alpha = SG_BLENDFACTOR_SRC_ALPHA,
+          .dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+          .op_alpha = SG_BLENDOP_ADD,
+          .src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA,
+          .dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+          .op_rgb = SG_BLENDOP_ADD,
+        }
+      }
 #endif
     }
   });
@@ -1129,7 +999,7 @@ void gui_setup_screen_pipeline(gui_handle_t handle, sg_shader display_shader, bo
   };
 }
 
-void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *window, float design_width, float design_height, kmAABB2 viewport, kmMat4 matrix, float scale) {
+void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *window, float design_width, float design_height, kmAABB2 viewport, kmMat4 matrix, float scale, bool pixel_perfect) {
   // Render the offscreen to the display
 
 
@@ -1146,11 +1016,15 @@ void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *win
   screen_fs_params.scale[1] = scale;
   screen_fs_params.viewport[0] = viewport.min.x;
   screen_fs_params.viewport[1] = viewport.min.y;
+  screen_fs_params.pixel_perfect = pixel_perfect;
 
   gui_screen_bind.fs.images[0] = gui->imgui_render_target;
   gui_screen_bind.fs.samplers[0] = gui->imgui_sampler;
 
-  sg_begin_default_pass(&gui_screen_pass_action, window->width, window->height);
+  // sg_begin_pass(&(sg_pass){
+  //   .action = gui_screen_pass_action,
+  //   .swapchain = binocle_window_get_swapchain(window)
+  // });
   sg_apply_pipeline(gui->gui_screen_pip);
   sg_apply_bindings(&gui_screen_bind);
   sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, &SG_RANGE(screen_vs_params));
@@ -1159,9 +1033,9 @@ void gui_render_to_screen(gui_t *gui, binocle_gd *gd, struct binocle_window *win
     sg_apply_scissor_rect(viewport.min.x, viewport.min.y, design_width / scale, design_height / scale, false);
   }
   sg_draw(0, 6, 1);
-  sg_end_pass();
+  // sg_end_pass();
 
-  sg_commit();
+  // sg_commit();
 }
 
 void gui_wrap_new_frame(binocle_window *window, float dt, int w, int h, int display_w, int display_h) {
@@ -1187,14 +1061,17 @@ int l_gui_wrap_new_frame(lua_State *L) {
   int display_h = h;
   if (w == 0 || h == 0) {
     SDL_GetWindowSize(window_wrapper->window->window, &w, &h);
-    SDL_GL_GetDrawableSize(window_wrapper->window->window, &display_w, &display_h);
+    SDL_GetWindowSizeInPixels(window_wrapper->window->window, &display_w, &display_h);
   }
   gui_wrap_new_frame(window_wrapper->window, dt, w, h, display_w, display_h);
   return 0;
 }
 
 void gui_wrap_render_frame(gui_t *gui) {
-  sg_begin_pass(gui->imgui_pass, &imgui_pass_action);
+  sg_begin_pass(&(sg_pass){
+    .action = imgui_pass_action,
+    .attachments = gui->imgui_attachments
+  });
   igRender();
   draw_imgui(igGetDrawData());
   sg_end_pass();
@@ -1216,8 +1093,9 @@ int l_gui_wrap_render_to_screen(lua_State *L) {
   float design_height = (float)luaL_checknumber(L, 5);
   kmAABB2 **vp = lua_touserdata(L, 6);
   l_binocle_camera_t *camera = luaL_checkudata(L, 7, "binocle_camera");
+  bool pixel_perfect = lua_toboolean(L, 8);
   gui_t *gui = gui_resources_get_gui(name);
-  gui_render_to_screen(gui, gd->gd, window->window, design_width, design_height, **vp, camera->camera->viewport_adapter->scale_matrix, camera->camera->viewport_adapter->inverse_multiplier);
+  gui_render_to_screen(gui, gd->gd, window->window, design_width, design_height, **vp, camera->camera->viewport_adapter->scale_matrix, camera->camera->viewport_adapter->inverse_multiplier, pixel_perfect);
   return 0;
 }
 

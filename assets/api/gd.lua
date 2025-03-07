@@ -33,10 +33,11 @@ function gd.render_screen(gd_instance, window, width, height, viewport, camera) 
 ---@param a number alpha 0..1
 function gd.set_offscreen_clear_color(gd_instance, r, g, b, a) end
 
+---@param name string the name to associate to this shader for debugging purposes
 ---@param vs_src string the vertex shader source code
 ---@param fs_src string the fragment shader source code
 ---@return shader the instance of the shader that contains the shader descriptor and later on the reference to the compiled shader and the reference to the pipeline
-function gd.create_shader_desc(vs_src, fs_src) end
+function gd.create_shader_desc(name, vs_src, fs_src) end
 
 ---@param shader shader the shader instance
 ---@param stage string the shader stage, either VS or FS
@@ -76,5 +77,16 @@ function gd.draw_rect(gd_instance, center_x, center_y, width, height, color, vie
 ---@param camera Camera the Camera instance
 ---@param depth number the depth to use
 function gd.draw_rect_outline(gd_instance, center_x, center_y, width, height, color, viewport, camera, depth) end
+
+---Begins the screen pass. During this pass multiple pipelines can be applied.
+---@param gd_instance GraphicsDevice an instance of GraphicsDevice
+---@param window Window an instance of Window
+function gd.begin_screen_pass(gd_instance, window) end
+
+---Ends the screen pass.
+function gd.end_screen_pass() end
+
+---Commits all the rendering buffers after all the passes are ended
+function gd.commit() end
 
 return gd

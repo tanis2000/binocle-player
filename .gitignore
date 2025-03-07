@@ -91,6 +91,7 @@ fabric.properties
 build/
 build-web/
 build-win/
+build-xcode/
 sys_config.h
 .cache/
 
