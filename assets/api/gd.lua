@@ -89,4 +89,8 @@ function gd.end_screen_pass() end
 ---Commits all the rendering buffers after all the passes are ended
 function gd.commit() end
 
+---Applies the viewport
+---@param viewport kmAABB2 the viewport
+function gd.apply_viewport(viewport) end
+
 return gd

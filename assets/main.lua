@@ -202,6 +202,7 @@ function main.on_update(dt)
 
     local screenViewport = viewport_adapter.get_viewport(adapter)
     gd.begin_screen_pass(gd_instance, win)
+    gd.apply_viewport(screenViewport)
     gd.render_screen(gd_instance, win, const.DESIGN_WIDTH, const.DESIGN_HEIGHT, screenViewport, cam)
     if G.debug then
         imgui.SetContext("debug")
